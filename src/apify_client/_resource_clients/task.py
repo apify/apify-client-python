@@ -347,7 +347,9 @@ class TaskClient(ResourceClient):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. The time spent retrying doesn't count toward
                 `wait_duration`.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -372,7 +374,7 @@ class TaskClient(ResourceClient):
             http_client=self._http_client,
             client_registry=self._client_registry,
         )
-        return run_client.wait_for_finish(wait_duration=wait_duration)
+        return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.
@@ -761,7 +763,9 @@ class TaskClientAsync(ResourceClientAsync):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. The time spent retrying doesn't count toward
                 `wait_duration`.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -785,7 +789,7 @@ class TaskClientAsync(ResourceClientAsync):
             http_client=self._http_client,
             client_registry=self._client_registry,
         )
-        return await run_client.wait_for_finish(wait_duration=wait_duration)
+        return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     async def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.

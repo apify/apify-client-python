@@ -12,6 +12,7 @@ from apify_client._docs import docs_group
 from apify_client._literals import (
     ActorJobStatus,
     ActorPermissionLevel,
+    Deployment,
     Encoding,
     ErrorType,
     GeneralAccess,
@@ -165,15 +166,15 @@ class ActorDefinition(BaseModel):
     """
     dockerfile: str | None = None
     """
-    The path to the Dockerfile used for building the Actor on the platform.
+    The path to the Dockerfile used for building the Actor on the platform, relative to the `.actor/` directory.
     """
     docker_context_dir: str | None = None
     """
-    The path to the directory used as the Docker context when building the Actor.
+    The path to the directory used as the Docker context when building the Actor, relative to the `.actor/` directory.
     """
     readme: str | None = None
     """
-    The path to the README file for the Actor.
+    The path to the README file for the Actor, relative to the `.actor/` directory.
     """
     input: dict[str, Any] | None = None
     """
@@ -185,7 +186,7 @@ class ActorDefinition(BaseModel):
     """
     changelog: str | None = None
     """
-    The path to the CHANGELOG file displayed in the Actor's information tab.
+    The path to the CHANGELOG file displayed in the Actor's information tab, relative to the `.actor/` directory.
     """
     storages: Storages | None = None
     default_memory_mbytes: str | int | None = None
@@ -1108,7 +1109,7 @@ class CreateVersionRequest(BaseModel):
     """
     tarball_url: str | None = None
     """
-    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
+    URL of the zip archive to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
@@ -3513,7 +3514,7 @@ class Run(BaseModel):
     """
     standby: RunStandby | None = None
     """
-    Standby configuration of the run. `null` for runs that are not Actor Standby runs.
+    Server Actor deployment of this run, `null` for runs not started by a Server Actor request.
     """
     integration_tracking: IntegrationTracking | None = None
     """
@@ -3772,10 +3773,11 @@ class RunStandby(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    deployment: Annotated[str, Field(examples=['SINGLE_TENANT'])]
+    deployment: Annotated[Deployment, Field(examples=['MULTI_TENANT_PAYING_USERS'])]
     """
-    How the Standby run is deployed: `SINGLE_TENANT`, `MULTI_TENANT_FREE_USERS`, `MULTI_TENANT_PAYING_USERS` or `MULTI_TENANT_OWNER_PAID`. `SINGLE_TENANT` is a private instance in the user's account.
-    The `MULTI_TENANT_*` values are runs in the Actor owner's account that serve requests from many users.
+    Which pool the Server Actor run serves. `SINGLE_TENANT` is a private instance in the caller's account.
+    The `MULTI_TENANT_*` pools run in the Actor owner's account and serve many callers;
+    charges in them require a `requestId` (see the charge endpoint).
 
     """
 
@@ -4749,7 +4751,7 @@ class UpdateVersionRequest(BaseModel):
     """
     tarball_url: str | None = None
     """
-    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
+    URL of the zip archive to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
@@ -5004,7 +5006,7 @@ class Version(BaseModel):
     """
     tarball_url: str | None = None
     """
-    URL to download the source code from as a tarball or ZIP file. Applies when the `sourceType` is `TARBALL`.
+    URL to download the source code from as a zip archive. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """

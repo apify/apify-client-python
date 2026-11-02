@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from .._utils import get_random_resource_name, maybe_await
+from .._utils import get_random_resource_name, maybe_await, poll_until_condition
 from apify_client._models import (
     ActorChargeEvent,
     ActorListItem,
@@ -171,10 +171,14 @@ async def test_actor_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         last_run_client = actor_client.last_run()
         assert last_run_client is not None
 
-        # Use the returned client to get the run
-        last_run = await maybe_await(last_run_client.get())
+        # Parallel tests share this account and keep finishing and deleting hello-world runs, so "last" may
+        # resolve to a run deleted before the API serves it (404 -> None). Poll past that window.
+        last_run = await poll_until_condition(
+            lambda: maybe_await(last_run_client.get()),
+            lambda r: isinstance(r, Run) and r.started_at >= run.started_at,
+        )
         assert isinstance(last_run, Run)
-        assert last_run.id is not None
+        assert last_run.started_at >= run.started_at
 
     finally:
         await maybe_await(client.run(run.id).delete())

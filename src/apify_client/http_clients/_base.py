@@ -456,8 +456,12 @@ class HttpClientBase:
         streamed: bool,
         stop_retrying: Callable[[], None],
         retry_status_codes: Collection[int] | None,
+        raise_for_status: bool,
     ) -> bool:
         """Record the response status and stop retrying unless the status is retryable.
+
+        A rate limit counts toward the client's statistics only for a request that raises for an error status, since
+        the statistics track the API's rate limits and only API calls raise.
 
         Returns whether the response is a success, so the caller can hand it back instead of raising.
         """
@@ -465,7 +469,7 @@ class HttpClientBase:
             logger.debug('Request successful', extra={'status_code': response.status_code})
             return True
 
-        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+        if raise_for_status and response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             self._statistics.add_rate_limit_error(attempt)
 
         logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
@@ -579,7 +583,8 @@ class HttpClient(HttpClientBase):
                 request, which then goes out without the `Authorization` header. A per-request header of either name
                 still wins.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
-                returned once no retry follows.
+                returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
+                which track the API's rate limits.
             retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
             retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
                 first one is raised, since the request may have reached the server before it failed.
@@ -741,6 +746,7 @@ class HttpClient(HttpClientBase):
             streamed=isinstance(content, StreamedRequestBody),
             stop_retrying=stop_retrying,
             retry_status_codes=retry_status_codes,
+            raise_for_status=raise_for_status,
         ):
             return response
 
@@ -826,7 +832,8 @@ class HttpClientAsync(HttpClientBase):
                 request, which then goes out without the `Authorization` header. A per-request header of either name
                 still wins.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
-                returned once no retry follows.
+                returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
+                which track the API's rate limits.
             retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
             retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
                 first one is raised, since the request may have reached the server before it failed.
@@ -1003,6 +1010,7 @@ class HttpClientAsync(HttpClientBase):
             streamed=isinstance(content, StreamedRequestBody),
             stop_retrying=stop_retrying,
             retry_status_codes=retry_status_codes,
+            raise_for_status=raise_for_status,
         ):
             return response
 

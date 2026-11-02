@@ -397,6 +397,16 @@ def test_request_retries_platform_statuses(httpserver: HTTPServer, status: int) 
     assert len(server_requests(httpserver)) == 3
 
 
+def test_request_rate_limit_is_left_out_of_statistics(httpserver: HTTPServer) -> None:
+    """A 429 from the Actor's server doesn't count toward the client's API rate-limit statistics."""
+    expect_flaky_server(httpserver, [429])
+    client = retrying_client(httpserver, max_retries=1)
+
+    client.actor(_MOCKED_ACTOR_ID).server().request('/flaky')
+
+    assert client._statistics.rate_limit_errors == {}
+
+
 def test_request_returns_last_retried_response(httpserver: HTTPServer) -> None:
     """Once the retries run out, the last retried response comes back."""
     expect_flaky_server(httpserver, [503, 503, 503])

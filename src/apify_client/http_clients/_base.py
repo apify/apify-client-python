@@ -592,7 +592,8 @@ class HttpClient(HttpClientBase):
                 is used for this request only, and `False` sends the body uncompressed.
             authorization_header: Name of the header that carries the client's `Authorization` value for this
                 request, which then goes out without the `Authorization` header. A per-request header of either name
-                still wins.
+                still wins. `ActorServerClient.request` sets it to `X-Apify-Authorization`, which the platform
+                consumes, so the `Authorization` header stays free for the Actor's own authentication.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
                 which track the API's rate limits.
@@ -851,7 +852,8 @@ class HttpClientAsync(HttpClientBase):
                 is used for this request only, and `False` sends the body uncompressed.
             authorization_header: Name of the header that carries the client's `Authorization` value for this
                 request, which then goes out without the `Authorization` header. A per-request header of either name
-                still wins.
+                still wins. `ActorServerClientAsync.request` sets it to `X-Apify-Authorization`, which the platform
+                consumes, so the `Authorization` header stays free for the Actor's own authentication.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
                 which track the API's rate limits.

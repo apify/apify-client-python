@@ -524,8 +524,6 @@ class HttpClient(HttpClientBase):
 
     A replaced `call` has to accept every argument of the inherited one and honor `compression`,
     `authorization_header`, `raise_for_status`, `retry_status_codes`, and `retry_transport_errors`.
-    `ActorServerClient.request` relies on them to keep the token away from the Actor's code, to return the server's
-    error responses, and to avoid sending a request to the Actor twice.
     """
 
     def __enter__(self) -> Self:

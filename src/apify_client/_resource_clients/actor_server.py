@@ -12,6 +12,7 @@ from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
     from apify_client._literals import HttpMethod
+    from apify_client._models import ActorResource
     from apify_client.http_clients import HttpResponse
     from apify_client.http_compressors import HttpCompressor
     from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, QueryParams, Timeout
@@ -64,6 +65,7 @@ class ActorServerClient(ResourceClient):
             **kwargs,
         )
         self._url: str | None = None
+        """The server URL, cached for `get_url` and `request`, since getting it takes an API call for the Actor."""
 
     def get_url(self, *, timeout: Timeout = 'short') -> str:
         """Return the URL of the Actor's server.
@@ -84,13 +86,10 @@ class ActorServerClient(ResourceClient):
             ApifyClientError: If the Actor is not a Server Actor.
             ApifyApiError: If the Actor does not exist.
         """
-        if self._url is None:
-            response = self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
-            actor = ActorResponse.model_validate(response_to_dict(response)).data
-            if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-            self._url = actor.standby_url
-        return self._url
+        if self._url is not None:
+            return self._url
+        _, url = self._get_server_actor(timeout=timeout)
+        return url
 
     def get_openapi_spec(self, *, timeout: Timeout = 'short') -> dict[str, Any] | None:
         """Return the OpenAPI specification of the Actor's server.
@@ -112,11 +111,7 @@ class ActorServerClient(ResourceClient):
                 exist.
             ApifyApiError: If the Actor does not exist.
         """
-        response = self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
-        actor = ActorResponse.model_validate(response_to_dict(response)).data
-        if actor.standby_url is None:
-            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-        self._url = actor.standby_url
+        actor, _ = self._get_server_actor(timeout=timeout)
 
         build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
 
@@ -230,6 +225,20 @@ class ActorServerClient(ResourceClient):
             stream=stream,
         )
 
+    def _get_server_actor(self, *, timeout: Timeout) -> tuple[ActorResource, str]:
+        """Fetch the Actor, check that it is a Server Actor, and cache its server URL.
+
+        Returns:
+            The Actor and the URL of its server.
+        """
+        response = self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
+        actor = ActorResponse.model_validate(response_to_dict(response)).data
+        url = actor.standby_url
+        if url is None:
+            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+        self._url = url
+        return actor, url
+
 
 @docs_group('Resource clients')
 class ActorServerClientAsync(ResourceClientAsync):
@@ -252,6 +261,7 @@ class ActorServerClientAsync(ResourceClientAsync):
             **kwargs,
         )
         self._url: str | None = None
+        """The server URL, cached for `get_url` and `request`, since getting it takes an API call for the Actor."""
 
     async def get_url(self, *, timeout: Timeout = 'short') -> str:
         """Return the URL of the Actor's server.
@@ -272,13 +282,10 @@ class ActorServerClientAsync(ResourceClientAsync):
             ApifyClientError: If the Actor is not a Server Actor.
             ApifyApiError: If the Actor does not exist.
         """
-        if self._url is None:
-            response = await self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
-            actor = ActorResponse.model_validate(response_to_dict(response)).data
-            if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-            self._url = actor.standby_url
-        return self._url
+        if self._url is not None:
+            return self._url
+        _, url = await self._get_server_actor(timeout=timeout)
+        return url
 
     async def get_openapi_spec(self, *, timeout: Timeout = 'short') -> dict[str, Any] | None:
         """Return the OpenAPI specification of the Actor's server.
@@ -300,11 +307,7 @@ class ActorServerClientAsync(ResourceClientAsync):
                 exist.
             ApifyApiError: If the Actor does not exist.
         """
-        response = await self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
-        actor = ActorResponse.model_validate(response_to_dict(response)).data
-        if actor.standby_url is None:
-            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-        self._url = actor.standby_url
+        actor, _ = await self._get_server_actor(timeout=timeout)
 
         build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
 
@@ -417,3 +420,17 @@ class ActorServerClientAsync(ResourceClientAsync):
             follow_redirects=False,
             stream=stream,
         )
+
+    async def _get_server_actor(self, *, timeout: Timeout) -> tuple[ActorResource, str]:
+        """Fetch the Actor, check that it is a Server Actor, and cache its server URL.
+
+        Returns:
+            The Actor and the URL of its server.
+        """
+        response = await self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
+        actor = ActorResponse.model_validate(response_to_dict(response)).data
+        url = actor.standby_url
+        if url is None:
+            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+        self._url = url
+        return actor, url

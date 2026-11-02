@@ -605,7 +605,7 @@ class DatasetClient(ResourceClient):
             skip_hidden: If True, then hidden fields are skipped from the output.
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
-            expires_in: How long the signed URL should be valid. Must be positive.
+            expires_in: How long the signed URL should be valid. Must be positive. If `None`, the URL never expires.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -1200,7 +1200,7 @@ class DatasetClientAsync(ResourceClientAsync):
             skip_hidden: If True, then hidden fields are skipped from the output.
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
-            expires_in: How long the signed URL should be valid. Must be positive.
+            expires_in: How long the signed URL should be valid. Must be positive. If `None`, the URL never expires.
             timeout: Timeout for the API HTTP request.
 
         Returns:

@@ -477,6 +477,7 @@ class KeyValueStoreClient(ResourceClient):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             expires_in: How long the signed URL should be valid from the time it is generated. Must be positive.
+                If `None`, the URL never expires.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -920,6 +921,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             expires_in: How long the signed URL should be valid from the time it is generated. Must be positive.
+                If `None`, the URL never expires.
             timeout: Timeout for the API HTTP request.
 
         Returns:

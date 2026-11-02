@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Align key iteration timeout with key listing ([#1181](https://github.com/apify/apify-client-python/pull/1181)) ([6097ad3](https://github.com/apify/apify-client-python/commit/6097ad3182522f73485c7c1733ecb4400624f456)) by [@kocaemre](https://github.com/kocaemre), closes [#1173](https://github.com/apify/apify-client-python/issues/1173)
+- Respect timeout when polling in `ActorClient.call()` and `TaskClient.call()` ([#1184](https://github.com/apify/apify-client-python/pull/1184)) ([a5a95d2](https://github.com/apify/apify-client-python/commit/a5a95d21b4feaacb41b9c6788a7f1fe17b26ce13)) by [@kocaemre](https://github.com/kocaemre), closes [#1171](https://github.com/apify/apify-client-python/issues/1171)
 
 
 <!-- git-cliff-unreleased-end -->

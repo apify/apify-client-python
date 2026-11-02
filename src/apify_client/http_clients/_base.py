@@ -502,7 +502,7 @@ class HttpClientBase:
             return status_code in retry_status_codes
         return status_code >= HTTPStatus.INTERNAL_SERVER_ERROR or status_code == HTTPStatus.TOO_MANY_REQUESTS
 
-    def _returns_error_response(
+    def _should_return_error_response(
         self,
         response: HttpResponse,
         *,
@@ -770,7 +770,7 @@ class HttpClient(HttpClientBase):
         ):
             return response
 
-        if not raise_for_status and self._returns_error_response(
+        if not raise_for_status and self._should_return_error_response(
             response, attempt=attempt, content=content, retry_status_codes=retry_status_codes
         ):
             return response
@@ -1044,7 +1044,7 @@ class HttpClientAsync(HttpClientBase):
         ):
             return response
 
-        if not raise_for_status and self._returns_error_response(
+        if not raise_for_status and self._should_return_error_response(
             response, attempt=attempt, content=content, retry_status_codes=retry_status_codes
         ):
             return response

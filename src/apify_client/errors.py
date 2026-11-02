@@ -38,8 +38,8 @@ class ApifyApiError(ApifyClientError):
         data: Additional error data from the API response.
     """
 
-    # Subclasses in `_STATUS_TO_CLASS` must keep the `__new__` constructor signature;
-    # the response, attempt, method, and url are forwarded verbatim.
+    # Subclasses in `_STATUS_TO_CLASS` must keep the `(response, attempt, *, method='GET', url=None)` constructor
+    # signature - Python calls the dispatched subclass's `__init__` with the original arguments.
 
     def __new__(cls, response: HttpResponse, attempt: int, *, method: str = 'GET', url: str | None = None) -> Self:  # noqa: ARG004
         """Dispatch to the subclass matching the response's HTTP status code, if any."""

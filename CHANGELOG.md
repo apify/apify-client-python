@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Align key iteration timeout with key listing ([#1181](https://github.com/apify/apify-client-python/pull/1181)) ([6097ad3](https://github.com/apify/apify-client-python/commit/6097ad3182522f73485c7c1733ecb4400624f456)) by [@kocaemre](https://github.com/kocaemre), closes [#1173](https://github.com/apify/apify-client-python/issues/1173)
 - Respect timeout when polling in `ActorClient.call()` and `TaskClient.call()` ([#1184](https://github.com/apify/apify-client-python/pull/1184)) ([a5a95d2](https://github.com/apify/apify-client-python/commit/a5a95d21b4feaacb41b9c6788a7f1fe17b26ce13)) by [@kocaemre](https://github.com/kocaemre), closes [#1171](https://github.com/apify/apify-client-python/issues/1171)
 - Include request method and path in `ApifyApiError` messages ([#1185](https://github.com/apify/apify-client-python/pull/1185)) ([25a64b6](https://github.com/apify/apify-client-python/commit/25a64b63818d92888c9a3019636f924f5b16ace5)) by [@kocaemre](https://github.com/kocaemre), closes [#1177](https://github.com/apify/apify-client-python/issues/1177)
+- Reject non-positive `expires_in` in signed public URLs ([#1182](https://github.com/apify/apify-client-python/pull/1182)) ([f6be852](https://github.com/apify/apify-client-python/commit/f6be852bf124f4ad3e340d25ace080b8a9770588)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

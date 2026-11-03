@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
-import pytest
-
 from .._utils import get_random_resource_name, maybe_await
 from apify_client._models import ActorResource, ListOfVersions, Version
 
@@ -153,7 +151,6 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
         await maybe_await(actor_client.delete())
 
 
-@pytest.mark.skip(reason='The Apify API does not accept `actorPath` yet.')
 async def test_actor_version_actor_path(client: ApifyClient | ApifyClientAsync) -> None:
     """Test that `actor_path` is stored, kept by other updates, and removed by an upload or a `source_type` update."""
     actor_name = get_random_resource_name('actor')
@@ -181,13 +178,13 @@ async def test_actor_version_actor_path(client: ApifyClient | ApifyClientAsync) 
             )
         )
         assert isinstance(created_version, Version)
-        assert created_version.model_dump(by_alias=True).get('actorPath') == actor_path
+        assert created_version.actor_path == actor_path
 
         # An update that leaves the source alone keeps the path
         await maybe_await(version_client.update(build_tag='beta'))
         kept_version = await maybe_await(version_client.get())
         assert isinstance(kept_version, Version)
-        assert kept_version.model_dump(by_alias=True).get('actorPath') == actor_path
+        assert kept_version.actor_path == actor_path
 
         # A new upload without `actor_path` removes the path
         await maybe_await(
@@ -203,18 +200,18 @@ async def test_actor_version_actor_path(client: ApifyClient | ApifyClientAsync) 
         )
         cleared_version = await maybe_await(version_client.get())
         assert isinstance(cleared_version, Version)
-        assert cleared_version.model_dump(by_alias=True).get('actorPath') is None
+        assert cleared_version.actor_path is None
 
         # Setting the path again and then passing the current source type removes it without a new upload
         await maybe_await(version_client.update(actor_path=actor_path))
         restored_version = await maybe_await(version_client.get())
         assert isinstance(restored_version, Version)
-        assert restored_version.model_dump(by_alias=True).get('actorPath') == actor_path
+        assert restored_version.actor_path == actor_path
 
         await maybe_await(version_client.update(source_type='SOURCE_FILES'))
         reset_version = await maybe_await(version_client.get())
         assert isinstance(reset_version, Version)
-        assert reset_version.model_dump(by_alias=True).get('actorPath') is None
+        assert reset_version.actor_path is None
 
     finally:
         await maybe_await(actor_client.delete())

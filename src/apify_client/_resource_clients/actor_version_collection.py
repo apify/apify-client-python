@@ -114,7 +114,7 @@ class ActorVersionCollectionClient(ResourceClient):
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
             actor_path: The Actor's directory inside the uploaded source, only for `'SOURCE_FILES'` and `'TARBALL'`
-                versions. A relative path with `/` separators, such as `actors/my-actor`, of at most 255 characters,
+                versions. A relative path with `/` separators, such as `actors/my-actor`, of 1 to 255 characters,
                 with no leading, trailing, or repeated `/` and no `.` or `..` segment. Without it, the root of the
                 uploaded source is the Actor's directory.
             timeout: Timeout for the API HTTP request.
@@ -226,7 +226,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
             actor_path: The Actor's directory inside the uploaded source, only for `'SOURCE_FILES'` and `'TARBALL'`
-                versions. A relative path with `/` separators, such as `actors/my-actor`, of at most 255 characters,
+                versions. A relative path with `/` separators, such as `actors/my-actor`, of 1 to 255 characters,
                 with no leading, trailing, or repeated `/` and no `.` or `..` segment. Without it, the root of the
                 uploaded source is the Actor's directory.
             timeout: Timeout for the API HTTP request.

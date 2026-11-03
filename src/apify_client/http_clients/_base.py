@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from typing import Self
 
     from apify_client.http_compressors._base import HttpCompressor
-    from apify_client.types import JsonSerializable, QueryParams, StreamedBodySource, Timeout
+    from apify_client.types import AuthorizationHeader, JsonSerializable, QueryParams, StreamedBodySource, Timeout
 
 logger = logging.getLogger(logger_name)
 logger_once = LoggerOnce(logger)
@@ -322,14 +322,14 @@ class HttpClientBase:
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
         compression: HttpCompressor | bool = True,
-        authorization_header: str | None = None,
+        authorization_header: AuthorizationHeader = 'Authorization',
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | StreamedRequestBody | None]:
         """Prepare headers, params, and body for an HTTP request.
 
         Merges the client's default headers (including authorization) with per-request headers and serializes a
         JSON body. Header names are treated case-insensitively and per-request values win over the client
         defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one. With
-        `authorization_header`, the client's `Authorization` value goes out in the header of that name instead.
+        `authorization_header='X-Apify-Authorization'`, the client's `Authorization` value goes out in that header.
 
         The body is compressed with the client's compressor, or with the one passed in `compression`, unless
         `compression` is `False`, a `Content-Encoding` header is already set, the body is smaller than
@@ -346,7 +346,7 @@ class HttpClientBase:
 
         default_headers = self._headers
         authorization = self._get_header(default_headers, 'authorization')
-        if authorization_header is not None and authorization is not None:
+        if authorization_header != 'Authorization' and authorization is not None:
             without_authorization = {
                 key: value for key, value in default_headers.items() if key.lower() != 'authorization'
             }
@@ -565,7 +565,7 @@ class HttpClient(HttpClientBase):
         stream: bool | None = None,
         timeout: Timeout = 'medium',
         compression: HttpCompressor | bool = True,
-        authorization_header: str | None = None,
+        authorization_header: AuthorizationHeader = 'Authorization',
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
         retry_transport_errors: bool = True,
@@ -590,10 +590,9 @@ class HttpClient(HttpClientBase):
                 `no_timeout` disables the timeout entirely.
             compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
                 is used for this request only, and `False` sends the body uncompressed.
-            authorization_header: Name of the header that carries the client's `Authorization` value for this
-                request, which then goes out without the `Authorization` header. A per-request header of either name
-                still wins. `ActorServerClient.request` sets it to `X-Apify-Authorization`, which the platform
-                consumes, so the `Authorization` header stays free for the Actor's own authentication.
+            authorization_header: Header that carries the client's API token for this request, see
+                `AuthorizationHeader`. `ActorServerClient.request` uses `X-Apify-Authorization`. A per-request
+                header of either name still wins.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
                 which track the API's rate limits.
@@ -825,7 +824,7 @@ class HttpClientAsync(HttpClientBase):
         stream: bool | None = None,
         timeout: Timeout = 'medium',
         compression: HttpCompressor | bool = True,
-        authorization_header: str | None = None,
+        authorization_header: AuthorizationHeader = 'Authorization',
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
         retry_transport_errors: bool = True,
@@ -850,10 +849,9 @@ class HttpClientAsync(HttpClientBase):
                 `no_timeout` disables the timeout entirely.
             compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
                 is used for this request only, and `False` sends the body uncompressed.
-            authorization_header: Name of the header that carries the client's `Authorization` value for this
-                request, which then goes out without the `Authorization` header. A per-request header of either name
-                still wins. `ActorServerClientAsync.request` sets it to `X-Apify-Authorization`, which the platform
-                consumes, so the `Authorization` header stays free for the Actor's own authentication.
+            authorization_header: Header that carries the client's API token for this request, see
+                `AuthorizationHeader`. `ActorServerClientAsync.request` uses `X-Apify-Authorization`. A per-request
+                header of either name still wins.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
                 which track the API's rate limits.

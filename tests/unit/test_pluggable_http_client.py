@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
     from apify_client.http_compressors import HttpCompressor
-    from apify_client.types import QueryParams, StreamedBodySource, Timeout
+    from apify_client.types import AuthorizationHeader, QueryParams, StreamedBodySource, Timeout
 
 
 @dataclass
@@ -101,7 +101,7 @@ class FakeHttpClient(HttpClient):
         stream: bool | None = None,
         timeout: Timeout = 'medium',
         compression: HttpCompressor | bool = True,
-        authorization_header: str | None = None,
+        authorization_header: AuthorizationHeader = 'Authorization',
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
         retry_transport_errors: bool = True,
@@ -147,7 +147,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         stream: bool | None = None,
         timeout: Timeout = 'medium',
         compression: HttpCompressor | bool = True,
-        authorization_header: str | None = None,
+        authorization_header: AuthorizationHeader = 'Authorization',
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
         retry_transport_errors: bool = True,

@@ -1,20 +1,13 @@
 # Cross-repository references for the apify-factory review (apify/ai-developer, `review-references`).
-# A change to this client is right when it matches what the Apify API does, keeps parity with the JS
-# client it mirrors, and does not break the Python SDK built on it, so the reviewer gets those three
-# repositories as source trees next to the pull request and compares. Read from the default branch,
-# never from the pull request; gathered only for a pull request by a human member of the
-# organization, on a branch of this repository.
 version: 1
 
 instructions: |
   This repository is the Python client for the Apify API, a port of the JS client that the Python SDK
   builds on. For every behaviour the pull request adds or changes, check three things: that it matches
-  what the API actually does, that it matches what the JS client does for the same operation, and that
-  every place the Python SDK uses the changed code still works. Only what a user of the client can
-  observe counts: method names and parameters, defaults, the request sent (path, method, query, body,
-  headers), how the response is parsed and what is returned, retries, timeouts, pagination, and the
-  exceptions raised. A difference from the JS client that the Python code or docs mark as intended is
-  not a finding. Back every finding with the reference file and line.
+  what the API actually does, that it matches what the JS client does for the same operation (ignore
+  differences caused by different language idioms and style), and that every place the Python SDK uses
+  the changed code still works. Back every finding with the reference file and line (create public
+  github link fixed to a commit you have seen).
 
 references:
   - repository: apify/apify-core
@@ -23,28 +16,14 @@ references:
       - src/api/**
       - src/packages/**
     instructions: |
-      The API the client calls. Entry points: the route handlers under `src/api/src/routes/<resource>/`
-      (actors, actor_runs, actor_builds, actor_tasks, datasets, key_value_stores, request_queues,
-      webhooks, webhook_dispatches, logs, users, store); a resource's published fields in
-      `PUBLISHED_*_FIELDS` in `src/packages/<area>-server/src/<resource>/<resource>.server.ts`; a list
-      endpoint's own fields in `API_PUBLISHED_*_LIST_FIELDS` next to its route; constants and limits in
-      `src/packages/consts/`. Compare the request the client builds with what the handler accepts
+      The API the client calls. Compare the request the client builds with what the handler accepts
       (paths, methods, query and body parameters, defaults, limits) and what the client expects back with
       what the handler returns (field names and types, pagination, status codes, error types).
   - repository: apify/apify-client-js
     instructions: |
-      The reference implementation this client mirrors: every resource client under
-      `src/apify_client/_resource_clients/` has a counterpart in `src/resource_clients/<resource>.ts`
-      and `<resource>_collection.ts`, the request pipeline (retries, timeouts, errors) lives in
-      `src/http_clients/` and `src/base/`, request-body compression in `src/http_compressors/`. Compare
-      the changed Python method with the JS method of the same name: parameters and defaults, the
-      request it sends, how it parses the response, what it returns, and how it handles errors.
+      The reference implementation this client mirrors. Compare the changed Python methods with the
+      matching JS methods: parameters and defaults, the request it sends, how it parses the response,
+      what it returns, and how it handles errors.
   - repository: apify/apify-sdk-python
     instructions: |
-      The main consumer of this client. It uses the client from `src/apify/storage_clients/_apify/`
-      (dataset, key-value store and request queue clients built on this client's storage clients and
-      `_api_client_creation.py`), `src/apify/_actor.py`, `_charging.py`, `_proxy_configuration.py`,
-      `_webhook.py`, `_child_runs.py` and `_configuration.py`. Search for every use of the method,
-      parameter, class, return type or exception the pull request changes and check that each call
-      site still works: a renamed or removed parameter, a changed default, a changed return shape or a
-      new exception breaks the SDK.
+      The main consumer of this client. Highlight the changes that will require updates to the SDK.

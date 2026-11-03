@@ -3,9 +3,6 @@ name: apify-factory review (AI review, and auto-approval)
 # Calls the apify-factory review and auto-approval pipeline (apify/ai-developer, wired up in
 # apify/workflows). Approvals additionally need the repository's `factory_auto_approve` custom
 # property set to true.
-#
-# `.github/review-references.yaml` names the repositories the reviewer compares a pull request with
-# (the API, the JS client, the Python SDK); the pipeline reads it from the base branch.
 on:
   # Taken from the default branch, never from the pull request, so a pull request cannot rewrite
   # its own review pipeline. Pull request code is never checked out or executed.

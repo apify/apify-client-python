@@ -11,7 +11,7 @@ instructions: |
 
 references:
   - repository: apify/apify-core
-    ref: latest-release
+    ref: develop
     paths:
       - src/api/**
       - src/packages/**

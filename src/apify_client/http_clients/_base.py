@@ -394,7 +394,10 @@ class HttpClientBase:
         return (headers, self._parse_params(params), content)
 
     def _build_url_with_params(self, url: str, *, params: dict[str, Any] | None = None) -> str:
-        """Build a URL with query parameters appended. List values are expanded into multiple key=value pairs."""
+        """Build a URL with query parameters appended to any query it already has.
+
+        List values are expanded into multiple key=value pairs.
+        """
         if not params:
             return url
 
@@ -407,7 +410,8 @@ class HttpClientBase:
 
         query_string = urlencode(param_pairs)
 
-        return f'{url}?{query_string}'
+        separator = '&' if '?' in url else '?'
+        return f'{url}{separator}{query_string}'
 
     def _handle_request_exception(
         self,

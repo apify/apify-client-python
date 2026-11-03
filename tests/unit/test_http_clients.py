@@ -1252,6 +1252,14 @@ def test_build_url_with_params_mixed() -> None:
     assert 'name=test' in url
 
 
+def test_build_url_with_params_appends_to_an_existing_query() -> None:
+    """Params are joined with `&` to a URL that already has a query."""
+    client = ConcreteHttpClient()
+
+    url = client._build_url_with_params('https://api.test.com/search?a=1', params={'b': 2})
+    assert url == 'https://api.test.com/search?a=1&b=2'
+
+
 class _ThreadRecordingCompressor(HttpCompressor):
     """Compressor that records the thread `compress` ran on, to prove the work is offloaded."""
 

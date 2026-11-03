@@ -386,7 +386,9 @@ class ActorClient(ResourceClient):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -414,7 +416,7 @@ class ActorClient(ResourceClient):
         )
 
         if not logger:
-            return run_client.wait_for_finish(wait_duration=wait_duration)
+            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
         if logger == 'default':
             logger = None
@@ -426,7 +428,7 @@ class ActorClient(ResourceClient):
         streamed_log = run_client.get_streamed_log(to_logger=logger)
 
         with status_redirector, streamed_log:
-            return run_client.wait_for_finish(wait_duration=wait_duration)
+            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     def build(
         self,
@@ -946,7 +948,9 @@ class ActorClientAsync(ResourceClientAsync):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -975,7 +979,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         if not logger:
-            return await run_client.wait_for_finish(wait_duration=wait_duration)
+            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
         if logger == 'default':
             logger = None
@@ -987,7 +991,7 @@ class ActorClientAsync(ResourceClientAsync):
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 
         async with status_redirector, streamed_log:
-            return await run_client.wait_for_finish(wait_duration=wait_duration)
+            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     async def build(
         self,

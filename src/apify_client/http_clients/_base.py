@@ -686,7 +686,7 @@ class HttpClient(HttpClientBase):
                 stop_retrying()
             raise
 
-        raise ApifyApiError(response, attempt, method=method)
+        raise ApifyApiError(response, attempt, method=method, url=url)
 
 
 @docs_group('HTTP clients')
@@ -911,4 +911,4 @@ class HttpClientAsync(HttpClientBase):
                 stop_retrying()
             raise
 
-        raise ApifyApiError(response, attempt, method=method)
+        raise ApifyApiError(response, attempt, method=method, url=url)

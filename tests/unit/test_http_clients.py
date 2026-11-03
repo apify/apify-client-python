@@ -281,18 +281,20 @@ def test_merge_headers(
 
 
 def test_http_client_creates_sync_impit_client() -> None:
-    """The synchronous adapter creates the underlying Impit client and closes it through the close hook."""
+    """The synchronous adapter creates the Impit client, defers the one without redirects, and closes them."""
     client = ImpitHttpClient(token='test_token_123')
 
     assert isinstance(client._impit_client, impit.Client)
+    assert client._impit_client_without_redirects is None
     client.close()
 
 
 async def test_http_client_async_creates_async_impit_client() -> None:
-    """The asynchronous adapter creates the underlying Impit client and closes it through the close hook."""
+    """The asynchronous adapter creates the Impit client, defers the one without redirects, and closes them."""
     client = ImpitHttpClientAsync(token='test_token_123')
 
     assert isinstance(client._impit_async_client, impit.AsyncClient)
+    assert client._impit_async_client_without_redirects is None
     await client.aclose()
 
 

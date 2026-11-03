@@ -94,8 +94,9 @@ class ImpitHttpClient(HttpClient):
         )
 
         self._impit_client = impit.Client(follow_redirects=True)
-        # Impit sets redirect handling per client, so a request that must not follow redirects needs its own.
-        self._impit_client_without_redirects = impit.Client(follow_redirects=False)
+        # Impit sets redirect handling per client, so a request that must not follow redirects needs its own. Only
+        # `ActorServerClient.request` sends one, so the client is created on first use.
+        self._impit_client_without_redirects: impit.Client | None = None
 
     @override
     def is_timeout_error(self, exc: Exception) -> bool:
@@ -119,7 +120,8 @@ class ImpitHttpClient(HttpClient):
         Impit does.
         """
         self._impit_client.__exit__(None, None, None)
-        self._impit_client_without_redirects.__exit__(None, None, None)
+        if self._impit_client_without_redirects is not None:
+            self._impit_client_without_redirects.__exit__(None, None, None)
 
     @override
     def send_request(
@@ -137,7 +139,11 @@ class ImpitHttpClient(HttpClient):
         # Use a large value (24 hours) to effectively disable the timeout.
         # This can be removed once impit updates its behaviour: https://github.com/apify/impit/issues/401
         impit_timeout = 86_400 if timeout is None else timeout
-        impit_client = self._impit_client if follow_redirects else self._impit_client_without_redirects
+        impit_client = self._impit_client
+        if not follow_redirects:
+            if self._impit_client_without_redirects is None:
+                self._impit_client_without_redirects = impit.Client(follow_redirects=False)
+            impit_client = self._impit_client_without_redirects
         return impit_client.request(
             method=method,
             url=url,
@@ -202,8 +208,8 @@ class ImpitHttpClientAsync(HttpClientAsync):
         )
 
         self._impit_async_client = impit.AsyncClient(follow_redirects=True)
-        # See the synchronous client for why a second client is needed.
-        self._impit_async_client_without_redirects = impit.AsyncClient(follow_redirects=False)
+        # See the synchronous client for why a second client is needed and created on first use.
+        self._impit_async_client_without_redirects: impit.AsyncClient | None = None
 
     @override
     def is_timeout_error(self, exc: Exception) -> bool:
@@ -225,7 +231,8 @@ class ImpitHttpClientAsync(HttpClientAsync):
         See `ImpitHttpClient.close` for what Impit's teardown does.
         """
         await self._impit_async_client.__aexit__(None, None, None)
-        await self._impit_async_client_without_redirects.__aexit__(None, None, None)
+        if self._impit_async_client_without_redirects is not None:
+            await self._impit_async_client_without_redirects.__aexit__(None, None, None)
 
     @override
     async def send_request(
@@ -241,7 +248,11 @@ class ImpitHttpClientAsync(HttpClientAsync):
     ) -> impit.Response:
         # See the synchronous implementation for why None maps to 24 hours.
         impit_timeout = 86_400 if timeout is None else timeout
-        impit_client = self._impit_async_client if follow_redirects else self._impit_async_client_without_redirects
+        impit_client = self._impit_async_client
+        if not follow_redirects:
+            if self._impit_async_client_without_redirects is None:
+                self._impit_async_client_without_redirects = impit.AsyncClient(follow_redirects=False)
+            impit_client = self._impit_async_client_without_redirects
         return await impit_client.request(
             method=method,
             url=url,

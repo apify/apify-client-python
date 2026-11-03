@@ -162,6 +162,34 @@ async def test_get_url_returns_standby_url_async(httpserver: HTTPServer, async_c
     assert len(actor_gets) == 1
 
 
+def test_get_url_fetches_again_after_failed_lookup(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A failed lookup is not cached, so the next `get_url` call fetches the Actor again."""
+    httpserver.expect_oneshot_request(_ACTOR_PATH, method='GET').respond_with_json(
+        {'error': {'type': 'record-not-found', 'message': 'Actor was not found'}}, status=404
+    )
+    expect_server_actor(httpserver)
+    server_client = sync_client.actor(_MOCKED_ACTOR_ID).server()
+
+    with pytest.raises(NotFoundError):
+        server_client.get_url()
+    assert server_client.get_url() == httpserver.url_for(_SERVER_PREFIX)
+
+
+async def test_get_url_fetches_again_after_failed_lookup_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_get_url_fetches_again_after_failed_lookup`."""
+    httpserver.expect_oneshot_request(_ACTOR_PATH, method='GET').respond_with_json(
+        {'error': {'type': 'record-not-found', 'message': 'Actor was not found'}}, status=404
+    )
+    expect_server_actor(httpserver)
+    server_client = async_client.actor(_MOCKED_ACTOR_ID).server()
+
+    with pytest.raises(NotFoundError):
+        await server_client.get_url()
+    assert await server_client.get_url() == httpserver.url_for(_SERVER_PREFIX)
+
+
 def test_get_url_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """`get_url` raises for an Actor without a server interface."""
     httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))

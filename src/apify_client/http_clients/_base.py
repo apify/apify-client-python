@@ -595,8 +595,7 @@ class HttpClient(HttpClientBase):
             compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
                 is used for this request only, and `False` sends the body uncompressed.
             authorization_header: Header that carries the client's API token for this request, see
-                `AuthorizationHeader`. `ActorServerClient.request` uses `X-Apify-Authorization`. A per-request
-                header of either name still wins.
+                `AuthorizationHeader`. A per-request header of either name still wins.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
                 which track the API's rate limits.
@@ -854,8 +853,7 @@ class HttpClientAsync(HttpClientBase):
             compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
                 is used for this request only, and `False` sends the body uncompressed.
             authorization_header: Header that carries the client's API token for this request, see
-                `AuthorizationHeader`. `ActorServerClientAsync.request` uses `X-Apify-Authorization`. A per-request
-                header of either name still wins.
+                `AuthorizationHeader`. A per-request header of either name still wins.
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows, and a rate limit (429) doesn't count toward the client's statistics,
                 which track the API's rate limits.

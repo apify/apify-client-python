@@ -84,7 +84,7 @@ class ActorServerClient(ResourceClient):
 
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist.
+            NotFoundError: If the Actor does not exist.
         """
         if self._url is not None:
             return self._url
@@ -109,7 +109,7 @@ class ActorServerClient(ResourceClient):
         Raises:
             ApifyClientError: If the Actor is not a Server Actor, or the build that serves its server interface doesn't
                 exist.
-            ApifyApiError: If the Actor does not exist.
+            NotFoundError: If the Actor does not exist.
         """
         actor, _ = self._get_server_actor(timeout=timeout)
 
@@ -202,7 +202,7 @@ class ActorServerClient(ResourceClient):
 
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist.
+            NotFoundError: If the Actor does not exist.
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
@@ -280,7 +280,7 @@ class ActorServerClientAsync(ResourceClientAsync):
 
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist.
+            NotFoundError: If the Actor does not exist.
         """
         if self._url is not None:
             return self._url
@@ -305,7 +305,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         Raises:
             ApifyClientError: If the Actor is not a Server Actor, or the build that serves its server interface doesn't
                 exist.
-            ApifyApiError: If the Actor does not exist.
+            NotFoundError: If the Actor does not exist.
         """
         actor, _ = await self._get_server_actor(timeout=timeout)
 
@@ -398,7 +398,7 @@ class ActorServerClientAsync(ResourceClientAsync):
 
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist.
+            NotFoundError: If the Actor does not exist.
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """

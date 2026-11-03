@@ -48,12 +48,12 @@ def request_body(request: Request) -> dict[str, Any]:
 
 
 def test_create_sends_actor_path(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """`create` sends `actor_path` as `actorPath`."""
+    """`create` sends `actor_path` as `actorPath` and reads it back from the response."""
     captured: list[Request] = []
     httpserver.expect_request(_VERSIONS_PATH, method='POST').respond_with_handler(capture(captured))
 
     versions_client = sync_client.actor(_MOCKED_ACTOR_ID).versions()
-    versions_client.create(
+    version = versions_client.create(
         version_number=_VERSION_NUMBER,
         source_type='TARBALL',
         tarball_url=_TARBALL_URL,
@@ -67,15 +67,16 @@ def test_create_sends_actor_path(httpserver: HTTPServer, sync_client: ApifyClien
         'tarballUrl': _TARBALL_URL,
         'actorPath': _ACTOR_PATH,
     }
+    assert version.actor_path == _ACTOR_PATH
 
 
 async def test_create_sends_actor_path_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
-    """Async `create` sends `actor_path` as `actorPath`."""
+    """Async `create` sends `actor_path` as `actorPath` and reads it back from the response."""
     captured: list[Request] = []
     httpserver.expect_request(_VERSIONS_PATH, method='POST').respond_with_handler(capture(captured))
 
     versions_client = async_client.actor(_MOCKED_ACTOR_ID).versions()
-    await versions_client.create(
+    version = await versions_client.create(
         version_number=_VERSION_NUMBER,
         source_type='TARBALL',
         tarball_url=_TARBALL_URL,
@@ -89,6 +90,7 @@ async def test_create_sends_actor_path_async(httpserver: HTTPServer, async_clien
         'tarballUrl': _TARBALL_URL,
         'actorPath': _ACTOR_PATH,
     }
+    assert version.actor_path == _ACTOR_PATH
 
 
 def test_create_omits_actor_path_when_not_passed(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
@@ -126,33 +128,35 @@ async def test_create_omits_actor_path_when_not_passed_async(
 
 
 def test_update_sends_actor_path(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """`update` sends `actor_path` as `actorPath`."""
+    """`update` sends `actor_path` as `actorPath` and reads it back from the response."""
     captured: list[Request] = []
     httpserver.expect_request(_VERSION_PATH, method='PUT').respond_with_handler(capture(captured))
 
     version_client = sync_client.actor(_MOCKED_ACTOR_ID).version(_VERSION_NUMBER)
-    version_client.update(
+    version = version_client.update(
         tarball_url=_TARBALL_URL,
         actor_path=_ACTOR_PATH,
     )
 
     assert len(captured) == 1
     assert request_body(captured[0]) == {'tarballUrl': _TARBALL_URL, 'actorPath': _ACTOR_PATH}
+    assert version.actor_path == _ACTOR_PATH
 
 
 async def test_update_sends_actor_path_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
-    """Async `update` sends `actor_path` as `actorPath`."""
+    """Async `update` sends `actor_path` as `actorPath` and reads it back from the response."""
     captured: list[Request] = []
     httpserver.expect_request(_VERSION_PATH, method='PUT').respond_with_handler(capture(captured))
 
     version_client = async_client.actor(_MOCKED_ACTOR_ID).version(_VERSION_NUMBER)
-    await version_client.update(
+    version = await version_client.update(
         tarball_url=_TARBALL_URL,
         actor_path=_ACTOR_PATH,
     )
 
     assert len(captured) == 1
     assert request_body(captured[0]) == {'tarballUrl': _TARBALL_URL, 'actorPath': _ACTOR_PATH}
+    assert version.actor_path == _ACTOR_PATH
 
 
 def test_update_omits_actor_path_when_not_passed(httpserver: HTTPServer, sync_client: ApifyClient) -> None:

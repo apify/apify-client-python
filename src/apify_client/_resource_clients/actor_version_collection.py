@@ -132,8 +132,7 @@ class ActorVersionCollectionClient(ResourceClient):
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
-            # The OpenAPI spec doesn't describe `actorPath` yet, so it goes to the model's extra fields by its API name.
-            actorPath=actor_path,
+            actor_path=actor_path,
         )
         result = self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
@@ -245,8 +244,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
-            # The OpenAPI spec doesn't describe `actorPath` yet, so it goes to the model's extra fields by its API name.
-            actorPath=actor_path,
+            actor_path=actor_path,
         )
         result = await self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data

@@ -95,7 +95,7 @@ def test_last_run_defaults_to_succeeded(
     kwargs: dict,
     expected_status: str | None,
 ) -> None:
-    """`last_run()` asks for the last successful run unless the caller picks another status or opts out."""
+    """`last_run()` asks for the last successful run unless the caller picks a different status or opts out."""
     httpserver.expect_request(f'/v2/{path_prefix}/resource-id/runs/last').respond_with_json(_NOT_FOUND_BODY, status=404)
     client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 

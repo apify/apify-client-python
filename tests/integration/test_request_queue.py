@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -169,7 +169,7 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> Non
 
         # Poll until all requests are available for locking (eventual consistency)
         async def lock_head() -> LockedRequestQueueHead:
-            head = await maybe_await(rq.list_and_lock_head(limit=10, lock_duration=timedelta(seconds=10)))
+            head = await maybe_await(rq.list_and_lock_head(limit=10, lock_secs=10))
             assert isinstance(head, LockedRequestQueueHead)
             return head
 
@@ -200,7 +200,7 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> Non
         prolong_request_lock_response = await maybe_await(
             rq.prolong_request_lock(
                 get_head_and_lock_response.items[3].id,
-                lock_duration=timedelta(seconds=15),
+                lock_secs=15,
             )
         )
         assert isinstance(prolong_request_lock_response, RequestLockInfo)
@@ -476,7 +476,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
 
         await ensure_queue_is_populated(rq_client, expected_count=5)
 
-        result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
+        result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_secs=60))
         assert isinstance(result, LockedRequestQueueHead)
         lock_response = result
         assert len(lock_response.items) == 3
@@ -503,7 +503,7 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
 
         # Poll until the request is available for locking (eventual consistency)
         async def lock_head() -> LockedRequestQueueHead:
-            head = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
+            head = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_secs=60))
             assert isinstance(head, LockedRequestQueueHead)
             return head
 
@@ -513,9 +513,7 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
         original_lock_expires = locked_request.lock_expires_at
 
         # Prolong the lock
-        prolong_response = await maybe_await(
-            rq_client.prolong_request_lock(locked_request.id, lock_duration=timedelta(seconds=120))
-        )
+        prolong_response = await maybe_await(rq_client.prolong_request_lock(locked_request.id, lock_secs=120))
         assert isinstance(prolong_response, RequestLockInfo)
         assert prolong_response.lock_expires_at is not None
         assert prolong_response.lock_expires_at > original_lock_expires
@@ -537,7 +535,7 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
 
         # Poll until the request is available for locking (eventual consistency)
         async def lock_head() -> LockedRequestQueueHead:
-            head = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
+            head = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_secs=60))
             assert isinstance(head, LockedRequestQueueHead)
             return head
 
@@ -573,7 +571,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
 
         await ensure_queue_is_populated(rq_client, expected_count=5)
 
-        lock_response = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
+        lock_response = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_secs=60))
         assert isinstance(lock_response, LockedRequestQueueHead)
         assert len(lock_response.items) == 3
 

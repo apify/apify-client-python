@@ -40,12 +40,10 @@ from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, ge
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.errors import catch_not_found_or_throw
 from apify_client._utils.http import response_to_dict, to_path_segment
-from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
-    from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
     from apify_client._typeddicts import (
@@ -197,7 +195,7 @@ class RequestQueueClient(ResourceClient):
     def list_and_lock_head(
         self,
         *,
-        lock_duration: timedelta,
+        lock_secs: int,
         limit: int | None = None,
         timeout: Timeout = 'medium',
     ) -> LockedRequestQueueHead:
@@ -206,7 +204,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_duration: How long the requests will be locked for.
+            lock_secs: How long the requests will be locked for, in seconds.
             limit: How many requests to retrieve.
             timeout: Timeout for the API HTTP request.
 
@@ -214,7 +212,7 @@ class RequestQueueClient(ResourceClient):
             The desired number of locked requests from the beginning of the queue.
         """
         request_params = self._build_params(
-            lockSecs=to_seconds(lock_duration, as_int=True),
+            lockSecs=lock_secs,
             limit=limit,
             clientKey=self.client_key,
         )
@@ -357,7 +355,7 @@ class RequestQueueClient(ResourceClient):
         request_id: str,
         *,
         forefront: bool | None = None,
-        lock_duration: timedelta,
+        lock_secs: int,
         timeout: Timeout = 'medium',
     ) -> RequestLockInfo | None:
         """Prolong the lock on a request.
@@ -367,13 +365,13 @@ class RequestQueueClient(ResourceClient):
         Args:
             request_id: ID of the request to prolong the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
-            lock_duration: By how much to prolong the lock.
+            lock_secs: By how many seconds to prolong the lock.
             timeout: Timeout for the API HTTP request.
         """
         request_params = self._build_params(
             clientKey=self.client_key,
             forefront=forefront,
-            lockSecs=to_seconds(lock_duration, as_int=True),
+            lockSecs=lock_secs,
         )
 
         response = self._http_client.call(
@@ -732,7 +730,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
     async def list_and_lock_head(
         self,
         *,
-        lock_duration: timedelta,
+        lock_secs: int,
         limit: int | None = None,
         timeout: Timeout = 'medium',
     ) -> LockedRequestQueueHead:
@@ -741,7 +739,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_duration: How long the requests will be locked for.
+            lock_secs: How long the requests will be locked for, in seconds.
             limit: How many requests to retrieve.
             timeout: Timeout for the API HTTP request.
 
@@ -749,7 +747,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             The desired number of locked requests from the beginning of the queue.
         """
         request_params = self._build_params(
-            lockSecs=to_seconds(lock_duration, as_int=True),
+            lockSecs=lock_secs,
             limit=limit,
             clientKey=self.client_key,
         )
@@ -888,7 +886,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         request_id: str,
         *,
         forefront: bool | None = None,
-        lock_duration: timedelta,
+        lock_secs: int,
         timeout: Timeout = 'medium',
     ) -> RequestLockInfo | None:
         """Prolong the lock on a request.
@@ -898,13 +896,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Args:
             request_id: ID of the request to prolong the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
-            lock_duration: By how much to prolong the lock.
+            lock_secs: By how many seconds to prolong the lock.
             timeout: Timeout for the API HTTP request.
         """
         request_params = self._build_params(
             clientKey=self.client_key,
             forefront=forefront,
-            lockSecs=to_seconds(lock_duration, as_int=True),
+            lockSecs=lock_secs,
         )
 
         response = await self._http_client.call(

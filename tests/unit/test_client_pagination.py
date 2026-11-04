@@ -4,6 +4,7 @@ import dataclasses
 import json
 import re
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pydantic.fields import FieldInfo
@@ -637,6 +638,36 @@ async def test_kvs_list_keys_iterable_async(
     returned_items = [dict(item) async for item in client.iterate_keys(**inputs)]
 
     assert returned_items == expected_items
+
+
+def test_kvs_iterate_keys_uses_list_keys_default_timeout_on_every_page(
+    pagination_server: HTTPServer, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The sync key iterator uses the list endpoint's timeout for each page."""
+    client = _make_sync_client(pagination_server).key_value_store(ID_PLACEHOLDER)
+    list_keys = Mock(wraps=client.list_keys)
+    monkeypatch.setattr(client, 'list_keys', list_keys)
+
+    keys = list(client.iterate_keys(limit=3, chunk_size=1))
+
+    assert len(keys) == 3
+    assert list_keys.call_count == 3
+    assert all(call.kwargs['timeout'] == 'medium' for call in list_keys.call_args_list)
+
+
+async def test_kvs_iterate_keys_uses_list_keys_default_timeout_on_every_page_async(
+    pagination_server: HTTPServer, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The async key iterator uses the list endpoint's timeout for each page."""
+    client = _make_async_client(pagination_server).key_value_store(ID_PLACEHOLDER)
+    list_keys = AsyncMock(wraps=client.list_keys)
+    monkeypatch.setattr(client, 'list_keys', list_keys)
+
+    keys = [key async for key in client.iterate_keys(limit=3, chunk_size=1)]
+
+    assert len(keys) == 3
+    assert list_keys.await_count == 3
+    assert all(call.kwargs['timeout'] == 'medium' for call in list_keys.await_args_list)
 
 
 @pytest.mark.parametrize(

@@ -31,11 +31,12 @@ from apify_client.http_clients import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Collection, Iterator
 
     from pytest_httpserver import HTTPServer
 
-    from apify_client.types import QueryParams, StreamedBodySource, Timeout
+    from apify_client.http_compressors import HttpCompressor
+    from apify_client.types import AuthorizationHeader, QueryParams, StreamedBodySource, Timeout
 
 
 @dataclass
@@ -99,6 +100,12 @@ class FakeHttpClient(HttpClient):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
+        authorization_header: AuthorizationHeader = 'Authorization',
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -110,6 +117,12 @@ class FakeHttpClient(HttpClient):
                 'json': json,
                 'stream': stream,
                 'timeout': timeout,
+                'compression': compression,
+                'authorization_header': authorization_header,
+                'raise_for_status': raise_for_status,
+                'retry_status_codes': retry_status_codes,
+                'retry_transport_errors': retry_transport_errors,
+                'follow_redirects': follow_redirects,
             }
         )
         return _make_fake_response()
@@ -133,6 +146,12 @@ class FakeHttpClientAsync(HttpClientAsync):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
+        authorization_header: AuthorizationHeader = 'Authorization',
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -144,6 +163,12 @@ class FakeHttpClientAsync(HttpClientAsync):
                 'json': json,
                 'stream': stream,
                 'timeout': timeout,
+                'compression': compression,
+                'authorization_header': authorization_header,
+                'raise_for_status': raise_for_status,
+                'retry_status_codes': retry_status_codes,
+                'retry_transport_errors': retry_transport_errors,
+                'follow_redirects': follow_redirects,
             }
         )
         return _make_fake_response()
@@ -192,8 +217,9 @@ class StdlibHttpClient(HttpClient):
         content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
-        _ = stream
+        _ = stream, follow_redirects
         return _stdlib_fetch(method=method, url=url, headers=headers, content=content, timeout=timeout)
 
 
@@ -209,8 +235,9 @@ class StdlibHttpClientAsync(HttpClientAsync):
         content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
-        _ = stream
+        _ = stream, follow_redirects
         if isinstance(content, AsyncIterator):
             content = b''.join([chunk async for chunk in content])
         return await asyncio.to_thread(
@@ -663,6 +690,37 @@ def test_custom_http_client_keeps_differently_cased_authorization() -> None:
 
     assert 'Authorization' not in http_client._headers
     assert http_client._headers['authorization'] == 'Bearer client_token'
+
+
+def test_transport_without_follow_redirects_refuses_unfollowed_requests() -> None:
+    """A transport without the `follow_redirects` argument sends other requests but fails an unfollowed one."""
+    send_request = Mock(return_value=_make_fake_response())
+
+    class LegacyHttpClient(HttpClient):
+        # The signature `send_request` had before it took `follow_redirects`.
+        def send_request(  # ty: ignore[invalid-method-override]
+            self,
+            *,
+            method: str,
+            url: str,
+            headers: dict[str, str],
+            content: bytes | Iterator[bytes] | None,
+            timeout: float | None,
+            stream: bool,
+        ) -> HttpResponse:
+            return send_request(
+                method=method, url=url, headers=headers, content=content, timeout=timeout, stream=stream
+            )
+
+    http_client = LegacyHttpClient()
+
+    http_client.call(url='https://api.example/v2/actors', method='GET')
+    send_request.assert_called_once()
+    send_request.reset_mock()
+
+    with pytest.raises(TypeError, match='follow_redirects'):
+        http_client.call(url='https://server.example/', method='GET', follow_redirects=False)
+    send_request.assert_not_called()
 
 
 def test_hooks_only_client_retries_and_sends_default_headers(httpserver: HTTPServer) -> None:

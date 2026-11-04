@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from base64 import urlsafe_b64decode
+from datetime import timedelta
 from unittest import mock
 from unittest.mock import Mock
 from urllib.parse import parse_qs, urlparse
@@ -308,3 +310,92 @@ async def test_api_url_version_appended_once_async(api_url: str, expected_base_u
 
     assert call_mock.call_args.kwargs['url'] == f'{expected_base_url}/key-value-stores/{MOCKED_KVS_ID}'
     assert public_url == f'{expected_base_url}/key-value-stores/{MOCKED_KVS_ID}/records/some_key'
+
+
+parametrized_non_positive_expires_in = pytest.mark.parametrize(
+    'expires_in',
+    [
+        pytest.param(timedelta(0), id='zero'),
+        pytest.param(timedelta(seconds=-1), id='negative'),
+    ],
+)
+
+
+@parametrized_non_positive_expires_in
+def test_dataset_public_url_rejects_non_positive_expires_in_sync(expires_in: timedelta) -> None:
+    """A non-positive `expires_in` raises `ValueError` before any request is sent, with sync client."""
+    client = ApifyClient(token='dummy-token')
+
+    dataset = client.dataset('someID')
+
+    with (
+        mock.patch.object(client._http_client, 'call') as call_mock,
+        pytest.raises(ValueError, match='expires_in must be positive'),
+    ):
+        dataset.create_items_public_url(expires_in=expires_in)
+
+    call_mock.assert_not_called()
+
+
+@parametrized_non_positive_expires_in
+async def test_dataset_public_url_rejects_non_positive_expires_in_async(expires_in: timedelta) -> None:
+    """A non-positive `expires_in` raises `ValueError` before any request is sent, with async client."""
+    client = ApifyClientAsync(token='dummy-token')
+
+    dataset = client.dataset('someID')
+
+    with (
+        mock.patch.object(client._http_client, 'call') as call_mock,
+        pytest.raises(ValueError, match='expires_in must be positive'),
+    ):
+        await dataset.create_items_public_url(expires_in=expires_in)
+
+    call_mock.assert_not_called()
+
+
+@parametrized_non_positive_expires_in
+def test_kvs_public_url_rejects_non_positive_expires_in_sync(expires_in: timedelta) -> None:
+    """A non-positive `expires_in` raises `ValueError` before any request is sent, with sync client."""
+    client = ApifyClient(token='dummy-token')
+
+    kvs = client.key_value_store(MOCKED_KVS_ID)
+
+    with (
+        mock.patch.object(client._http_client, 'call') as call_mock,
+        pytest.raises(ValueError, match='expires_in must be positive'),
+    ):
+        kvs.create_keys_public_url(expires_in=expires_in)
+
+    call_mock.assert_not_called()
+
+
+@parametrized_non_positive_expires_in
+async def test_kvs_public_url_rejects_non_positive_expires_in_async(expires_in: timedelta) -> None:
+    """A non-positive `expires_in` raises `ValueError` before any request is sent, with async client."""
+    client = ApifyClientAsync(token='dummy-token')
+
+    kvs = client.key_value_store(MOCKED_KVS_ID)
+
+    with (
+        mock.patch.object(client._http_client, 'call') as call_mock,
+        pytest.raises(ValueError, match='expires_in must be positive'),
+    ):
+        await kvs.create_keys_public_url(expires_in=expires_in)
+
+    call_mock.assert_not_called()
+
+
+def test_dataset_public_url_signs_positive_expires_in() -> None:
+    """A positive `expires_in` produces a signature with a non-zero expiry."""
+    client = ApifyClient(token='dummy-token')
+    dataset = client.dataset('someID')
+
+    mock_response = Mock()
+    mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
+
+    with mock.patch.object(client._http_client, 'call', return_value=mock_response):
+        public_url = dataset.create_items_public_url(expires_in=timedelta(seconds=1))
+
+    signature = parse_qs(urlparse(public_url).query)['signature'][0]
+    _, expires_at, _ = urlsafe_b64decode(signature).decode().split('.')
+    assert int(expires_at) > 0

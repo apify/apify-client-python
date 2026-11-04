@@ -40,6 +40,8 @@ if TYPE_CHECKING:
 
     from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
     from apify_client._resource_clients import (
+        ActorServerClient,
+        ActorServerClientAsync,
         ActorVersionClient,
         ActorVersionClientAsync,
         ActorVersionCollectionClient,
@@ -86,6 +88,7 @@ class ActorClient(ResourceClient):
             resource_path=resource_path,
             **kwargs,
         )
+        self._server_client: ActorServerClient | None = None
 
     def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -390,7 +393,9 @@ class ActorClient(ResourceClient):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -418,7 +423,7 @@ class ActorClient(ResourceClient):
         )
 
         if not logger:
-            return run_client.wait_for_finish(wait_duration=wait_duration)
+            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
         if logger == 'default':
             logger = None
@@ -430,7 +435,7 @@ class ActorClient(ResourceClient):
         streamed_log = run_client.get_streamed_log(to_logger=logger)
 
         with status_redirector, streamed_log:
-            return run_client.wait_for_finish(wait_duration=wait_duration)
+            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     def build(
         self,
@@ -629,6 +634,45 @@ class ActorClient(ResourceClient):
 
         return True
 
+    def server(self) -> ActorServerClient:
+        """Retrieve a client for the server interface of this Actor.
+
+        A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
+        call. Server Actors were formerly called Actor Standby, and `standby` is a deprecated alias of this method.
+        Every call returns the same client, so the server URL it fetches is reused.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Returns:
+            The client for the server interface of this Actor.
+        """
+        if self._server_client is None:
+            self._server_client = self._client_registry.actor_server_client(
+                resource_id=self._resource_id,
+                resource_path=self._resource_path,
+                base_url=self._base_url,
+                api_base_url=self._api_base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_registry=self._client_registry,
+            )
+        return self._server_client
+
+    def standby(self) -> ActorServerClient:
+        """Retrieve a client for the server interface of this Actor in Standby mode.
+
+        Deprecated alias of `server`, named after Actor Standby, the former name of Server Actors. Will be removed in
+        v4. Use `server` instead.
+
+        https://docs.apify.com/platform/actors/running/standby
+        """
+        warnings.warn(
+            '`standby` is deprecated and will be removed in v4. Use `server` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self.server()
+
 
 @docs_group('Resource clients')
 class ActorClientAsync(ResourceClientAsync):
@@ -650,6 +694,7 @@ class ActorClientAsync(ResourceClientAsync):
             resource_path=resource_path,
             **kwargs,
         )
+        self._server_client: ActorServerClientAsync | None = None
 
     async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -954,7 +999,9 @@ class ActorClientAsync(ResourceClientAsync):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -983,7 +1030,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         if not logger:
-            return await run_client.wait_for_finish(wait_duration=wait_duration)
+            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
         if logger == 'default':
             logger = None
@@ -995,7 +1042,7 @@ class ActorClientAsync(ResourceClientAsync):
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 
         async with status_redirector, streamed_log:
-            return await run_client.wait_for_finish(wait_duration=wait_duration)
+            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     async def build(
         self,
@@ -1193,3 +1240,42 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         return True
+
+    def server(self) -> ActorServerClientAsync:
+        """Retrieve a client for the server interface of this Actor.
+
+        A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
+        call. Server Actors were formerly called Actor Standby, and `standby` is a deprecated alias of this method.
+        Every call returns the same client, so the server URL it fetches is reused.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Returns:
+            The client for the server interface of this Actor.
+        """
+        if self._server_client is None:
+            self._server_client = self._client_registry.actor_server_client(
+                resource_id=self._resource_id,
+                resource_path=self._resource_path,
+                base_url=self._base_url,
+                api_base_url=self._api_base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_registry=self._client_registry,
+            )
+        return self._server_client
+
+    def standby(self) -> ActorServerClientAsync:
+        """Retrieve a client for the server interface of this Actor in Standby mode.
+
+        Deprecated alias of `server`, named after Actor Standby, the former name of Server Actors. Will be removed in
+        v4. Use `server` instead.
+
+        https://docs.apify.com/platform/actors/running/standby
+        """
+        warnings.warn(
+            '`standby` is deprecated and will be removed in v4. Use `server` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self.server()

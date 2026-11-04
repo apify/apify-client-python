@@ -166,15 +166,15 @@ class ActorDefinition(BaseModel):
     """
     dockerfile: str | None = None
     """
-    The path to the Dockerfile used for building the Actor on the platform.
+    The path to the Dockerfile used for building the Actor on the platform, relative to the `.actor/` directory.
     """
     docker_context_dir: str | None = None
     """
-    The path to the directory used as the Docker context when building the Actor.
+    The path to the directory used as the Docker context when building the Actor, relative to the `.actor/` directory.
     """
     readme: str | None = None
     """
-    The path to the README file for the Actor.
+    The path to the README file for the Actor, relative to the `.actor/` directory.
     """
     input: dict[str, Any] | None = None
     """
@@ -186,7 +186,7 @@ class ActorDefinition(BaseModel):
     """
     changelog: str | None = None
     """
-    The path to the CHANGELOG file displayed in the Actor's information tab.
+    The path to the CHANGELOG file displayed in the Actor's information tab, relative to the `.actor/` directory.
     """
     storages: Storages | None = None
     default_memory_mbytes: str | int | None = None
@@ -494,17 +494,21 @@ class ActorStandby(BaseModel):
     """
     Whether to pass the Actor's input to the standby run. If `false`, the standby runs start with no input.
     """
-    tenancy: Annotated[str | None, Field(examples=['SINGLE_TENANT'])] = None
+    tenancy: Annotated[Tenancy | None, Field(examples=['SINGLE_TENANT'])] = None
     """
-    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`). Set by Apify.
+    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`).
     """
     is_console_auth_enabled: bool | None = None
     """
-    Whether standby requests can be authenticated with an Apify Console session. Set by Apify.
+    Whether standby requests can be authenticated with an Apify Console session.
+    When creating an Actor, omit this field or set it to `false`. When updating an Actor, only Apify administrators can change it; other users can only send the current value, or `false` if it's not set yet.
+
     """
     is_tokenless_enabled: bool | None = None
     """
-    Whether standby requests can be made without an API token. Set by Apify.
+    Whether standby requests can be made without an API token.
+    When creating an Actor, omit this field or set it to `false`. When updating an Actor, only Apify administrators can change it; other users can only send the current value, or `false` if it's not set yet.
+
     """
 
 
@@ -1109,7 +1113,7 @@ class CreateVersionRequest(BaseModel):
     """
     tarball_url: str | None = None
     """
-    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
+    URL of the zip archive to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
@@ -4414,6 +4418,15 @@ class TaskStats(BaseModel):
 
 
 @docs_group('Models')
+class Tenancy(Enum):
+    """Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`)."""
+
+    SINGLE_TENANT = 'SINGLE_TENANT'
+    MULTI_TENANT = 'MULTI_TENANT'
+    NONE_TYPE_NONE = None
+
+
+@docs_group('Models')
 class TieredPricing(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -4751,7 +4764,7 @@ class UpdateVersionRequest(BaseModel):
     """
     tarball_url: str | None = None
     """
-    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
+    URL of the zip archive to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
@@ -5006,7 +5019,7 @@ class Version(BaseModel):
     """
     tarball_url: str | None = None
     """
-    URL to download the source code from as a tarball or ZIP file. Applies when the `sourceType` is `TARBALL`.
+    URL to download the source code from as a zip archive. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """

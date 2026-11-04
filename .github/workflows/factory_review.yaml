@@ -25,6 +25,8 @@ jobs:
     # Paths never auto-approved here, on top of the pipeline's defaults. Proposed from the
     # repository's layout when this workflow was added; edit them like any other code.
     with:
+      # The draft of the cross-repository references, under evaluation. Back to `main` once it lands.
+      ai-developer-ref: claude/review-references
       policy: |
         {
           "denyGlobs": [

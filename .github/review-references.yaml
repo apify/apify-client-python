@@ -1,0 +1,29 @@
+# Cross-repository references for the apify-factory review (apify/ai-developer, `review-references`).
+version: 1
+
+instructions: |
+  This repository is the Python client for the Apify API, a port of the JS client that the Python SDK
+  builds on. For every behaviour the pull request adds or changes, check three things: that it matches
+  what the API actually does, that it matches what the JS client does for the same operation (ignore
+  differences caused by different language idioms and style), and that every place the Python SDK uses
+  the changed code still works. Back every finding with the reference file and line (create public
+  github link fixed to a commit you have seen).
+
+references:
+  - repository: apify/apify-core
+    ref: develop
+    paths:
+      - src/api/**
+      - src/packages/**
+    instructions: |
+      The API the client calls. Compare the request the client builds with what the handler accepts
+      (paths, methods, query and body parameters, defaults, limits) and what the client expects back with
+      what the handler returns (field names and types, pagination, status codes, error types).
+  - repository: apify/apify-client-js
+    instructions: |
+      The reference implementation this client mirrors. Compare the changed Python methods with the
+      matching JS methods: parameters and defaults, the request it sends, how it parses the response,
+      what it returns, and how it handles errors.
+  - repository: apify/apify-sdk-python
+    instructions: |
+      The main consumer of this client. Highlight the changes that will require updates to the SDK.

@@ -42,7 +42,7 @@ def _capture_into(captured_requests: list[Request], body: dict) -> Callable[[Req
 
 
 def test_list_and_lock_head_sends_lock_secs_sync(httpserver: HTTPServer) -> None:
-    """`list_and_lock_head()` passes the lock length straight through as the `lockSecs` query parameter."""
+    """`list_and_lock_head()` sends the lock length unchanged as the `lockSecs` query parameter."""
     captured_requests: list[Request] = []
     httpserver.expect_request(_HEAD_LOCK_PATH, method='POST').respond_with_handler(
         _capture_into(captured_requests, _HEAD_LOCK_RESPONSE)
@@ -74,7 +74,7 @@ async def test_list_and_lock_head_sends_lock_secs_async(httpserver: HTTPServer) 
 
 
 def test_prolong_request_lock_sends_lock_secs_sync(httpserver: HTTPServer) -> None:
-    """`prolong_request_lock()` passes the lock length straight through as the `lockSecs` query parameter."""
+    """`prolong_request_lock()` sends the lock length unchanged as the `lockSecs` query parameter."""
     captured_requests: list[Request] = []
     httpserver.expect_request(_REQUEST_LOCK_PATH, method='PUT').respond_with_handler(
         _capture_into(captured_requests, _REQUEST_LOCK_RESPONSE)

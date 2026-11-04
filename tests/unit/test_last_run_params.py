@@ -71,3 +71,67 @@ async def test_last_run_filters_propagate_to_chained_clients_async(
     request, _ = httpserver.log[-1]
     assert request.args.get('status') == 'SUCCEEDED'
     assert request.args.get('origin') == 'WEB'
+
+
+@pytest.mark.parametrize(
+    ('resource', 'path_prefix'),
+    [
+        pytest.param('actor', 'actors', id='actor'),
+        pytest.param('task', 'actor-tasks', id='task'),
+    ],
+)
+@pytest.mark.parametrize(
+    ('kwargs', 'expected_status'),
+    [
+        pytest.param({}, 'SUCCEEDED', id='default'),
+        pytest.param({'status': 'FAILED'}, 'FAILED', id='explicit_status'),
+        pytest.param({'status': None}, None, id='any_status'),
+    ],
+)
+def test_last_run_defaults_to_succeeded(
+    httpserver: HTTPServer,
+    resource: str,
+    path_prefix: str,
+    kwargs: dict,
+    expected_status: str | None,
+) -> None:
+    """`last_run()` asks for the last successful run unless the caller picks another status or opts out."""
+    httpserver.expect_request(f'/v2/{path_prefix}/resource-id/runs/last').respond_with_json(_NOT_FOUND_BODY, status=404)
+    client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    assert getattr(client, resource)('resource-id').last_run(**kwargs).get() is None
+
+    request, _ = httpserver.log[-1]
+    assert request.args.get('status') == expected_status
+
+
+@pytest.mark.parametrize(
+    ('resource', 'path_prefix'),
+    [
+        pytest.param('actor', 'actors', id='actor'),
+        pytest.param('task', 'actor-tasks', id='task'),
+    ],
+)
+@pytest.mark.parametrize(
+    ('kwargs', 'expected_status'),
+    [
+        pytest.param({}, 'SUCCEEDED', id='default'),
+        pytest.param({'status': 'FAILED'}, 'FAILED', id='explicit_status'),
+        pytest.param({'status': None}, None, id='any_status'),
+    ],
+)
+async def test_last_run_defaults_to_succeeded_async(
+    httpserver: HTTPServer,
+    resource: str,
+    path_prefix: str,
+    kwargs: dict,
+    expected_status: str | None,
+) -> None:
+    """Async variant of `test_last_run_defaults_to_succeeded`."""
+    httpserver.expect_request(f'/v2/{path_prefix}/resource-id/runs/last').respond_with_json(_NOT_FOUND_BODY, status=404)
+    client = ApifyClientAsync(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    assert await getattr(client, resource)('resource-id').last_run(**kwargs).get() is None
+
+    request, _ = httpserver.log[-1]
+    assert request.args.get('status') == expected_status

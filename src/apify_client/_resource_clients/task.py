@@ -429,13 +429,14 @@ class TaskClient(ResourceClient):
             **self._base_client_kwargs,
         )
 
-    def last_run(self, *, status: ActorJobStatus | None = None, origin: RunOrigin | None = None) -> RunClient:
+    def last_run(self, *, status: ActorJobStatus | None = 'SUCCEEDED', origin: RunOrigin | None = None) -> RunClient:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status: Consider only runs with this status.
+            status: Consider only runs with this status. Defaults to SUCCEEDED; pass None to consider runs
+                of any status.
             origin: Consider only runs started with this origin.
 
         Returns:
@@ -844,13 +845,16 @@ class TaskClientAsync(ResourceClientAsync):
             **self._base_client_kwargs,
         )
 
-    def last_run(self, *, status: ActorJobStatus | None = None, origin: RunOrigin | None = None) -> RunClientAsync:
+    def last_run(
+        self, *, status: ActorJobStatus | None = 'SUCCEEDED', origin: RunOrigin | None = None
+    ) -> RunClientAsync:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status: Consider only runs with this status.
+            status: Consider only runs with this status. Defaults to SUCCEEDED; pass None to consider runs
+                of any status.
             origin: Consider only runs started with this origin.
 
         Returns:

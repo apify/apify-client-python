@@ -536,7 +536,7 @@ class ActorClient(ResourceClient):
     def last_run(
         self,
         *,
-        status: ActorJobStatus | None = None,
+        status: ActorJobStatus | None = 'SUCCEEDED',
         origin: RunOrigin | None = None,
     ) -> RunClient:
         """Retrieve the client for the last run of this Actor.
@@ -544,7 +544,8 @@ class ActorClient(ResourceClient):
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status: Consider only runs with this status.
+            status: Consider only runs with this status. Defaults to SUCCEEDED; pass None to consider runs
+                of any status.
             origin: Consider only runs started with this origin.
 
         Returns:
@@ -1139,7 +1140,7 @@ class ActorClientAsync(ResourceClientAsync):
     def last_run(
         self,
         *,
-        status: ActorJobStatus | None = None,
+        status: ActorJobStatus | None = 'SUCCEEDED',
         origin: RunOrigin | None = None,
     ) -> RunClientAsync:
         """Retrieve the client for the last run of this Actor.
@@ -1147,7 +1148,8 @@ class ActorClientAsync(ResourceClientAsync):
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status: Consider only runs with this status.
+            status: Consider only runs with this status. Defaults to SUCCEEDED; pass None to consider runs
+                of any status.
             origin: Consider only runs started with this origin.
 
         Returns:

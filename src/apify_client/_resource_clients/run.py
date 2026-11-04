@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 def _build_abort_body(*, gracefully: bool | None) -> dict[str, bool]:
-    """Build the JSON body of the abort request, leaving out options the caller did not set."""
+    """Build the JSON body of the abort request, leaving out the options the caller did not set."""
     body: dict[str, bool] = {}
     if gracefully is not None:
         body['gracefully'] = gracefully

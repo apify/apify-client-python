@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Add models for Actor OAuth, Git repositories and webhook integrations ([#1167](https://github.com/apify/apify-client-python/pull/1167)) ([4a3b30f](https://github.com/apify/apify-client-python/commit/4a3b30ffd09b219d8a4a739f715037de7c6680af)) by [@apify-service-account](https://github.com/apify-service-account)
+- Add Server Actor support (formerly Actor Standby) ([#1153](https://github.com/apify/apify-client-python/pull/1153)) ([63bd448](https://github.com/apify/apify-client-python/commit/63bd448e1bfdfa668f96145c2f79cfd73d9ffe98)) by [@vdusek](https://github.com/vdusek), closes [#973](https://github.com/apify/apify-client-python/issues/973)
 
 ### 🐛 Bug Fixes
 

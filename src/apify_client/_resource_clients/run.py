@@ -38,6 +38,14 @@ if TYPE_CHECKING:
     from apify_client.types import Timeout
 
 
+def _build_abort_body(*, gracefully: bool | None) -> dict[str, bool]:
+    """Build the JSON body of the abort request, leaving out options the caller did not set."""
+    body: dict[str, bool] = {}
+    if gracefully is not None:
+        body['gracefully'] = gracefully
+    return body
+
+
 @docs_group('Resource clients')
 class RunClient(ResourceClient):
     """Sub-client for managing a specific Actor run.
@@ -131,7 +139,8 @@ class RunClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url('abort'),
             method='POST',
-            params=self._build_params(gracefully=gracefully),
+            headers={'content-type': 'application/json'},
+            data=json.dumps(_build_abort_body(gracefully=gracefully)),
             timeout=timeout,
         )
         result = response_to_dict(response)
@@ -678,7 +687,8 @@ class RunClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url('abort'),
             method='POST',
-            params=self._build_params(gracefully=gracefully),
+            headers={'content-type': 'application/json'},
+            data=json.dumps(_build_abort_body(gracefully=gracefully)),
             timeout=timeout,
         )
         result = response_to_dict(response)

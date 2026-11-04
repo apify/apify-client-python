@@ -494,17 +494,21 @@ class ActorStandby(BaseModel):
     """
     Whether to pass the Actor's input to the standby run. If `false`, the standby runs start with no input.
     """
-    tenancy: Annotated[str | None, Field(examples=['SINGLE_TENANT'])] = None
+    tenancy: Annotated[Tenancy | None, Field(examples=['SINGLE_TENANT'])] = None
     """
-    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`). Set by Apify.
+    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`).
     """
     is_console_auth_enabled: bool | None = None
     """
-    Whether standby requests can be authenticated with an Apify Console session. Set by Apify.
+    Whether standby requests can be authenticated with an Apify Console session.
+    When creating an Actor, omit this field or set it to `false`. When updating an Actor, only Apify administrators can change it; other users can only send the current value, or `false` if it's not set yet.
+
     """
     is_tokenless_enabled: bool | None = None
     """
-    Whether standby requests can be made without an API token. Set by Apify.
+    Whether standby requests can be made without an API token.
+    When creating an Actor, omit this field or set it to `false`. When updating an Actor, only Apify administrators can change it; other users can only send the current value, or `false` if it's not set yet.
+
     """
 
 
@@ -4411,6 +4415,15 @@ class TaskStats(BaseModel):
     """
     Time when the last run of the task started. In the task list, it's `null` if the task has no runs. In a single task, it's omitted if the task has no runs.
     """
+
+
+@docs_group('Models')
+class Tenancy(Enum):
+    """Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`)."""
+
+    SINGLE_TENANT = 'SINGLE_TENANT'
+    MULTI_TENANT = 'MULTI_TENANT'
+    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')

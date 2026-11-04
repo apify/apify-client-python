@@ -129,6 +129,7 @@ class Httpx2HttpClient(HttpClient):
         content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> httpx2.Response:
         request = self._httpx2_client.build_request(
             method=method,
@@ -138,7 +139,7 @@ class Httpx2HttpClient(HttpClient):
             timeout=timeout,
         )
         _restore_explicit_cookie_header(request, headers)
-        return self._httpx2_client.send(request, stream=stream)
+        return self._httpx2_client.send(request, stream=stream, follow_redirects=follow_redirects)
 
     def _clear_response_cookies(self, _response: httpx2.Response) -> None:
         """Prevent HTTPX2's shared cookie jar from leaking server cookies into later API requests."""
@@ -236,6 +237,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
         content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> httpx2.Response:
         request = self._httpx2_async_client.build_request(
             method=method,
@@ -245,7 +247,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
             timeout=timeout,
         )
         _restore_explicit_cookie_header(request, headers)
-        return await self._httpx2_async_client.send(request, stream=stream)
+        return await self._httpx2_async_client.send(request, stream=stream, follow_redirects=follow_redirects)
 
     async def _clear_response_cookies(self, _response: httpx2.Response) -> None:
         """Prevent HTTPX2's shared cookie jar from leaking server cookies into later API requests."""

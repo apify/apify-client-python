@@ -2,6 +2,7 @@ from .actor import ActorClient, ActorClientAsync
 from .actor_collection import ActorCollectionClient, ActorCollectionClientAsync
 from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from .actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
+from .actor_server import ActorServerClient, ActorServerClientAsync
 from .actor_version import ActorVersionClient, ActorVersionClientAsync
 from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
 from .build import BuildClient, BuildClientAsync
@@ -35,6 +36,8 @@ __all__ = [
     'ActorEnvVarClientAsync',
     'ActorEnvVarCollectionClient',
     'ActorEnvVarCollectionClientAsync',
+    'ActorServerClient',
+    'ActorServerClientAsync',
     'ActorVersionClient',
     'ActorVersionClientAsync',
     'ActorVersionCollectionClient',

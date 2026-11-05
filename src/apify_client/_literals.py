@@ -20,6 +20,17 @@ ActorJobStatus = (
 """Status of an Actor job (run or build)."""
 
 
+ActorNotice = (
+    Literal[
+        'NONE',
+        'RESIDENTIAL_PROXY_REQUIRED',
+        'UNDER_MAINTENANCE',
+    ]
+    | str
+)
+"""A warning displayed on the Actor's page in Apify Store and Console. Can be set by the Actor's developer or automatically by Apify's quality checks."""
+
+
 ActorPermissionLevel = (
     Literal[
         'LIMITED_PERMISSIONS',
@@ -495,6 +506,10 @@ HttpMethod = (
 )
 
 
+MonitoringLevel = Literal['STANDARD',] | str
+"""Level of monitoring services included in the plan. `null` or missing means the plan includes no monitoring service."""
+
+
 OAuthProviderType = (
     Literal[
         'CUSTOM',
@@ -548,6 +563,16 @@ StorageOwnership = (
     ]
     | str
 )
+
+
+Tenancy = (
+    Literal[
+        'SINGLE_TENANT',
+        'MULTI_TENANT',
+    ]
+    | str
+)
+"""Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`)."""
 
 
 VersionSourceType = (

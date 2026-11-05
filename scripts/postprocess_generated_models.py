@@ -114,10 +114,11 @@ def fix_discriminators(content: str) -> str:
 
 
 def convert_enums_to_literals(content: str) -> str:
-    """Rewrite every `class X(StrEnum): ...` into an open literal `X = Literal[...] | str` alias.
+    """Rewrite every `class X(StrEnum): ...` (or `Enum`) into an open literal `X = Literal[...] | str` alias.
 
     Each member assignment (`NAME = 'value'`) contributes its string value to the literal in
-    declaration order. The trailing `| str` widens the alias so unknown values (e.g. a new enum
+    declaration order; a `None` member of a nullable enum is dropped, since the fields using it are already
+    `X | None`. The trailing `| str` widens the alias so unknown values (e.g. a new enum
     member the platform introduces before this client is regenerated) still validate against the
     Pydantic models, while the known members remain as autocomplete hints. The class docstring, if
     present, is preserved as a trailing bare-string docstring after the alias — matching the
@@ -134,7 +135,7 @@ def convert_enums_to_literals(content: str) -> str:
         if not isinstance(node, ast.ClassDef):
             continue
         base_names = _base_names(node)
-        if 'StrEnum' not in base_names:
+        if 'StrEnum' not in base_names and 'Enum' not in base_names:
             continue
 
         values: list[str] = [

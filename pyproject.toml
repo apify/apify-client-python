@@ -168,6 +168,7 @@ indent-style = "space"
     "TC003",  # Move standard library import into a type-checking block
 ]
 "src/apify_client/_literals.py" = [
+    "E501",   # Line too long
     "PYI051", # `Literal[...]` is redundant in a union with `str`; the open `Literal[...] | str` is deliberate — it keeps known members as hints while tolerating unknown API values (see scripts/postprocess_generated_models.py)
 ]
 

@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
+    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin, Tenancy
     from apify_client._resource_clients import (
         ActorServerClient,
         ActorServerClientAsync,
@@ -134,7 +134,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
-        actor_standby_tenancy: str | None = None,
+        actor_standby_tenancy: Tenancy | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
@@ -740,7 +740,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
-        actor_standby_tenancy: str | None = None,
+        actor_standby_tenancy: Tenancy | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,

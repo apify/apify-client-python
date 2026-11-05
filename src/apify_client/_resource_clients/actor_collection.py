@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._literals import ActorPermissionLevel
+    from apify_client._literals import ActorPermissionLevel, Tenancy
     from apify_client._models import ActorListItem
     from apify_client.types import Timeout
 
@@ -137,7 +137,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
-        actor_standby_tenancy: str | None = None,
+        actor_standby_tenancy: Tenancy | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
@@ -338,7 +338,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
-        actor_standby_tenancy: str | None = None,
+        actor_standby_tenancy: Tenancy | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:

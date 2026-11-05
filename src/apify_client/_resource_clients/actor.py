@@ -189,7 +189,7 @@ class ActorClient(ResourceClient):
             server_should_pass_actor_input: Whether to pass the Actor input to the runs of the Server Actor. If false,
                 they start with no input.
             server_tenancy: Whether each user gets their own runs of the Server Actor (`SINGLE_TENANT`) or the runs are
-                shared across users (`MULTI_TENANT`).
+                shared across users (`MULTI_TENANT`). `MULTI_TENANT` requires pay-per-event pricing.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -830,7 +830,7 @@ class ActorClientAsync(ResourceClientAsync):
             server_should_pass_actor_input: Whether to pass the Actor input to the runs of the Server Actor. If false,
                 they start with no input.
             server_tenancy: Whether each user gets their own runs of the Server Actor (`SINGLE_TENANT`) or the runs are
-                shared across users (`MULTI_TENANT`).
+                shared across users (`MULTI_TENANT`). `MULTI_TENANT` requires pay-per-event pricing.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,

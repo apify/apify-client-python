@@ -38,6 +38,7 @@ def build_actor_standby(server_args: dict[str, Any], deprecated_args: dict[str, 
         if value is None:
             continue
         name = DEPRECATED_SERVER_ARGS[deprecated_name]
+        # Skips this helper, the public method, and the `WithLogDetailsClient` wrapper around it.
         warnings.warn(
             f'The `{deprecated_name}` argument is deprecated and will be removed in v4. Use `{name}` instead.',
             DeprecationWarning,

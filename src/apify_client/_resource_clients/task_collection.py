@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    ActorStandby,
     CreateTaskRequest,
     ListOfTasks,
     ListOfTasksResponse,
@@ -16,6 +15,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.server_args import build_actor_standby
 from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
@@ -117,17 +117,22 @@ class TaskCollectionClient(ResourceClient):
         task_input: TaskInputDict | TaskInput | None = None,
         title: str | None = None,
         description: str | None = None,
-        actor_standby_desired_requests_per_actor_run: int | None = None,
-        actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout: timedelta | None = None,
-        actor_standby_build: str | None = None,
-        actor_standby_memory_mbytes: int | None = None,
+        server_desired_requests_per_actor_run: int | None = None,
+        server_max_requests_per_actor_run: int | None = None,
+        server_idle_timeout: timedelta | None = None,
+        server_build: str | None = None,
+        server_memory_mbytes: int | None = None,
         public_config_seo_title: str | None = None,
         public_config_seo_description: str | None = None,
         public_config_input_schema_fields: list[str] | None = None,  # ty: ignore[invalid-type-form]
         public_config_dataset_name: str | None = None,
         public_config_dataset_view: str | None = None,
         timeout: Timeout = 'medium',
+        actor_standby_desired_requests_per_actor_run: int | None = None,
+        actor_standby_max_requests_per_actor_run: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
+        actor_standby_build: str | None = None,
+        actor_standby_memory_mbytes: int | None = None,
     ) -> Task:
         """Create a new task.
 
@@ -153,14 +158,14 @@ class TaskCollectionClient(ResourceClient):
             task_input: Task input object.
             title: A human-friendly equivalent of the name.
             description: Description of the task.
-            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
-                it will be shut down.
-            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            server_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for a single run of
+                the Server Actor.
+            server_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for a single run of the
+                Server Actor.
+            server_idle_timeout: If a run of the Server Actor does not receive any requests for this time, it is shut
+                down.
+            server_build: The build tag or number that the Server Actor runs.
+            server_memory_mbytes: The memory in megabytes for the runs of the Server Actor.
             public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
             public_config_seo_description: SEO description of the public task page. Defaults to the task description
                 when not set.
@@ -169,6 +174,13 @@ class TaskCollectionClient(ResourceClient):
                 displayed on the public task page.
             public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
+            actor_standby_desired_requests_per_actor_run: Deprecated alias of `server_desired_requests_per_actor_run`.
+                Will be removed in v4.
+            actor_standby_max_requests_per_actor_run: Deprecated alias of `server_max_requests_per_actor_run`. Will be
+                removed in v4.
+            actor_standby_idle_timeout: Deprecated alias of `server_idle_timeout`. Will be removed in v4.
+            actor_standby_build: Deprecated alias of `server_build`. Will be removed in v4.
+            actor_standby_memory_mbytes: Deprecated alias of `server_memory_mbytes`. Will be removed in v4.
 
         Returns:
             The created task.
@@ -197,12 +209,21 @@ class TaskCollectionClient(ResourceClient):
                 timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
             ),
-            actor_standby=ActorStandby(
-                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
-                build=actor_standby_build,
-                memory_mbytes=actor_standby_memory_mbytes,
+            actor_standby=build_actor_standby(
+                {
+                    'server_desired_requests_per_actor_run': server_desired_requests_per_actor_run,
+                    'server_max_requests_per_actor_run': server_max_requests_per_actor_run,
+                    'server_idle_timeout': server_idle_timeout,
+                    'server_build': server_build,
+                    'server_memory_mbytes': server_memory_mbytes,
+                },
+                {
+                    'actor_standby_desired_requests_per_actor_run': actor_standby_desired_requests_per_actor_run,
+                    'actor_standby_max_requests_per_actor_run': actor_standby_max_requests_per_actor_run,
+                    'actor_standby_idle_timeout': actor_standby_idle_timeout,
+                    'actor_standby_build': actor_standby_build,
+                    'actor_standby_memory_mbytes': actor_standby_memory_mbytes,
+                },
             ),
         )
         result = self._create(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
@@ -298,17 +319,22 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         task_input: TaskInputDict | TaskInput | None = None,
         title: str | None = None,
         description: str | None = None,
-        actor_standby_desired_requests_per_actor_run: int | None = None,
-        actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout: timedelta | None = None,
-        actor_standby_build: str | None = None,
-        actor_standby_memory_mbytes: int | None = None,
+        server_desired_requests_per_actor_run: int | None = None,
+        server_max_requests_per_actor_run: int | None = None,
+        server_idle_timeout: timedelta | None = None,
+        server_build: str | None = None,
+        server_memory_mbytes: int | None = None,
         public_config_seo_title: str | None = None,
         public_config_seo_description: str | None = None,
         public_config_input_schema_fields: list[str] | None = None,  # ty: ignore[invalid-type-form]
         public_config_dataset_name: str | None = None,
         public_config_dataset_view: str | None = None,
         timeout: Timeout = 'medium',
+        actor_standby_desired_requests_per_actor_run: int | None = None,
+        actor_standby_max_requests_per_actor_run: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
+        actor_standby_build: str | None = None,
+        actor_standby_memory_mbytes: int | None = None,
     ) -> Task:
         """Create a new task.
 
@@ -334,14 +360,14 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             task_input: Task input object.
             title: A human-friendly equivalent of the name.
             description: Description of the task.
-            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
-                it will be shut down.
-            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            server_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for a single run of
+                the Server Actor.
+            server_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for a single run of the
+                Server Actor.
+            server_idle_timeout: If a run of the Server Actor does not receive any requests for this time, it is shut
+                down.
+            server_build: The build tag or number that the Server Actor runs.
+            server_memory_mbytes: The memory in megabytes for the runs of the Server Actor.
             public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
             public_config_seo_description: SEO description of the public task page. Defaults to the task description
                 when not set.
@@ -350,6 +376,13 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 displayed on the public task page.
             public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
+            actor_standby_desired_requests_per_actor_run: Deprecated alias of `server_desired_requests_per_actor_run`.
+                Will be removed in v4.
+            actor_standby_max_requests_per_actor_run: Deprecated alias of `server_max_requests_per_actor_run`. Will be
+                removed in v4.
+            actor_standby_idle_timeout: Deprecated alias of `server_idle_timeout`. Will be removed in v4.
+            actor_standby_build: Deprecated alias of `server_build`. Will be removed in v4.
+            actor_standby_memory_mbytes: Deprecated alias of `server_memory_mbytes`. Will be removed in v4.
 
         Returns:
             The created task.
@@ -378,12 +411,21 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
             ),
-            actor_standby=ActorStandby(
-                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
-                build=actor_standby_build,
-                memory_mbytes=actor_standby_memory_mbytes,
+            actor_standby=build_actor_standby(
+                {
+                    'server_desired_requests_per_actor_run': server_desired_requests_per_actor_run,
+                    'server_max_requests_per_actor_run': server_max_requests_per_actor_run,
+                    'server_idle_timeout': server_idle_timeout,
+                    'server_build': server_build,
+                    'server_memory_mbytes': server_memory_mbytes,
+                },
+                {
+                    'actor_standby_desired_requests_per_actor_run': actor_standby_desired_requests_per_actor_run,
+                    'actor_standby_max_requests_per_actor_run': actor_standby_max_requests_per_actor_run,
+                    'actor_standby_idle_timeout': actor_standby_idle_timeout,
+                    'actor_standby_build': actor_standby_build,
+                    'actor_standby_memory_mbytes': actor_standby_memory_mbytes,
+                },
             ),
         )
         result = await self._create(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))

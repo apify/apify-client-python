@@ -79,6 +79,17 @@ async def test_update_sends_description_and_interpolation_flag_async(
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
 
+def test_update_sends_request_url_as_string(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`update` sends `requestUrl` as a plain URL string."""
+    captured: list[Request] = []
+    httpserver.expect_request(_WEBHOOK_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    sync_client.webhook(_MOCKED_WEBHOOK_ID).update(request_url='https://example.com/hook')
+
+    assert len(captured) == 1
+    assert json.loads(captured[0].get_data())['requestUrl'] == 'https://example.com/hook'
+
+
 def test_create_sends_description_and_interpolation_flag(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """`create` sends `description` and `shouldInterpolateStrings`."""
     captured: list[Request] = []

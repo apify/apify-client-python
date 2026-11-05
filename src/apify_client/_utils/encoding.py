@@ -7,6 +7,7 @@ from functools import cache
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateWebhookRequest, WebhookRepresentation
+from apify_client._utils.http import json_default
 from apify_client.http_clients._streamed_body import StreamedRequestBody
 
 if TYPE_CHECKING:
@@ -71,12 +72,17 @@ def encode_key_value_store_record_value(
 
     if 'application/json' in content_type and not isinstance(value, (bytes, bytearray, str)):
         # Don't use indentation to reduce size.
-        value = json.dumps(
-            value,
-            ensure_ascii=False,
-            allow_nan=False,
-            default=str,
-        ).encode('utf-8')
+        try:
+            value = json.dumps(
+                value,
+                ensure_ascii=False,
+                allow_nan=False,
+                default=json_default,
+            ).encode('utf-8')
+        except TypeError as exc:
+            raise TypeError(
+                f'{exc} To store it in another format, pass bytes or a string with a matching `content_type`.'
+            ) from exc
 
     # A non-JSON content type skips the serialization above, so anything that is not bytes-like would reach the
     # transport unencoded and fail there with an opaque error.

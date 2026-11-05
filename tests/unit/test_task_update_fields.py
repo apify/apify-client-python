@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -101,3 +102,129 @@ async def test_create_sends_description_and_max_total_charge_async(
 
     assert len(captured) == 1
     assert body_subset(captured[0]) == _EXPECTED_BODY
+
+
+_SERVER_EXPECTED_BODY = {'actorStandby': {'build': 'beta', 'idleTimeoutSecs': 90}}
+
+
+def server_body(request: Request) -> dict[str, Any]:
+    body = json.loads(request.get_data())
+    return {'actorStandby': body['actorStandby']}
+
+
+def test_update_sends_server_fields(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`update` nests the `server_*` arguments into `actorStandby`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASK_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    sync_client.task(_MOCKED_TASK_ID).update(server_build='beta', server_idle_timeout=timedelta(seconds=90))
+
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+async def test_update_sends_server_fields_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async `update` nests the `server_*` arguments into `actorStandby`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASK_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    await async_client.task(_MOCKED_TASK_ID).update(server_build='beta', server_idle_timeout=timedelta(seconds=90))
+
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+def test_update_deprecated_standby_args_are_aliases(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """The deprecated `actor_standby_*` arguments of `update` warn at the caller and are sent as `server_*`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASK_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
+        sync_client.task(_MOCKED_TASK_ID).update(
+            actor_standby_build='beta', actor_standby_idle_timeout=timedelta(seconds=90)
+        )
+
+    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+async def test_update_deprecated_standby_args_are_aliases_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """The deprecated `actor_standby_*` arguments of async `update` warn at the caller and are sent as `server_*`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASK_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
+        await async_client.task(_MOCKED_TASK_ID).update(
+            actor_standby_build='beta', actor_standby_idle_timeout=timedelta(seconds=90)
+        )
+
+    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+def test_create_sends_server_fields(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`create` nests the `server_*` arguments into `actorStandby`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASKS_PATH, method='POST').respond_with_handler(capture(captured))
+
+    sync_client.tasks().create(
+        actor_id='test_actor_id', name='test-task', server_build='beta', server_idle_timeout=timedelta(seconds=90)
+    )
+
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+async def test_create_sends_server_fields_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async `create` nests the `server_*` arguments into `actorStandby`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASKS_PATH, method='POST').respond_with_handler(capture(captured))
+
+    await async_client.tasks().create(
+        actor_id='test_actor_id', name='test-task', server_build='beta', server_idle_timeout=timedelta(seconds=90)
+    )
+
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+def test_create_deprecated_standby_args_are_aliases(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """The deprecated `actor_standby_*` arguments of `create` warn at the caller and are sent as `server_*`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASKS_PATH, method='POST').respond_with_handler(capture(captured))
+
+    with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
+        sync_client.tasks().create(
+            actor_id='test_actor_id',
+            name='test-task',
+            actor_standby_build='beta',
+            actor_standby_idle_timeout=timedelta(seconds=90),
+        )
+
+    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY
+
+
+async def test_create_deprecated_standby_args_are_aliases_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """The deprecated `actor_standby_*` arguments of async `create` warn at the caller and are sent as `server_*`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_TASKS_PATH, method='POST').respond_with_handler(capture(captured))
+
+    with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
+        await async_client.tasks().create(
+            actor_id='test_actor_id',
+            name='test-task',
+            actor_standby_build='beta',
+            actor_standby_idle_timeout=timedelta(seconds=90),
+        )
+
+    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert len(captured) == 1
+    assert server_body(captured[0]) == _SERVER_EXPECTED_BODY

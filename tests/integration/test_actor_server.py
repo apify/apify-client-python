@@ -73,9 +73,9 @@ def server_actor_id(api_token: str) -> Generator[str]:
                 ],
             }
         ],
-        actor_standby_is_enabled=True,
-        actor_standby_memory_mbytes=256,
-        actor_standby_idle_timeout=timedelta(minutes=1),
+        server_is_enabled=True,
+        server_memory_mbytes=256,
+        server_idle_timeout=timedelta(minutes=1),
     )
     actor_client = client.actor(actor.id)
 

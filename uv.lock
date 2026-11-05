@@ -100,7 +100,7 @@ provides-extras = ["brotli", "httpx2"]
 [package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=24.3.0" },
-    { name = "datamodel-code-generator", extras = ["http", "ruff"], specifier = ">=0.64.1,<1.0.0" },
+    { name = "datamodel-code-generator", extras = ["http", "ruff"], specifier = ">=0.85.0,<1.0.0" },
     { name = "griffe", specifier = "<3.0.0" },
     { name = "poethepoet", specifier = "<1.0.0" },
     { name = "pre-commit", specifier = "<5.0.0" },

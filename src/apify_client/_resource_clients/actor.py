@@ -9,7 +9,6 @@ from apify_client._docs import docs_group
 from apify_client._models import (
     ActorResource,
     ActorResponse,
-    ActorStandby,
     Build,
     BuildResponse,
     CreateVersionRequest,
@@ -26,6 +25,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
+from apify_client._utils.server_args import build_actor_standby
 from apify_client._utils.time import to_seconds
 from apify_client._utils.wait_for_resources import (
     prepare_resendable_body,
@@ -126,6 +126,19 @@ class ActorClient(ResourceClient):
         default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
+        server_is_enabled: bool | None = None,
+        server_desired_requests_per_actor_run: int | None = None,
+        server_max_requests_per_actor_run: int | None = None,
+        server_idle_timeout: timedelta | None = None,
+        server_build: str | None = None,
+        server_memory_mbytes: int | None = None,
+        server_disable_fields_override: bool | None = None,
+        server_should_pass_actor_input: bool | None = None,
+        server_tenancy: Tenancy | None = None,
+        pricing_infos: list[dict[str, Any]] | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
+        tagged_builds: dict[str, dict[str, str] | None] | None = None,
+        timeout: Timeout = 'short',
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -135,10 +148,6 @@ class ActorClient(ResourceClient):
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
         actor_standby_tenancy: Tenancy | None = None,
-        pricing_infos: list[dict[str, Any]] | None = None,
-        actor_permission_level: ActorPermissionLevel | None = None,
-        tagged_builds: dict[str, dict[str, str] | None] | None = None,
-        timeout: Timeout = 'short',
     ) -> ActorResource:
         """Update the Actor with the specified fields.
 
@@ -166,20 +175,20 @@ class ActorClient(ResourceClient):
             example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
                 as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
-            actor_standby_is_enabled: Whether the Actor Standby is enabled.
-            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
-                it will be shut down.
-            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
-            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
-                overridden elsewhere.
-            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
-                the Standby runs start with no input.
-            actor_standby_tenancy: Whether each user gets their own Standby runs (`SINGLE_TENANT`) or the runs are
+            server_is_enabled: Whether the Actor is a Server Actor, which runs a web server called over HTTP.
+            server_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for a single run of
+                the Server Actor.
+            server_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for a single run of the
+                Server Actor.
+            server_idle_timeout: If a run of the Server Actor does not receive any requests for this time, it is shut
+                down.
+            server_build: The build tag or number that the Server Actor runs.
+            server_memory_mbytes: The memory in megabytes for the runs of the Server Actor.
+            server_disable_fields_override: If true, prevents the Server Actor configuration from being overridden
+                elsewhere.
+            server_should_pass_actor_input: Whether to pass the Actor input to the runs of the Server Actor. If false,
+                they start with no input.
+            server_tenancy: Whether each user gets their own runs of the Server Actor (`SINGLE_TENANT`) or the runs are
                 shared across users (`MULTI_TENANT`).
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
@@ -187,6 +196,19 @@ class ActorClient(ResourceClient):
                 or remove build tags. To assign a tag, provide a dict with 'buildId' key. To remove a tag,
                 set its value to None. Example: {'latest': {'buildId': 'abc'}, 'beta': None}.
             timeout: Timeout for the API HTTP request.
+            actor_standby_is_enabled: Deprecated alias of `server_is_enabled`. Will be removed in v4.
+            actor_standby_desired_requests_per_actor_run: Deprecated alias of `server_desired_requests_per_actor_run`.
+                Will be removed in v4.
+            actor_standby_max_requests_per_actor_run: Deprecated alias of `server_max_requests_per_actor_run`. Will be
+                removed in v4.
+            actor_standby_idle_timeout: Deprecated alias of `server_idle_timeout`. Will be removed in v4.
+            actor_standby_build: Deprecated alias of `server_build`. Will be removed in v4.
+            actor_standby_memory_mbytes: Deprecated alias of `server_memory_mbytes`. Will be removed in v4.
+            actor_standby_disable_standby_fields_override: Deprecated alias of `server_disable_fields_override`. Will be
+                removed in v4.
+            actor_standby_should_pass_actor_input: Deprecated alias of `server_should_pass_actor_input`. Will be removed
+                in v4.
+            actor_standby_tenancy: Deprecated alias of `server_tenancy`. Will be removed in v4.
 
         Returns:
             The updated Actor.
@@ -211,16 +233,29 @@ class ActorClient(ResourceClient):
                 force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
-            actor_standby=ActorStandby(
-                is_enabled=actor_standby_is_enabled,
-                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
-                build=actor_standby_build,
-                memory_mbytes=actor_standby_memory_mbytes,
-                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
-                should_pass_actor_input=actor_standby_should_pass_actor_input,
-                tenancy=actor_standby_tenancy,
+            actor_standby=build_actor_standby(
+                {
+                    'server_is_enabled': server_is_enabled,
+                    'server_desired_requests_per_actor_run': server_desired_requests_per_actor_run,
+                    'server_max_requests_per_actor_run': server_max_requests_per_actor_run,
+                    'server_idle_timeout': server_idle_timeout,
+                    'server_build': server_build,
+                    'server_memory_mbytes': server_memory_mbytes,
+                    'server_disable_fields_override': server_disable_fields_override,
+                    'server_should_pass_actor_input': server_should_pass_actor_input,
+                    'server_tenancy': server_tenancy,
+                },
+                {
+                    'actor_standby_is_enabled': actor_standby_is_enabled,
+                    'actor_standby_desired_requests_per_actor_run': actor_standby_desired_requests_per_actor_run,
+                    'actor_standby_max_requests_per_actor_run': actor_standby_max_requests_per_actor_run,
+                    'actor_standby_idle_timeout': actor_standby_idle_timeout,
+                    'actor_standby_build': actor_standby_build,
+                    'actor_standby_memory_mbytes': actor_standby_memory_mbytes,
+                    'actor_standby_disable_standby_fields_override': actor_standby_disable_standby_fields_override,
+                    'actor_standby_should_pass_actor_input': actor_standby_should_pass_actor_input,
+                    'actor_standby_tenancy': actor_standby_tenancy,
+                },
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -732,6 +767,19 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
+        server_is_enabled: bool | None = None,
+        server_desired_requests_per_actor_run: int | None = None,
+        server_max_requests_per_actor_run: int | None = None,
+        server_idle_timeout: timedelta | None = None,
+        server_build: str | None = None,
+        server_memory_mbytes: int | None = None,
+        server_disable_fields_override: bool | None = None,
+        server_should_pass_actor_input: bool | None = None,
+        server_tenancy: Tenancy | None = None,
+        pricing_infos: list[dict[str, Any]] | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
+        tagged_builds: dict[str, dict[str, str] | None] | None = None,
+        timeout: Timeout = 'short',
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -741,10 +789,6 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
         actor_standby_tenancy: Tenancy | None = None,
-        pricing_infos: list[dict[str, Any]] | None = None,
-        actor_permission_level: ActorPermissionLevel | None = None,
-        tagged_builds: dict[str, dict[str, str] | None] | None = None,
-        timeout: Timeout = 'short',
     ) -> ActorResource:
         """Update the Actor with the specified fields.
 
@@ -772,20 +816,20 @@ class ActorClientAsync(ResourceClientAsync):
             example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
                 as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
-            actor_standby_is_enabled: Whether the Actor Standby is enabled.
-            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
-                a single Actor Standby run.
-            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
-                it will be shut down.
-            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
-            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
-                overridden elsewhere.
-            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
-                the Standby runs start with no input.
-            actor_standby_tenancy: Whether each user gets their own Standby runs (`SINGLE_TENANT`) or the runs are
+            server_is_enabled: Whether the Actor is a Server Actor, which runs a web server called over HTTP.
+            server_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for a single run of
+                the Server Actor.
+            server_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for a single run of the
+                Server Actor.
+            server_idle_timeout: If a run of the Server Actor does not receive any requests for this time, it is shut
+                down.
+            server_build: The build tag or number that the Server Actor runs.
+            server_memory_mbytes: The memory in megabytes for the runs of the Server Actor.
+            server_disable_fields_override: If true, prevents the Server Actor configuration from being overridden
+                elsewhere.
+            server_should_pass_actor_input: Whether to pass the Actor input to the runs of the Server Actor. If false,
+                they start with no input.
+            server_tenancy: Whether each user gets their own runs of the Server Actor (`SINGLE_TENANT`) or the runs are
                 shared across users (`MULTI_TENANT`).
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
@@ -793,6 +837,19 @@ class ActorClientAsync(ResourceClientAsync):
                 or remove build tags. To assign a tag, provide a dict with 'buildId' key. To remove a tag,
                 set its value to None. Example: {'latest': {'buildId': 'abc'}, 'beta': None}.
             timeout: Timeout for the API HTTP request.
+            actor_standby_is_enabled: Deprecated alias of `server_is_enabled`. Will be removed in v4.
+            actor_standby_desired_requests_per_actor_run: Deprecated alias of `server_desired_requests_per_actor_run`.
+                Will be removed in v4.
+            actor_standby_max_requests_per_actor_run: Deprecated alias of `server_max_requests_per_actor_run`. Will be
+                removed in v4.
+            actor_standby_idle_timeout: Deprecated alias of `server_idle_timeout`. Will be removed in v4.
+            actor_standby_build: Deprecated alias of `server_build`. Will be removed in v4.
+            actor_standby_memory_mbytes: Deprecated alias of `server_memory_mbytes`. Will be removed in v4.
+            actor_standby_disable_standby_fields_override: Deprecated alias of `server_disable_fields_override`. Will be
+                removed in v4.
+            actor_standby_should_pass_actor_input: Deprecated alias of `server_should_pass_actor_input`. Will be removed
+                in v4.
+            actor_standby_tenancy: Deprecated alias of `server_tenancy`. Will be removed in v4.
 
         Returns:
             The updated Actor.
@@ -817,16 +874,29 @@ class ActorClientAsync(ResourceClientAsync):
                 force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
-            actor_standby=ActorStandby(
-                is_enabled=actor_standby_is_enabled,
-                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
-                build=actor_standby_build,
-                memory_mbytes=actor_standby_memory_mbytes,
-                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
-                should_pass_actor_input=actor_standby_should_pass_actor_input,
-                tenancy=actor_standby_tenancy,
+            actor_standby=build_actor_standby(
+                {
+                    'server_is_enabled': server_is_enabled,
+                    'server_desired_requests_per_actor_run': server_desired_requests_per_actor_run,
+                    'server_max_requests_per_actor_run': server_max_requests_per_actor_run,
+                    'server_idle_timeout': server_idle_timeout,
+                    'server_build': server_build,
+                    'server_memory_mbytes': server_memory_mbytes,
+                    'server_disable_fields_override': server_disable_fields_override,
+                    'server_should_pass_actor_input': server_should_pass_actor_input,
+                    'server_tenancy': server_tenancy,
+                },
+                {
+                    'actor_standby_is_enabled': actor_standby_is_enabled,
+                    'actor_standby_desired_requests_per_actor_run': actor_standby_desired_requests_per_actor_run,
+                    'actor_standby_max_requests_per_actor_run': actor_standby_max_requests_per_actor_run,
+                    'actor_standby_idle_timeout': actor_standby_idle_timeout,
+                    'actor_standby_build': actor_standby_build,
+                    'actor_standby_memory_mbytes': actor_standby_memory_mbytes,
+                    'actor_standby_disable_standby_fields_override': actor_standby_disable_standby_fields_override,
+                    'actor_standby_should_pass_actor_input': actor_standby_should_pass_actor_input,
+                    'actor_standby_tenancy': actor_standby_tenancy,
+                },
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,

@@ -19,7 +19,7 @@ A [Server Actor](https://docs.apify.com/platform/actors/running/standby) (former
 
 :::note Formerly Actor Standby
 
-Actor Standby is the former name of Server Actors, and it'll be deprecated. The platform documentation and the API still use it, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. In the client, `ActorClient.standby` is a deprecated alias of `ActorClient.server` that will be removed in v4.
+Actor Standby is the former name of Server Actors, and it'll be deprecated. The platform documentation and the API still use it, for example in the Actor's `standby_url` and `actor_standby` fields. In the client, `ActorClient.standby` is a deprecated alias of `ActorClient.server`, and the `actor_standby_*` arguments of the Actor and task `update` and `create` methods are deprecated aliases of their `server_*` counterparts, such as `server_build` for `actor_standby_build`. The aliases will be removed in v4.
 
 :::
 

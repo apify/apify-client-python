@@ -149,9 +149,12 @@ def convert_enums_to_literals(content: str) -> str:
         ]
         docstring = ast.get_docstring(node)
 
-        new_lines: list[str] = [f'{node.name} = Literal[']
-        new_lines.extend(f'    {v!r},' for v in values)
-        new_lines.append('] | str')
+        if len(values) == 1:
+            new_lines: list[str] = [f'{node.name} = Literal[{values[0]!r}] | str']
+        else:
+            new_lines = [f'{node.name} = Literal[']
+            new_lines.extend(f'    {v!r},' for v in values)
+            new_lines.append('] | str')
         if docstring is not None:
             if '\n' in docstring:
                 new_lines.append('"""')

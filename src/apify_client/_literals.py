@@ -506,7 +506,7 @@ HttpMethod = (
 )
 
 
-MonitoringLevel = Literal['STANDARD',] | str
+MonitoringLevel = Literal['STANDARD'] | str
 """Level of monitoring services included in the plan. `null` or missing means the plan includes no monitoring service."""
 
 

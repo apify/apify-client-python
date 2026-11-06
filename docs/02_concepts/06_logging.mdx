@@ -1,7 +1,7 @@
 ---
 id: logging
 title: Logging
-description: Configure debug logging to inspect API requests and responses.
+description: Configure debug logging for API requests and redirect Actor run logs to Python loggers.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -44,7 +44,7 @@ For more information on creating and using custom log formatters, refer to the o
 When you start an Actor with <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink>, the client redirects the run's log to a Python logger while it waits for the run to finish. The same logger also receives the run's status and status message whenever they change. The `logger` argument controls where the lines go:
 
 - `'default'` (the default) - A built-in redirect logger named after the Actor and the run ID.
-- A `logging.Logger` - Your own logger receives the lines.
+- A `logging.Logger` - Your own logger receives the lines, so give it a handler and a level that let them through.
 - `None` - Redirection is turned off.
 
 <Tabs>

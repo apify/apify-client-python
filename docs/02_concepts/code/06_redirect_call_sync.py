@@ -13,6 +13,7 @@ def main() -> None:
     actor_client.call()
 
     # Send the run's log and status messages to your own logger.
+    logging.basicConfig(level=logging.INFO)
     my_logger = logging.getLogger('my_actor_run')
     actor_client.call(logger=my_logger)
 

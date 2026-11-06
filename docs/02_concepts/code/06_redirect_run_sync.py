@@ -5,7 +5,9 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 def main() -> None:
     apify_client = ApifyClient(TOKEN)
-    actor_run = apify_client.actor('username/actor-name').start()
+    actor_client = apify_client.actor('username/actor-name')
+
+    actor_run = actor_client.start()
     run_client = apify_client.run(actor_run.id)
 
     # Use the helpers as context managers to redirect while the run is in progress.
@@ -15,6 +17,9 @@ def main() -> None:
         run_client.wait_for_finish()
 
     # Or start and stop them yourself.
+    actor_run = actor_client.start()
+    run_client = apify_client.run(actor_run.id)
+
     # With `from_start=False`, only log lines written from now on are redirected.
     streamed_log = run_client.get_streamed_log(from_start=False)
     streamed_log.start()

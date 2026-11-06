@@ -39,12 +39,12 @@ We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [ty](htt
 
 ### Readability
 
+- Every module in `src/`, `tests/`, and `scripts/` except `__init__.py` has `from __future__ import annotations` as its first import.
 - Prefer a few simple statements over one dense line. Give intermediate values a name instead of nesting calls, comprehensions, and unpacking into a single long expression.
 - When replacing a call with an equivalent one, change only the call and keep the surrounding statements as they were.
 
 ### Comments and docstrings
 
-- Every module starts with `from __future__ import annotations`.
 - Comments and docstrings describe what the code does now. The bug a change fixed, what a PR changed, and contrasts with removed behavior (`instead of ...`, `no longer ...`) belong in the commit message.
 - Don't explain language features in comments. A comment earns its place with a domain reason, an invariant the types can't express, or a non-obvious consequence for callers.
 - Use single backticks for code references, never RST-style double backticks.
@@ -64,7 +64,7 @@ We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [ty](htt
 
 ### YAML
 
-Use double quotes for quoted YAML values (`retries: "3"`). Keep single quotes when the value itself contains double quotes, and for string literals inside GitHub Actions expressions (`${{ ... }}`, `if:` conditions), where double quotes are invalid.
+Leave YAML values unquoted unless quotes are needed: a plain value that would change type (`"3.14"`, `"true"`, `""`), start with an indicator character (`"*"`, `"@apify/*"`), contain a colon followed by a space or a `#` preceded by one (`"a: b"`, `"a #b"`), or need an escape sequence (`"\n"`). Use double quotes then. Keep single quotes when the value itself contains double quotes, and for string literals inside GitHub Actions expressions (`${{ ... }}`, `if:` conditions), where double quotes are invalid.
 
 ## Generated models
 
@@ -72,6 +72,7 @@ Use double quotes for quoted YAML values (`retries: "3"`). Keep single quotes wh
 
 - `uv run poe generate-models` regenerates them from the published specification. `scripts/openapi_spec.py` describes how the specification version is recorded. Don't commit a regeneration that only moves that version.
 - `uv run poe generate-models-from-file <path>` generates them from a local specification, for trying out unpublished changes. Don't commit the result.
+- A regeneration that adds a `pattern`, a length or item-count limit (`minLength`/`maxLength`, `minItems`/`maxItems`), a numeric bound (`minimum`/`maximum`), or a `const` to a model makes the client raise a `ValidationError` on data that violates it: on request input before the request is sent, and on an API response while parsing it. Point it out in the PR, since the API may accept input or return data the client now rejects.
 - The nightly `Regenerate models` workflow opens a `chore:` PR when the models change. If the diff is user-facing, retitle it to `fix:` or `feat:` so it lands in the changelog and triggers a release.
 
 ## Documentation
@@ -91,7 +92,7 @@ A user-facing feature ships with its documentation in the same PR: a page in `do
 
 Code examples in `docs/` come in `_sync.py` / `_async.py` pairs and have their own lint settings in `docs/pyproject.toml`. Never edit `website/versioned_docs/`: those snapshots are produced by the release automation and frozen against the code that shipped. Fix `docs/`, and the next release snapshot carries the change.
 
-To run the documentation locally (requires Node.js):
+To run the documentation locally (requires Node.js 22.12 or newer and pnpm):
 
 ```sh
 uv run poe run-docs
@@ -99,11 +100,7 @@ uv run poe run-docs
 
 ### Linting the docs and website
 
-Markdown content (this guide, `README.md`, and the `docs/` folder) is checked with
-[markdownlint](https://github.com/DavidAnson/markdownlint). The Docusaurus website code is linted
-with [oxlint](https://oxc.rs/) in type-aware mode (types come from `website/tsconfig.json`) and
-formatted with [oxfmt](https://oxc.rs/). All of them run in CI.
-To run them locally (requires Node.js 22.12 or newer and pnpm), from the `website/` directory:
+Markdown content (this guide, `README.md`, and the `docs/` folder) is checked with [markdownlint](https://github.com/DavidAnson/markdownlint). The Docusaurus website code is linted with [oxlint](https://oxc.rs/) in type-aware mode (types come from `website/tsconfig.json`) and formatted with [oxfmt](https://oxc.rs/). All of them run in CI. To run them locally (requires Node.js 22.12 or newer and pnpm), from the `website/` directory:
 
 ```sh
 pnpm lint          # lint Markdown and website code
@@ -111,8 +108,7 @@ pnpm lint:fix      # auto-fix both
 pnpm format        # format the website code
 ```
 
-Doc images are committed as optimized `.webp`. To convert a new image, run
-`pnpm opt:images <path-to-image>` from the `website/` directory.
+Doc images are committed as optimized `.webp`. To convert a new image, run `pnpm opt:images <path-to-image>` from the `website/` directory.
 
 ## Commits
 

@@ -81,7 +81,8 @@ def encode_key_value_store_record_value(
             ).encode('utf-8')
         except TypeError as exc:
             raise TypeError(
-                f'{exc} To store it in another format, pass bytes or a string with a matching `content_type`.'
+                f'{str(exc).rstrip(".")}. To send it in another format, pass bytes or a string with a matching '
+                '`content_type`.'
             ) from exc
 
     # A non-JSON content type skips the serialization above, so anything that is not bytes-like would reach the

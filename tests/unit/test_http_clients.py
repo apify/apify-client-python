@@ -8,9 +8,11 @@ import threading
 import time
 from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, date, datetime, timedelta
+from datetime import time as dt_time
 from io import BytesIO
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
+from uuid import UUID
 
 import brotli
 import httpx2
@@ -842,6 +844,16 @@ def test_prepare_request_call_encodes_datetime_as_iso_8601() -> None:
     assert data == b'{"at": "2026-01-01T12:30:00+00:00", "on": "2026-01-01"}'
 
 
+def test_prepare_request_call_encodes_time_and_uuid_as_strings() -> None:
+    """A `time` in a JSON body is sent as an ISO 8601 string and a `UUID` as its string form."""
+    client = ConcreteHttpClient()
+
+    json_body = {'at': dt_time(12, 30), 'id': UUID('12345678-1234-5678-1234-567812345678')}
+    _headers, _params, data = client._prepare_request_call(json=json_body)  # ty: ignore[invalid-argument-type]
+
+    assert data == b'{"at": "12:30:00", "id": "12345678-1234-5678-1234-567812345678"}'
+
+
 @pytest.mark.parametrize(
     'value',
     [
@@ -850,7 +862,7 @@ def test_prepare_request_call_encodes_datetime_as_iso_8601() -> None:
     ],
 )
 def test_prepare_request_call_rejects_non_json_value(value: object) -> None:
-    """A value the JSON encoder doesn't support raises `TypeError` instead of being sent as its `str()`."""
+    """A value the JSON encoder doesn't support raises `TypeError`."""
     client = ConcreteHttpClient()
 
     with pytest.raises(TypeError, match='is not JSON serializable'):

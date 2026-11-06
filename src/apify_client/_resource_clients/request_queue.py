@@ -39,7 +39,7 @@ from apify_client._models import (
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.errors import catch_not_found_or_throw
-from apify_client._utils.http import json_default, response_to_dict, to_path_segment
+from apify_client._utils.http import response_to_dict, to_path_segment
 from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 
@@ -86,7 +86,7 @@ def _serialize_requests(
             ),
             ensure_ascii=False,
             allow_nan=False,
-            default=json_default,
+            default=str,
         ).encode('utf-8')
         for request in requests
     ]

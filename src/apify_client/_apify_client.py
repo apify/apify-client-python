@@ -154,8 +154,10 @@ class ApifyClient:
             user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `, for
                 example to identify the tool built on top of the client. With `with_custom_http_client`, pass it to
                 the HTTP client's constructor.
-            compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
-                or an `HttpCompressor` instance for finer-grained control.
+            compression: Compression algorithm for request bodies. Defaults to `'gzip'`. Pass a string
+                literal to select an algorithm, or an `HttpCompressor` instance for finer-grained control.
+                `'brotli'` needs the optional extra (`pip install "apify-client[brotli]"`); it is not the
+                default because brotli is a native package and would add a required compiled dependency.
 
         Raises:
             ValueError: If `max_retries` is negative.
@@ -534,8 +536,10 @@ class ApifyClientAsync:
             user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `, for
                 example to identify the tool built on top of the client. With `with_custom_http_client`, pass it to
                 the HTTP client's constructor.
-            compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
-                or an `HttpCompressor` instance for finer-grained control.
+            compression: Compression algorithm for request bodies. Defaults to `'gzip'`. Pass a string
+                literal to select an algorithm, or an `HttpCompressor` instance for finer-grained control.
+                `'brotli'` needs the optional extra (`pip install "apify-client[brotli]"`); it is not the
+                default because brotli is a native package and would add a required compiled dependency.
 
         Raises:
             ValueError: If `max_retries` is negative.

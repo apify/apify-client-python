@@ -30,8 +30,10 @@ We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [ty](htt
 
 ## Tests
 
-- **Unit tests** (`tests/unit`) are isolated from the Apify API. See [`tests/unit/README.md`](tests/unit/README.md) for the rules they follow. Run them with `uv run poe unit-tests`, or a single test with `uv run pytest tests/unit/<path>.py::<test_name>`.
-- **Integration tests** (`tests/integration`) call the real Apify API. See [`tests/integration/README.md`](tests/integration/README.md) for the tokens they need. Run them with `uv run poe integration-tests`.
+[`tests/README.md`](tests/README.md) describes each test level, with its rules and required tokens.
+
+- **Unit tests** (`tests/unit`) are isolated from the Apify API. Run them with `uv run poe unit-tests`, or a single test with `uv run pytest tests/unit/<path>.py::<test_name>`.
+- **Integration tests** (`tests/integration`) call the real Apify API. Run them with `uv run poe integration-tests`.
 
 ## Code style
 

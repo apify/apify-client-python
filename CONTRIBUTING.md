@@ -39,7 +39,7 @@ We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [ty](htt
 
 ### Readability
 
-- Every module except `__init__.py` starts with `from __future__ import annotations`.
+- Every module in `src/`, `tests/`, and `scripts/` except `__init__.py` has `from __future__ import annotations` as its first import.
 - Prefer a few simple statements over one dense line. Give intermediate values a name instead of nesting calls, comprehensions, and unpacking into a single long expression.
 - When replacing a call with an equivalent one, change only the call and keep the surrounding statements as they were.
 
@@ -64,7 +64,7 @@ We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [ty](htt
 
 ### YAML
 
-Leave YAML values unquoted unless quotes are needed: a plain value that would change type (`"3.14"`, `"true"`) or start with an indicator character (`"*"`, `"@apify/*"`). Use double quotes then. Keep single quotes when the value itself contains double quotes, and for string literals inside GitHub Actions expressions (`${{ ... }}`, `if:` conditions), where double quotes are invalid.
+Leave YAML values unquoted unless quotes are needed: a plain value that would change type (`"3.14"`, `"true"`, `""`), start with an indicator character (`"*"`, `"@apify/*"`), contain a colon followed by a space or a `#` preceded by one (`"a: b"`, `"a #b"`), or need an escape sequence (`"\n"`). Use double quotes then. Keep single quotes when the value itself contains double quotes, and for string literals inside GitHub Actions expressions (`${{ ... }}`, `if:` conditions), where double quotes are invalid.
 
 ## Generated models
 
@@ -72,7 +72,7 @@ Leave YAML values unquoted unless quotes are needed: a plain value that would ch
 
 - `uv run poe generate-models` regenerates them from the published specification. `scripts/openapi_spec.py` describes how the specification version is recorded. Don't commit a regeneration that only moves that version.
 - `uv run poe generate-models-from-file <path>` generates them from a local specification, for trying out unpublished changes. Don't commit the result.
-- A regeneration that adds a `pattern`, `minLength`/`maxLength`, `maxItems`, or `const` to a request model turns it into a client-side `ValidationError` raised before the request is sent. Point it out in the PR, since the API may accept input the client now rejects.
+- A regeneration that adds a `pattern`, a length or item-count limit (`minLength`/`maxLength`, `minItems`/`maxItems`), a numeric bound (`minimum`/`maximum`), or a `const` to a model makes the client raise a `ValidationError` on data that violates it: on request input before the request is sent, and on an API response while parsing it. Point it out in the PR, since the API may accept input or return data the client now rejects.
 - The nightly `Regenerate models` workflow opens a `chore:` PR when the models change. If the diff is user-facing, retitle it to `fix:` or `feat:` so it lands in the changelog and triggers a release.
 
 ## Documentation

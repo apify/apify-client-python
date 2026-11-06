@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import warnings
+from datetime import date, time
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote, urlsplit
+from uuid import UUID
+
+from pydantic import AnyUrl
 
 from apify_client._consts import (
     ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES,
@@ -98,6 +102,22 @@ def is_compressible_content_type(content_type: str | None) -> bool:
 
     return not (
         media_type in ALREADY_COMPRESSED_MEDIA_TYPES or media_type.startswith(ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES)
+    )
+
+
+def json_default(value: Any) -> str:
+    """Encode a value the `json` module can't encode on its own, as the `default` hook of `json.dumps`.
+
+    A `datetime`, `date` or `time` is encoded as an ISO 8601 string, and a `UUID` or a URL from a model dumped in Python
+    mode as its string form. Any other type raises `TypeError`, so a value is never sent as its `str()` representation.
+    """
+    if isinstance(value, (date, time)):
+        return value.isoformat()
+    if isinstance(value, (UUID, AnyUrl)):
+        return str(value)
+    raise TypeError(
+        f'Object of type {type(value).__name__} is not JSON serializable. Convert it to a JSON-compatible value '
+        'before passing it to the client.'
     )
 
 

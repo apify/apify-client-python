@@ -5,7 +5,7 @@ import io
 import json
 import sys
 from base64 import b64decode
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
@@ -348,6 +348,19 @@ def test_encode_key_value_store_record_value_serializes_list_as_json() -> None:
 
     assert value == b'[1, 2]'
     assert content_type == 'application/json; charset=utf-8'
+
+
+def test_encode_key_value_store_record_value_encodes_datetime_as_iso_8601() -> None:
+    """A `datetime` in a JSON record is stored as an ISO 8601 string."""
+    value, _content_type = encode_key_value_store_record_value({'at': datetime(2026, 1, 1, 12, 30, tzinfo=UTC)})
+
+    assert value == b'{"at": "2026-01-01T12:30:00+00:00"}'
+
+
+def test_encode_key_value_store_record_value_rejects_non_json_value() -> None:
+    """A value the JSON encoder doesn't support raises `TypeError` that points to other content types."""
+    with pytest.raises(TypeError, match=r'Object of type set is not JSON serializable.*matching `content_type`'):
+        encode_key_value_store_record_value({'tags': {'a', 'b'}})
 
 
 @pytest.mark.parametrize(

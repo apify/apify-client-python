@@ -31,7 +31,7 @@ from apify_client._consts import (
 from apify_client._docs import docs_group
 from apify_client._logging import LoggerOnce, log_context, logger_name
 from apify_client._statistics import ClientStatistics
-from apify_client._utils.http import is_compressible_content_type
+from apify_client._utils.http import is_compressible_content_type, json_default
 from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients._streamed_body import StreamedRequestBody
@@ -356,7 +356,7 @@ class HttpClientBase:
 
         # Dump JSON data to a string so it can be sent as a request body.
         if json is not None:
-            data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
+            data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=json_default).encode('utf-8')
             if self._get_header(headers, 'content-type') is None:
                 headers['Content-Type'] = 'application/json'
 

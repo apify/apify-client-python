@@ -2,7 +2,7 @@
 
 The tests have two levels:
 
-- [Unit tests](#unit-tests) (`tests/unit`) run against a local HTTP server and need no credentials or network access.
+- [Unit tests](#unit-tests) (`tests/unit`) are isolated from the Apify API and need no credentials or network access.
 - [Integration tests](#integration-tests) (`tests/integration`) call the real Apify API.
 
 A test that calls the Apify API is an integration test. Every other test is a unit test. Helpers shared by both levels live in `tests/_utils.py`.

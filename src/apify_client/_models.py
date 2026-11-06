@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Annotated, Any, Literal
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, RootModel
@@ -11,16 +10,19 @@ from pydantic.alias_generators import to_camel
 from apify_client._docs import docs_group
 from apify_client._literals import (
     ActorJobStatus,
+    ActorNotice,
     ActorPermissionLevel,
     Deployment,
     Encoding,
     ErrorType,
     GeneralAccess,
     HttpMethod,
+    MonitoringLevel,
     OAuthProviderType,
     Provider,
     RunOrigin,
     SourceCodeFileFormat,
+    Tenancy,
     VersionSourceType,
     WebhookDispatchStatus,
     WebhookEventType,
@@ -248,16 +250,6 @@ class ActorListItem(BaseModel):
     username: Annotated[str, Field(examples=['janedoe'])]
     title: Annotated[str | None, Field(examples=['Hello World Example'])] = None
     stats: ActorStats | None = None
-
-
-@docs_group('Models')
-class ActorNotice(Enum):
-    """A warning displayed on the Actor's page in Apify Store and Console. Can be set by the Actor's developer or automatically by Apify's quality checks."""
-
-    NONE = 'NONE'
-    RESIDENTIAL_PROXY_REQUIRED = 'RESIDENTIAL_PROXY_REQUIRED'
-    UNDER_MAINTENANCE = 'UNDER_MAINTENANCE'
-    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')
@@ -2512,14 +2504,6 @@ class LockedRequestQueueHeadResponse(BaseModel):
 
 
 @docs_group('Models')
-class MonitoringLevel(Enum):
-    """Level of monitoring services included in the plan. `null` or missing means the plan includes no monitoring service."""
-
-    STANDARD = 'STANDARD'
-    NONE_TYPE_NONE = None
-
-
-@docs_group('Models')
 class MonthlyUsage(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -4415,15 +4399,6 @@ class TaskStats(BaseModel):
     """
     Time when the last run of the task started. In the task list, it's `null` if the task has no runs. In a single task, it's omitted if the task has no runs.
     """
-
-
-@docs_group('Models')
-class Tenancy(Enum):
-    """Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`)."""
-
-    SINGLE_TENANT = 'SINGLE_TENANT'
-    MULTI_TENANT = 'MULTI_TENANT'
-    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')

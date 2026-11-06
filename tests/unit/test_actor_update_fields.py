@@ -37,15 +37,21 @@ _ACTOR_RESPONSE = {
 _FIELDS: dict[str, Any] = {
     'server_disable_fields_override': True,
     'server_should_pass_actor_input': False,
+    'server_tenancy': 'SINGLE_TENANT',
 }
 
 _DEPRECATED_FIELDS: dict[str, Any] = {
     'actor_standby_disable_standby_fields_override': True,
     'actor_standby_should_pass_actor_input': False,
+    'actor_standby_tenancy': 'SINGLE_TENANT',
 }
 
 _EXPECTED_BODY = {
-    'actorStandby': {'disableStandbyFieldsOverride': True, 'shouldPassActorInput': False},
+    'actorStandby': {
+        'disableStandbyFieldsOverride': True,
+        'shouldPassActorInput': False,
+        'tenancy': 'SINGLE_TENANT',
+    },
 }
 
 
@@ -114,7 +120,7 @@ def test_update_deprecated_standby_args_are_aliases(httpserver: HTTPServer, sync
     with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
         sync_client.actor(_MOCKED_ACTOR_ID).update(**_DEPRECATED_FIELDS)
 
-    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert [warning.filename for warning in record] == [__file__, __file__, __file__]
     assert len(captured) == 1
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
@@ -129,7 +135,7 @@ async def test_update_deprecated_standby_args_are_aliases_async(
     with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
         await async_client.actor(_MOCKED_ACTOR_ID).update(**_DEPRECATED_FIELDS)
 
-    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert [warning.filename for warning in record] == [__file__, __file__, __file__]
     assert len(captured) == 1
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
@@ -142,7 +148,7 @@ def test_create_deprecated_standby_args_are_aliases(httpserver: HTTPServer, sync
     with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
         sync_client.actors().create(name='test-actor', **_DEPRECATED_FIELDS)
 
-    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert [warning.filename for warning in record] == [__file__, __file__, __file__]
     assert len(captured) == 1
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
@@ -157,7 +163,7 @@ async def test_create_deprecated_standby_args_are_aliases_async(
     with pytest.warns(DeprecationWarning, match='argument is deprecated') as record:
         await async_client.actors().create(name='test-actor', **_DEPRECATED_FIELDS)
 
-    assert [warning.filename for warning in record] == [__file__, __file__]
+    assert [warning.filename for warning in record] == [__file__, __file__, __file__]
     assert len(captured) == 1
     assert body_subset(captured[0]) == _EXPECTED_BODY
 

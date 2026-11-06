@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
+    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin, Tenancy
     from apify_client._resource_clients import (
         ActorServerClient,
         ActorServerClientAsync,
@@ -134,6 +134,7 @@ class ActorClient(ResourceClient):
         server_memory_mbytes: int | None = None,
         server_disable_fields_override: bool | None = None,
         server_should_pass_actor_input: bool | None = None,
+        server_tenancy: Tenancy | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
@@ -146,6 +147,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_standby_tenancy: Tenancy | None = None,
     ) -> ActorResource:
         """Update the Actor with the specified fields.
 
@@ -186,6 +188,8 @@ class ActorClient(ResourceClient):
                 elsewhere.
             server_should_pass_actor_input: Whether to pass the Actor input to the runs of the Server Actor. If false,
                 they start with no input.
+            server_tenancy: Whether each user gets their own runs of the Server Actor (`SINGLE_TENANT`) or the runs are
+                shared across users (`MULTI_TENANT`). `MULTI_TENANT` requires pay-per-event pricing.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -204,6 +208,7 @@ class ActorClient(ResourceClient):
                 removed in v4.
             actor_standby_should_pass_actor_input: Deprecated alias of `server_should_pass_actor_input`. Will be removed
                 in v4.
+            actor_standby_tenancy: Deprecated alias of `server_tenancy`. Will be removed in v4.
 
         Returns:
             The updated Actor.
@@ -238,6 +243,7 @@ class ActorClient(ResourceClient):
                     'server_memory_mbytes': server_memory_mbytes,
                     'server_disable_fields_override': server_disable_fields_override,
                     'server_should_pass_actor_input': server_should_pass_actor_input,
+                    'server_tenancy': server_tenancy,
                 },
                 {
                     'actor_standby_is_enabled': actor_standby_is_enabled,
@@ -248,6 +254,7 @@ class ActorClient(ResourceClient):
                     'actor_standby_memory_mbytes': actor_standby_memory_mbytes,
                     'actor_standby_disable_standby_fields_override': actor_standby_disable_standby_fields_override,
                     'actor_standby_should_pass_actor_input': actor_standby_should_pass_actor_input,
+                    'actor_standby_tenancy': actor_standby_tenancy,
                 },
             ),
             example_run_input=ExampleRunInput(
@@ -768,6 +775,7 @@ class ActorClientAsync(ResourceClientAsync):
         server_memory_mbytes: int | None = None,
         server_disable_fields_override: bool | None = None,
         server_should_pass_actor_input: bool | None = None,
+        server_tenancy: Tenancy | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
@@ -780,6 +788,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_standby_tenancy: Tenancy | None = None,
     ) -> ActorResource:
         """Update the Actor with the specified fields.
 
@@ -820,6 +829,8 @@ class ActorClientAsync(ResourceClientAsync):
                 elsewhere.
             server_should_pass_actor_input: Whether to pass the Actor input to the runs of the Server Actor. If false,
                 they start with no input.
+            server_tenancy: Whether each user gets their own runs of the Server Actor (`SINGLE_TENANT`) or the runs are
+                shared across users (`MULTI_TENANT`). `MULTI_TENANT` requires pay-per-event pricing.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -838,6 +849,7 @@ class ActorClientAsync(ResourceClientAsync):
                 removed in v4.
             actor_standby_should_pass_actor_input: Deprecated alias of `server_should_pass_actor_input`. Will be removed
                 in v4.
+            actor_standby_tenancy: Deprecated alias of `server_tenancy`. Will be removed in v4.
 
         Returns:
             The updated Actor.
@@ -872,6 +884,7 @@ class ActorClientAsync(ResourceClientAsync):
                     'server_memory_mbytes': server_memory_mbytes,
                     'server_disable_fields_override': server_disable_fields_override,
                     'server_should_pass_actor_input': server_should_pass_actor_input,
+                    'server_tenancy': server_tenancy,
                 },
                 {
                     'actor_standby_is_enabled': actor_standby_is_enabled,
@@ -882,6 +895,7 @@ class ActorClientAsync(ResourceClientAsync):
                     'actor_standby_memory_mbytes': actor_standby_memory_mbytes,
                     'actor_standby_disable_standby_fields_override': actor_standby_disable_standby_fields_override,
                     'actor_standby_should_pass_actor_input': actor_standby_should_pass_actor_input,
+                    'actor_standby_tenancy': actor_standby_tenancy,
                 },
             ),
             example_run_input=ExampleRunInput(

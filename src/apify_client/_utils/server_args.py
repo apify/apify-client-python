@@ -15,6 +15,7 @@ DEPRECATED_SERVER_ARGS = {
     'actor_standby_memory_mbytes': 'server_memory_mbytes',
     'actor_standby_disable_standby_fields_override': 'server_disable_fields_override',
     'actor_standby_should_pass_actor_input': 'server_should_pass_actor_input',
+    'actor_standby_tenancy': 'server_tenancy',
 }
 """Deprecated `actor_standby_*` arguments, named after Actor Standby (the former name of Server Actors), mapped to the
 `server_*` arguments that replace them."""
@@ -57,4 +58,5 @@ def build_actor_standby(server_args: dict[str, Any], deprecated_args: dict[str, 
         memory_mbytes=args.get('server_memory_mbytes'),
         disable_standby_fields_override=args.get('server_disable_fields_override'),
         should_pass_actor_input=args.get('server_should_pass_actor_input'),
+        tenancy=args.get('server_tenancy'),
     )

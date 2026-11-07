@@ -90,6 +90,10 @@ class ActVersion(BaseModel):
     """
     URL of the tarball or ZIP file, present when sourceType is TARBALL. Returned only to the Actor owner.
     """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'])] = None
+    """
+    The Actor's directory inside the uploaded source, present when the version sets it. Applies when sourceType is SOURCE_FILES or TARBALL. On a TARBALL version, only users with write access to the Actor get it.
+    """
 
 
 @docs_group('Models')
@@ -1110,6 +1114,10 @@ class CreateVersionRequest(BaseModel):
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
+    """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'], max_length=255, min_length=1)] = None
+    """
+    The Actor's directory inside the uploaded source, as a path relative to the upload root with `/` separators, for example `actors/typescript-actor`. Applies when the `sourceType` is `SOURCE_FILES` or `TARBALL`. The API rejects a path when the `sourceType` is `GIT_REPO` or `GITHUB_GIST`. When omitted or `null`, the upload root is the Actor's directory. It has 1 to 255 characters, with no leading, trailing, or repeated `/` and no `.` or `..` segments.
     """
 
 
@@ -4745,6 +4753,10 @@ class UpdateVersionRequest(BaseModel):
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'], max_length=255, min_length=1)] = None
+    """
+    The Actor's directory inside the uploaded source, as a path relative to the upload root with `/` separators, for example `actors/typescript-actor`. Applies when the `sourceType` is `SOURCE_FILES` or `TARBALL`. The API rejects it when the `sourceType` is `GIT_REPO` or `GITHUB_GIST`. On an update without `sourceType`, the API checks it against the version's stored source type. When the version has no `actorPath`, the upload root is the Actor's directory. It has 1 to 255 characters, with no leading, trailing, or repeated `/` and no `.` or `..` segments. An update that sends `sourceType`, `sourceFiles`, or `tarballUrl` without `actorPath` removes the stored `actorPath`, so send it again with every upload. An update of other fields, such as `envVars` or `buildTag`, keeps it. Send `null` to remove it.
+    """
 
 
 @docs_group('Models')
@@ -4999,6 +5011,10 @@ class Version(BaseModel):
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
+    """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'], max_length=255, min_length=1)] = None
+    """
+    The Actor's directory inside the uploaded source, as a path relative to the upload root with `/` separators, for example `actors/typescript-actor`. Applies when the `sourceType` is `SOURCE_FILES` or `TARBALL`. When absent or `null`, the upload root is the Actor's directory. On a `TARBALL` version, only users with write access to the Actor get it. It has 1 to 255 characters, with no leading, trailing, or repeated `/` and no `.` or `..` segments.
     """
     github_webhook_id: int | None = None
     """

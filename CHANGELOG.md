@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add Server Actor support (formerly Actor Standby) ([#1153](https://github.com/apify/apify-client-python/pull/1153)) ([63bd448](https://github.com/apify/apify-client-python/commit/63bd448e1bfdfa668f96145c2f79cfd73d9ffe98)) by [@vdusek](https://github.com/vdusek), closes [#973](https://github.com/apify/apify-client-python/issues/973)
 - Add `server_*` arguments and deprecate `actor_standby_*` ones ([#1202](https://github.com/apify/apify-client-python/pull/1202)) ([e8ef135](https://github.com/apify/apify-client-python/commit/e8ef135c0b690164cc949e7bfd0a2b5f965ec50a)) by [@vdusek](https://github.com/vdusek), closes [#1195](https://github.com/apify/apify-client-python/issues/1195)
 - Add `server_tenancy` parameter to Actor create and update ([#1169](https://github.com/apify/apify-client-python/pull/1169)) ([d989d65](https://github.com/apify/apify-client-python/commit/d989d6508df648044504b6ee9343615ee5cf8428)) by [@janbuchar](https://github.com/janbuchar)
+- Add `actor_path` to Actor version models ([#1210](https://github.com/apify/apify-client-python/pull/1210)) ([503d9d9](https://github.com/apify/apify-client-python/commit/503d9d914f6593fbaaa0456e9a9fab971f88f507)) by [@apify-service-account](https://github.com/apify-service-account)
 
 ### 🐛 Bug Fixes
 

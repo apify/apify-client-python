@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.4.1 - **not yet released**
+## [3.5.0](https://github.com/apify/apify-client-python/releases/tag/v3.5.0) (2026-11-09)
 
 ### 🚀 Features
 
@@ -22,7 +21,6 @@ All notable changes to this project will be documented in this file.
 - Reject non-positive `expires_in` in signed public URLs ([#1182](https://github.com/apify/apify-client-python/pull/1182)) ([f6be852](https://github.com/apify/apify-client-python/commit/f6be852bf124f4ad3e340d25ace080b8a9770588)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.4.0](https://github.com/apify/apify-client-python/releases/tag/v3.4.0) (2026-10-27)
 
 ### 🚀 Features

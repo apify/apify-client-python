@@ -112,6 +112,19 @@ def test_request_sends_caller_authorization_header(httpserver: HTTPServer, sync_
     assert captured[0].headers['X-Apify-Authorization'] == 'Bearer test'
 
 
+def test_request_sends_parent_request_id_header(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`parent_request_id` goes out as the `X-Actor-Request-ID` header, over one passed in `headers`."""
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/', method='GET').respond_with_json({'ok': True})
+
+    sync_client.actor(_MOCKED_ACTOR_ID).server().request(
+        headers={'x-actor-request-id': 'stale'}, parent_request_id='parent-id'
+    )
+
+    captured = server_requests(httpserver)
+    assert captured[0].headers.getlist('X-Actor-Request-ID') == ['parent-id']
+
+
 def test_request_fetches_server_url_once(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """Later calls on the same client reuse the server URL fetched by the first one."""
     expect_server_actor(httpserver)

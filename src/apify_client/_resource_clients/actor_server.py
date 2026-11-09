@@ -159,6 +159,7 @@ class ActorServerClient(ResourceClient):
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
+        parent_request_id: str | None = None,
         compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
         stream: bool = False,
         timeout: Timeout = 'long',
@@ -190,6 +191,8 @@ class ActorServerClient(ResourceClient):
             headers: Additional headers of the request.
             data: Raw request body. Cannot be used together with `json`.
             json: JSON-serializable request body. Cannot be used together with `data`.
+            parent_request_id: The `X-Actor-Request-ID` header of the request your Server Actor is handling, sent on
+                as the same header so the called Actor charges at that request's pricing tier.
             compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
                 instance. The body is compressed under the same conditions as for API calls. Set it only if the
                 Actor's server decodes the resulting `Content-Encoding`.
@@ -208,6 +211,8 @@ class ActorServerClient(ResourceClient):
         """
         server_url = self.get_url()
         server_path = path.partition('#')[0].lstrip('/')
+        if parent_request_id is not None:
+            headers = self._http_client._merge_headers(headers, {'X-Actor-Request-ID': parent_request_id})  # noqa: SLF001
         return self._http_client.call(
             url=f'{server_url.rstrip("/")}/{server_path}',
             method=method,
@@ -355,6 +360,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
+        parent_request_id: str | None = None,
         compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
         stream: bool = False,
         timeout: Timeout = 'long',
@@ -386,6 +392,8 @@ class ActorServerClientAsync(ResourceClientAsync):
             headers: Additional headers of the request.
             data: Raw request body. Cannot be used together with `json`.
             json: JSON-serializable request body. Cannot be used together with `data`.
+            parent_request_id: The `X-Actor-Request-ID` header of the request your Server Actor is handling, sent on
+                as the same header so the called Actor charges at that request's pricing tier.
             compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
                 instance. The body is compressed under the same conditions as for API calls. Set it only if the
                 Actor's server decodes the resulting `Content-Encoding`.
@@ -404,6 +412,8 @@ class ActorServerClientAsync(ResourceClientAsync):
         """
         server_url = await self.get_url()
         server_path = path.partition('#')[0].lstrip('/')
+        if parent_request_id is not None:
+            headers = self._http_client._merge_headers(headers, {'X-Actor-Request-ID': parent_request_id})  # noqa: SLF001
         return await self._http_client.call(
             url=f'{server_url.rstrip("/")}/{server_path}',
             method=method,

@@ -156,7 +156,8 @@ class ApifyClient:
                 the HTTP client's constructor.
             compression: Compression algorithm for request bodies. Defaults to `'gzip'`. Pass a string literal to select
                 an algorithm, or an `HttpCompressor` instance for finer-grained control. `'brotli'` needs the `brotli`
-                extra (`pip install "apify-client[brotli]"`). It is not the default because it is a compiled package.
+                extra (`pip install "apify-client[brotli]"`). It is not the default because the `brotli` package is a C
+                extension, while gzip support is part of the Python standard library.
 
         Raises:
             ValueError: If `max_retries` is negative.
@@ -538,7 +539,8 @@ class ApifyClientAsync:
                 the HTTP client's constructor.
             compression: Compression algorithm for request bodies. Defaults to `'gzip'`. Pass a string literal to select
                 an algorithm, or an `HttpCompressor` instance for finer-grained control. `'brotli'` needs the `brotli`
-                extra (`pip install "apify-client[brotli]"`). It is not the default because it is a compiled package.
+                extra (`pip install "apify-client[brotli]"`). It is not the default because the `brotli` package is a C
+                extension, while gzip support is part of the Python standard library.
 
         Raises:
             ValueError: If `max_retries` is negative.

@@ -21,6 +21,7 @@ class MyHttpClientAsync(HttpClientAsync):
         content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         """Send one request through the custom transport."""
         raise NotImplementedError

@@ -53,7 +53,7 @@ dev = [
     # See https://github.com/apify/apify-client-python/pull/582/ for more details.
     # We explicitly constrain black>=24.3.0 to override the transitive dependency.
     "black>=24.3.0",
-    "datamodel-code-generator[http,ruff]>=0.64.1,<1.0.0",
+    "datamodel-code-generator[http,ruff]>=0.85.0,<1.0.0",
     "griffe<3.0.0",
     "poethepoet<1.0.0",
     "pre-commit<5.0.0",
@@ -105,7 +105,6 @@ ignore = [
     "D213",     # Multi-line docstring summary should start at the second line
     "D413",     # Missing blank line after last section
     "EM",       # flake8-errmsg
-    "G004",     # Logging statement uses f-string
     "ISC001",   # This rule may cause conflicts when used with the formatter
     "FIX",      # flake8-fixme
     "PLR0911",  # Too many return statements
@@ -168,6 +167,7 @@ indent-style = "space"
     "TC003",  # Move standard library import into a type-checking block
 ]
 "src/apify_client/_literals.py" = [
+    "E501",   # Line too long
     "PYI051", # `Literal[...]` is redundant in a union with `str`; the open `Literal[...] | str` is deliberate — it keeps known members as hints while tolerating unknown API values (see scripts/postprocess_generated_models.py)
 ]
 
@@ -208,7 +208,7 @@ unused-ignore-comment = "error"
 [[tool.ty.overrides]]
 include = ["docs/**/*.py", "website/**/*.py"]
 [tool.ty.overrides.rules]
-unresolved-import = "ignore"
+import-not-found = "ignore"
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert_never()"]
@@ -251,7 +251,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-10-29T100357Z"
+version = "v2-2026-11-04T151257Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

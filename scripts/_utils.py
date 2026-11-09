@@ -20,7 +20,7 @@ SRC_PATH = Path(__file__).resolve().parent.parent / 'src'
 """Path to the source code of the apify_client package."""
 
 _SUBSTITUTIONS = [
-    (re.compile(r'Client'), 'ClientAsync'),
+    (re.compile(r'Client(?!Error)'), 'ClientAsync'),
     (re.compile(r'\bsynchronously\b'), 'asynchronously'),
     (re.compile(r'\bSynchronously\b'), 'Asynchronously'),
     (re.compile(r'\bsynchronous\b'), 'asynchronous'),

@@ -17,6 +17,13 @@ from apify_client.http_clients import HttpResponse, StreamedRequestBody
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
+AuthorizationHeader = Literal['Authorization', 'X-Apify-Authorization']
+"""Type for the `authorization_header` parameter on `HttpClient.call` and `HttpClientAsync.call`.
+
+The Apify API reads `Authorization`. Actor servers also accept `X-Apify-Authorization`, which the platform removes
+before the request reaches the Actor, so the `Authorization` header stays free for the Actor's own authentication.
+"""
+
 HttpCompressionAlgorithm = Literal['brotli', 'gzip']
 """Accepted string literals for the `compression` parameter on `ApifyClient` and `ApifyClientAsync`."""
 

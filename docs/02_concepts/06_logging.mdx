@@ -1,7 +1,7 @@
 ---
 id: logging
 title: Logging
-description: Configure debug logging to inspect API requests and responses.
+description: Configure debug logging for API requests and redirect Actor run logs to Python loggers.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -10,6 +10,12 @@ import CodeBlock from '@theme/CodeBlock';
 
 import LoggingConfigExample from '!!raw-loader!./code/06_logging_config.py';
 import LoggingFormatterExample from '!!raw-loader!./code/06_logging_formatter.py';
+import RedirectCallAsyncExample from '!!raw-loader!./code/06_redirect_call_async.py';
+import RedirectCallSyncExample from '!!raw-loader!./code/06_redirect_call_sync.py';
+import RedirectRunAsyncExample from '!!raw-loader!./code/06_redirect_run_async.py';
+import RedirectRunSyncExample from '!!raw-loader!./code/06_redirect_run_sync.py';
+
+import ApiLink from '@theme/ApiLink';
 
 The library logs useful debug information to the `apify_client` logger whenever it sends requests to the Apify API. You can configure this logger to print debug information to the standard output by adding a handler:
 
@@ -32,3 +38,39 @@ To display these additional properties in the log output, you need to use a cust
 </CodeBlock>
 
 For more information on creating and using custom log formatters, refer to the official Python [logging documentation](https://docs.python.org/3/howto/logging.html#formatters).
+
+## Redirecting Actor run logs
+
+When you start an Actor with <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink>, the client redirects the run's log to a Python logger while it waits for the run to finish. The same logger also receives the run's status and status message whenever they change. The `logger` argument controls where the lines go:
+
+- `'default'` (the default) - A built-in redirect logger named after the Actor and the run ID.
+- A `logging.Logger` - Your own logger receives the lines, so give it a handler and a level that let them through.
+- `None` - Redirection is turned off.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {RedirectCallAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {RedirectCallSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+For a run started with <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink>, or any other run you have a client for, use <ApiLink to="class/RunClient#get_streamed_log">`RunClient.get_streamed_log`</ApiLink> to redirect its log and <ApiLink to="class/RunClient#get_status_message_watcher">`RunClient.get_status_message_watcher`</ApiLink> to redirect its status messages. Both accept an optional `to_logger` and work as context managers, or you can call `start()` and `stop()` yourself:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {RedirectRunAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {RedirectRunSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

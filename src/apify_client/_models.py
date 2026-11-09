@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Annotated, Any, Literal
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, RootModel
@@ -11,16 +10,19 @@ from pydantic.alias_generators import to_camel
 from apify_client._docs import docs_group
 from apify_client._literals import (
     ActorJobStatus,
+    ActorNotice,
     ActorPermissionLevel,
     Deployment,
     Encoding,
     ErrorType,
     GeneralAccess,
     HttpMethod,
+    MonitoringLevel,
     OAuthProviderType,
     Provider,
     RunOrigin,
     SourceCodeFileFormat,
+    Tenancy,
     VersionSourceType,
     WebhookDispatchStatus,
     WebhookEventType,
@@ -87,6 +89,10 @@ class ActVersion(BaseModel):
     tarball_url: Annotated[str | None, Field(examples=['https://example.com/my-actor.zip'])] = None
     """
     URL of the tarball or ZIP file, present when sourceType is TARBALL. Returned only to the Actor owner.
+    """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'])] = None
+    """
+    The Actor's directory inside the uploaded source, present when the version sets it. Applies when sourceType is SOURCE_FILES or TARBALL. On a TARBALL version, only users with write access to the Actor get it.
     """
 
 
@@ -248,16 +254,6 @@ class ActorListItem(BaseModel):
     username: Annotated[str, Field(examples=['janedoe'])]
     title: Annotated[str | None, Field(examples=['Hello World Example'])] = None
     stats: ActorStats | None = None
-
-
-@docs_group('Models')
-class ActorNotice(Enum):
-    """A warning displayed on the Actor's page in Apify Store and Console. Can be set by the Actor's developer or automatically by Apify's quality checks."""
-
-    NONE = 'NONE'
-    RESIDENTIAL_PROXY_REQUIRED = 'RESIDENTIAL_PROXY_REQUIRED'
-    UNDER_MAINTENANCE = 'UNDER_MAINTENANCE'
-    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')
@@ -494,17 +490,21 @@ class ActorStandby(BaseModel):
     """
     Whether to pass the Actor's input to the standby run. If `false`, the standby runs start with no input.
     """
-    tenancy: Annotated[str | None, Field(examples=['SINGLE_TENANT'])] = None
+    tenancy: Annotated[Tenancy | None, Field(examples=['SINGLE_TENANT'])] = None
     """
-    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`). Set by Apify.
+    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`).
     """
     is_console_auth_enabled: bool | None = None
     """
-    Whether standby requests can be authenticated with an Apify Console session. Set by Apify.
+    Whether standby requests can be authenticated with an Apify Console session.
+    When creating an Actor, omit this field or set it to `false`. When updating an Actor, only Apify administrators can change it; other users can only send the current value, or `false` if it's not set yet.
+
     """
     is_tokenless_enabled: bool | None = None
     """
-    Whether standby requests can be made without an API token. Set by Apify.
+    Whether standby requests can be made without an API token.
+    When creating an Actor, omit this field or set it to `false`. When updating an Actor, only Apify administrators can change it; other users can only send the current value, or `false` if it's not set yet.
+
     """
 
 
@@ -1114,6 +1114,10 @@ class CreateVersionRequest(BaseModel):
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
+    """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'], max_length=255, min_length=1)] = None
+    """
+    The Actor's directory inside the uploaded source, as a path relative to the upload root with `/` separators, for example `actors/typescript-actor`. Applies when the `sourceType` is `SOURCE_FILES` or `TARBALL`. The API rejects a path when the `sourceType` is `GIT_REPO` or `GITHUB_GIST`. When omitted or `null`, the upload root is the Actor's directory. It has 1 to 255 characters, with no leading, trailing, or repeated `/` and no `.` or `..` segments.
     """
 
 
@@ -2505,14 +2509,6 @@ class LockedRequestQueueHeadResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: LockedRequestQueueHead
-
-
-@docs_group('Models')
-class MonitoringLevel(Enum):
-    """Level of monitoring services included in the plan. `null` or missing means the plan includes no monitoring service."""
-
-    STANDARD = 'STANDARD'
-    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')
@@ -4757,6 +4753,10 @@ class UpdateVersionRequest(BaseModel):
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'], max_length=255, min_length=1)] = None
+    """
+    The Actor's directory inside the uploaded source, as a path relative to the upload root with `/` separators, for example `actors/typescript-actor`. Applies when the `sourceType` is `SOURCE_FILES` or `TARBALL`. The API rejects it when the `sourceType` is `GIT_REPO` or `GITHUB_GIST`. On an update without `sourceType`, the API checks it against the version's stored source type. When the version has no `actorPath`, the upload root is the Actor's directory. It has 1 to 255 characters, with no leading, trailing, or repeated `/` and no `.` or `..` segments. An update that sends `sourceType`, `sourceFiles`, or `tarballUrl` without `actorPath` removes the stored `actorPath`, so send it again with every upload. An update of other fields, such as `envVars` or `buildTag`, keeps it. Send `null` to remove it.
+    """
 
 
 @docs_group('Models')
@@ -5011,6 +5011,10 @@ class Version(BaseModel):
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
+    """
+    actor_path: Annotated[str | None, Field(examples=['actors/typescript-actor'], max_length=255, min_length=1)] = None
+    """
+    The Actor's directory inside the uploaded source, as a path relative to the upload root with `/` separators, for example `actors/typescript-actor`. Applies when the `sourceType` is `SOURCE_FILES` or `TARBALL`. When absent or `null`, the upload root is the Actor's directory. On a `TARBALL` version, only users with write access to the Actor get it. It has 1 to 255 characters, with no leading, trailing, or repeated `/` and no `.` or `..` segments.
     """
     github_webhook_id: int | None = None
     """

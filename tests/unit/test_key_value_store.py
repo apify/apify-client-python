@@ -524,3 +524,40 @@ async def test_set_record_streams_pre_encoded_file_like_value_async(
 
     assert captured_records[0].headers['content-encoding'] == 'gzip'
     assert captured_records[0].get_data() == compressed
+
+
+_GET_RECORD_CASES = [
+    pytest.param('application/json', b'{"a": 1}', {'a': 1}, id='json is parsed'),
+    pytest.param('application/json; charset=utf-8', b'[1, 2]', [1, 2], id='json with parameters is parsed'),
+    pytest.param('application/json-patch+json', b'[{"op": "remove"}]', [{'op': 'remove'}], id='+json is parsed'),
+    pytest.param('application/jsonl', b'{"a":1}\n{"a":2}', '{"a":1}\n{"a":2}', id='jsonl is returned as text'),
+    pytest.param('application/json-seq', b'\x1e{"a":1}\n', '\x1e{"a":1}\n', id='json-seq is returned as text'),
+]
+
+
+@pytest.mark.parametrize(('content_type', 'body', 'expected_value'), _GET_RECORD_CASES)
+def test_get_record_decodes_value_by_content_type_sync(
+    *, httpserver: HTTPServer, api_url: str, content_type: str, body: bytes, expected_value: Any
+) -> None:
+    """`application/json*` records that are not a single JSON document come back as text instead of failing."""
+    httpserver.expect_request(_RECORD_PATH, method='GET').respond_with_data(body, content_type=content_type)
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    record = client.key_value_store(_MOCKED_KVS_ID).get_record('f')
+
+    assert record is not None
+    assert record['value'] == expected_value
+
+
+@pytest.mark.parametrize(('content_type', 'body', 'expected_value'), _GET_RECORD_CASES)
+async def test_get_record_decodes_value_by_content_type_async(
+    *, httpserver: HTTPServer, api_url: str, content_type: str, body: bytes, expected_value: Any
+) -> None:
+    """`application/json*` records that are not a single JSON document come back as text instead of failing."""
+    httpserver.expect_request(_RECORD_PATH, method='GET').respond_with_data(body, content_type=content_type)
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    record = await client.key_value_store(_MOCKED_KVS_ID).get_record('f')
+
+    assert record is not None
+    assert record['value'] == expected_value

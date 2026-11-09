@@ -90,6 +90,7 @@ class ActorVersionCollectionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        actor_path: str | None = None,
         timeout: Timeout = 'short',
     ) -> Version:
         """Create a new Actor version.
@@ -112,6 +113,10 @@ class ActorVersionCollectionClient(ResourceClient):
                 Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
+            actor_path: The Actor's directory inside the uploaded source, only for `'SOURCE_FILES'` and `'TARBALL'`
+                versions. A relative path with `/` separators, such as `actors/my-actor`, of 1 to 255 characters,
+                with no leading, trailing, or repeated `/` and no `.` or `..` segment. Without it, the root of the
+                uploaded source is the Actor's directory.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -127,6 +132,7 @@ class ActorVersionCollectionClient(ResourceClient):
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
+            actor_path=actor_path,
         )
         result = self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
@@ -196,6 +202,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        actor_path: str | None = None,
         timeout: Timeout = 'short',
     ) -> Version:
         """Create a new Actor version.
@@ -218,6 +225,10 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
                 Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
+            actor_path: The Actor's directory inside the uploaded source, only for `'SOURCE_FILES'` and `'TARBALL'`
+                versions. A relative path with `/` separators, such as `actors/my-actor`, of 1 to 255 characters,
+                with no leading, trailing, or repeated `/` and no `.` or `..` segment. Without it, the root of the
+                uploaded source is the Actor's directory.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -233,6 +244,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
+            actor_path=actor_path,
         )
         result = await self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data

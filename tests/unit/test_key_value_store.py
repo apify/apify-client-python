@@ -526,7 +526,7 @@ async def test_set_record_streams_pre_encoded_file_like_value_async(
     assert captured_records[0].get_data() == compressed
 
 
-_GET_RECORD_CASES = [
+GET_RECORD_CASES = [
     pytest.param('application/json', b'{"a": 1}', {'a': 1}, id='json is parsed'),
     pytest.param('application/json; charset=utf-8', b'[1, 2]', [1, 2], id='json with parameters is parsed'),
     pytest.param('application/json-patch+json', b'[{"op": "remove"}]', [{'op': 'remove'}], id='+json is parsed'),
@@ -537,7 +537,7 @@ _GET_RECORD_CASES = [
 ]
 
 
-@pytest.mark.parametrize(('content_type', 'body', 'expected_value'), _GET_RECORD_CASES)
+@pytest.mark.parametrize(('content_type', 'body', 'expected_value'), GET_RECORD_CASES)
 def test_get_record_decodes_value_by_content_type_sync(
     *, httpserver: HTTPServer, api_url: str, content_type: str, body: bytes, expected_value: Any
 ) -> None:
@@ -551,7 +551,7 @@ def test_get_record_decodes_value_by_content_type_sync(
     assert record['value'] == expected_value
 
 
-@pytest.mark.parametrize(('content_type', 'body', 'expected_value'), _GET_RECORD_CASES)
+@pytest.mark.parametrize(('content_type', 'body', 'expected_value'), GET_RECORD_CASES)
 async def test_get_record_decodes_value_by_content_type_async(
     *, httpserver: HTTPServer, api_url: str, content_type: str, body: bytes, expected_value: Any
 ) -> None:

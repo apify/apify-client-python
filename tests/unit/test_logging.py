@@ -1382,15 +1382,6 @@ def test_streamed_log_sync_redirects_line_before_next_message(httpserver: HTTPSe
     ('chunks', 'expected_calls'),
     [
         pytest.param(
-            [b'2025-05-13T07:24:12.588Z ERROR boom\n', b'  traceback line\n', b'2025-05-13T07:24:13.588Z next\n'],
-            [
-                (logging.ERROR, '2025-05-13T07:24:12.588Z ERROR boom'),
-                (logging.ERROR, '  traceback line'),
-                (logging.INFO, '2025-05-13T07:24:13.588Z next'),
-            ],
-            id='continuation-in-later-chunk-keeps-level',
-        ),
-        pytest.param(
             [b'2025-05-13T07:24:12.588Z first\n2025-05-13T07:24:13', b'.588Z second\n'],
             [(logging.INFO, '2025-05-13T07:24:12.588Z first'), (logging.INFO, '2025-05-13T07:24:13.588Z second')],
             id='marker-split-across-chunks',

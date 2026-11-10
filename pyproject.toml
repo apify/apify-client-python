@@ -207,6 +207,10 @@ exclude = ["website/versioned_docs"]
 [tool.ty.rules]
 unused-ignore-comment = "error"
 
+[tool.ty.analysis]
+# Installed only below Python 3.14 (the `zstd` extra), so it cannot resolve when type checking under 3.14 and newer.
+allowed-unresolved-imports = ["backports.zstd"]
+
 [[tool.ty.overrides]]
 include = ["docs/**/*.py", "website/**/*.py"]
 [tool.ty.overrides.rules]

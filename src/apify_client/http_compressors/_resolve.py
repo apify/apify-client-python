@@ -19,7 +19,8 @@ def resolve_compressor(compression: HttpCompressionAlgorithm | HttpCompressor) -
         A ready-to-use `HttpCompressor`.
 
     Raises:
-        ImportError: If the requested algorithm needs an optional extra that is not installed.
+        ImportError: If the requested algorithm needs an optional extra that is not installed, or for `'zstd'` on
+            Python 3.14 and newer, if the Python build lacks zstd support.
         ValueError: If `compression` is not a recognized compression algorithm.
     """
     if isinstance(compression, HttpCompressor):
@@ -32,6 +33,11 @@ def resolve_compressor(compression: HttpCompressionAlgorithm | HttpCompressor) -
         from apify_client.http_compressors import BrotliHttpCompressor  # noqa: PLC0415
 
         return BrotliHttpCompressor()
+    if compression == 'zstd':
+        # Imported here for the same reason as brotli: before Python 3.14 zstd needs the `zstd` extra.
+        from apify_client.http_compressors import ZstdHttpCompressor  # noqa: PLC0415
+
+        return ZstdHttpCompressor()
 
     # The backend supports also `deflate` and `identity` (no compression). One can build
     # a custom compressor if needed.

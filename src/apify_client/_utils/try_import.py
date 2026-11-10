@@ -19,24 +19,28 @@ class ImportState:
 
 
 @contextmanager
-def try_import(module_name: str, *symbol_names: str, dependency_name: str, extra_name: str) -> Generator[ImportState]:
+def try_import(
+    module_name: str, *symbol_names: str, dependency_name: str, extra_name: str | None
+) -> Generator[ImportState]:
     """Context manager to attempt importing symbols into a module.
 
     If the named optional dependency is missing, the symbols are replaced with `FailedImport` objects whose message
-    names the extra that installs it. Import errors caused by the importing module itself or by another dependency
-    are propagated instead of being masked.
+    names the extra that installs it, or is the import error's own message when `extra_name` is `None` because no extra
+    can install the dependency. A dotted `dependency_name` also counts as missing when its parent package is missing.
+    Import errors caused by the importing module itself or by another dependency are propagated instead of being masked.
     """
     state = ImportState()
     try:
         yield state
     except ModuleNotFoundError as exc:
-        if exc.name != dependency_name:
+        if exc.name is None or not (dependency_name == exc.name or dependency_name.startswith(f'{exc.name}.')):
             raise
         state.available = False
-        message = (
-            f"{exc.args[0]}. Install the optional '{extra_name}' extra to use it: "
-            f"pip install 'apify-client[{extra_name}]'"
-        )
+        message = exc.args[0]
+        if extra_name is not None:
+            message += (
+                f". Install the optional '{extra_name}' extra to use it: pip install 'apify-client[{extra_name}]'"
+            )
         for symbol_name in symbol_names:
             setattr(sys.modules[module_name], symbol_name, FailedImport(message))
 

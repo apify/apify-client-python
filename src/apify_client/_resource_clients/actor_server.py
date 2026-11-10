@@ -203,7 +203,8 @@ class ActorServerClient(ResourceClient):
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
             NotFoundError: If the Actor does not exist.
-            ImportError: If `compression` needs an optional extra that is not installed.
+            ImportError: If `compression` needs an optional extra that is not installed, or for `'zstd'` on Python 3.14
+                and newer, if the Python build lacks zstd support.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
         server_url = self.get_url()
@@ -399,7 +400,8 @@ class ActorServerClientAsync(ResourceClientAsync):
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
             NotFoundError: If the Actor does not exist.
-            ImportError: If `compression` needs an optional extra that is not installed.
+            ImportError: If `compression` needs an optional extra that is not installed, or for `'zstd'` on Python 3.14
+                and newer, if the Python build lacks zstd support.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
         server_url = await self.get_url()

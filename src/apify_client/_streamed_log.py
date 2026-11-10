@@ -51,43 +51,52 @@ class StreamedLogBase:
         self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
         self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=UTC)
         self._received_data = False
+        self._last_message_level: int | None = None
+        """Level of the last redirected message, or `None` if the last message was skipped or none came yet."""
 
     def _process_new_data(self, data: bytes) -> None:
         if data:
             self._received_data = True
-        new_chunk = data
-        self._stream_buffer.append(new_chunk)
-        if re.findall(self._split_marker, new_chunk):
-            # If complete split marker was found in new chunk, then log the buffer.
+        self._stream_buffer.append(data)
+        if b'\n' in data:
             self._log_buffer_content(include_last_part=False)
 
     def _log_buffer_content(self, *, include_last_part: bool = False) -> None:
-        """Merge the whole buffer and split it into parts based on the marker.
+        """Redirect every complete line in the buffer and keep only the unterminated last line.
 
-        Log the messages created from the split parts and remove them from buffer.
-        The last part could be incomplete, and so it can be left unprocessed in the buffer until later.
+        A line is complete once its newline arrives, so a message is redirected as soon as it is written, not when the
+        next message starts. With `include_last_part`, the unterminated last line is redirected too.
         """
-        all_parts = re.split(self._split_marker, b''.join(self._stream_buffer))[1:]  # The First split is empty
+        buffer = b''.join(self._stream_buffer)
+        last_newline = buffer.rfind(b'\n')
         if include_last_part:
-            message_markers = all_parts[0::2]
-            message_contents = all_parts[1::2]
-            self._stream_buffer = []
+            complete, rest = buffer, b''
+        elif last_newline == -1:
+            complete, rest = b'', buffer
         else:
-            message_markers = all_parts[0:-2:2]
-            message_contents = all_parts[1:-2:2]
-            # The last two parts (marker and message) are possibly not complete and will be left in the buffer
-            self._stream_buffer = all_parts[-2:]
+            complete, rest = buffer[:last_newline], buffer[last_newline + 1 :]
+        self._stream_buffer = [rest] if rest else []
 
-        for marker, content in zip(message_markers, message_contents, strict=False):
+        all_parts = re.split(self._split_marker, complete)
+        # Lines before the first marker continue a message whose first lines an earlier chunk already redirected.
+        continuation = all_parts[0].decode('utf-8').strip()
+        if continuation and self._last_message_level is not None:
+            self._to_logger.log(level=self._last_message_level, msg=continuation)
+
+        message_markers = all_parts[1::2]
+        message_contents = all_parts[2::2]
+        for marker, content in zip(message_markers, message_contents, strict=True):
             decoded_marker = marker.decode('utf-8')
             decoded_content = content.decode('utf-8')
             if self._relevancy_time_limit:
                 log_time = datetime.fromisoformat(decoded_marker)
                 if log_time < self._relevancy_time_limit:
                     # Skip irrelevant logs
+                    self._last_message_level = None
                     continue
             message = decoded_marker + decoded_content
-            self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
+            self._last_message_level = self._guess_log_level_from_message(message)
+            self._to_logger.log(level=self._last_message_level, msg=message.strip())
 
     def _process_whole_log(self, log: bytes | None) -> None:
         """Redirect a whole log read in one request, including its last part."""

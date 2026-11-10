@@ -915,15 +915,15 @@ def _register_run_and_actor_endpoints(httpserver: HTTPServer) -> None:
 
 
 def _wait_for_blocking_read(streamed_log: StreamedLogBase, *, timeout: float = 5) -> None:
-    """Wait until a chunk has been buffered, which proves the reader reached the blocking read.
+    """Wait until a chunk has been received, which proves the reader reached the blocking read.
 
     A fixed sleep could end before the reader gets there. Async callers reach this through `asyncio.to_thread`, so
     the streaming task keeps the event loop while the wait runs.
     """
     deadline = time.monotonic() + timeout
-    while not streamed_log._stream_buffer and time.monotonic() < deadline:
+    while not streamed_log._received_data and time.monotonic() < deadline:
         time.sleep(0.01)
-    assert streamed_log._stream_buffer, 'the log stream never reached its blocking read'
+    assert streamed_log._received_data, 'the log stream never reached its blocking read'
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')
@@ -1343,6 +1343,80 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
     restarted_thread.join(timeout=5)
     assert not restarted_thread.is_alive()
     streamed_log.stop()
+
+
+def test_streamed_log_sync_redirects_line_before_next_message(httpserver: HTTPServer) -> None:
+    """A complete line is redirected while the stream stays open and silent, without waiting for the next message."""
+    release_server = threading.Event()
+    line = '2025-05-13T07:24:12.588Z ACTOR: going quiet'
+
+    def _silent_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            yield f'{line}\n'.encode()
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_silent_handler)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    to_logger = Mock(spec=logging.Logger)
+    streamed_log = StreamedLog(log_client, to_logger=to_logger)
+
+    streaming_thread = streamed_log.start()
+    try:
+        deadline = time.monotonic() + 5
+        while not to_logger.log.called and time.monotonic() < deadline:
+            time.sleep(0.01)
+        to_logger.log.assert_called_once_with(level=logging.INFO, msg=line)
+    finally:
+        release_server.set()
+        streaming_thread.join(timeout=5)
+        streamed_log.stop()
+
+
+@pytest.mark.parametrize(
+    ('chunks', 'expected_calls'),
+    [
+        pytest.param(
+            [b'2025-05-13T07:24:12.588Z ERROR boom\n', b'  traceback line\n', b'2025-05-13T07:24:13.588Z next\n'],
+            [
+                (logging.ERROR, '2025-05-13T07:24:12.588Z ERROR boom'),
+                (logging.ERROR, 'traceback line'),
+                (logging.INFO, '2025-05-13T07:24:13.588Z next'),
+            ],
+            id='continuation-in-later-chunk-keeps-level',
+        ),
+        pytest.param(
+            [b'2025-05-13T07:24:12.588Z first\n2025-05-13T07:24:13', b'.588Z second\n'],
+            [(logging.INFO, '2025-05-13T07:24:12.588Z first'), (logging.INFO, '2025-05-13T07:24:13.588Z second')],
+            id='marker-split-across-chunks',
+        ),
+        pytest.param(
+            [b'2025-05-13T07:24:12.588Z unterminated'],
+            [],
+            id='unterminated-line-waits-for-newline',
+        ),
+        pytest.param(
+            [b'preamble without marker\n', b'2025-05-13T07:24:12.588Z first\n'],
+            [(logging.INFO, '2025-05-13T07:24:12.588Z first')],
+            id='text-before-first-message-is-skipped',
+        ),
+    ],
+)
+def test_streamed_log_redirects_each_complete_line(chunks: list[bytes], expected_calls: list[tuple[int, str]]) -> None:
+    """Each chunk redirects the messages its newlines complete and keeps only the unterminated rest."""
+    to_logger = Mock(spec=logging.Logger)
+    streamed_log = StreamedLogBase(to_logger)
+
+    for chunk in chunks:
+        streamed_log._process_new_data(chunk)
+
+    calls = [(call.kwargs['level'], call.kwargs['msg']) for call in to_logger.log.call_args_list]
+    assert calls == expected_calls
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')

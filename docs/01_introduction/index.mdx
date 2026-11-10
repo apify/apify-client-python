@@ -61,6 +61,8 @@ For better request-body compression, opt in to `brotli`, which compresses better
     </TabItem>
 </Tabs>
 
+To compress with `zstd` instead, pass `compression='zstd'`. On Python 3.14 and newer it uses the standard library; on older versions install the optional `zstd` extra with `pip install "apify-client[zstd]"`.
+
 For details, see [HTTP compression](../02_concepts/13_http_compression.mdx).
 
 The client uses [Impit](https://github.com/apify/impit) as its default HTTP transport. To use the built-in [HTTPX2](https://github.com/pydantic/httpx2) transport, install the optional `httpx2` extra, which provides Pydantic's maintained continuation of HTTPX:

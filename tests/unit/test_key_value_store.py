@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gzip
 import io
+import sys
 import zlib
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
@@ -15,6 +16,11 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE, STREAMED_BODY_CHUNK_SIZE
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import StreamedRequestBody
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    import backports.zstd as zstd  # noqa: PLR0402 - the same import form as `http_compressors/_zstd.py`
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable, Iterator
@@ -113,6 +119,7 @@ _ASYNC_STREAMED_VALUE_CASES = [
 _PRE_ENCODED_VALUE_CASES = [
     pytest.param('gzip', gzip.compress(_BYTES_VALUE), id='gzip'),
     pytest.param('br', brotli.compress(_BYTES_VALUE), id='brotli'),
+    pytest.param('zstd', zstd.compress(_BYTES_VALUE), id='zstd'),
     pytest.param('deflate', zlib.compress(_BYTES_VALUE), id='encoding the client has no compressor for'),
     pytest.param('identity', _BYTES_VALUE, id='identity opt-out'),
 ]
@@ -130,10 +137,11 @@ _INCOMPRESSIBLE_VALUE_CASES = [
     params=[
         pytest.param(('gzip', 'gzip'), id='gzip'),
         pytest.param(('brotli', 'br'), id='brotli'),
+        pytest.param(('zstd', 'zstd'), id='zstd'),
     ]
 )
 def compression_case(request: pytest.FixtureRequest) -> tuple[HttpCompressionAlgorithm, str]:
-    """Run each test over both supported request-body compression algorithms, as (algorithm, content-encoding)."""
+    """Run each test over every supported request-body compression algorithm, as (algorithm, content-encoding)."""
     return request.param
 
 
@@ -164,6 +172,8 @@ def decode_body(request: Request) -> bytes:
         return gzip.decompress(raw)
     if encoding == 'br':
         return brotli.decompress(raw)
+    if encoding == 'zstd':
+        return zstd.decompress(raw)
     return raw
 
 

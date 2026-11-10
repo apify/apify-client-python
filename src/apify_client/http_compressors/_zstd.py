@@ -7,12 +7,15 @@ from apify_client.http_compressors._base import HttpCompressor
 if sys.version_info >= (3, 14):
     try:
         from compression import zstd
-    except ModuleNotFoundError as exc:
-        # `compression.zstd` is optional when CPython is built, and no extra can add it to a build without it.
+    except ImportError as exc:
+        # `compression.zstd` is optional when CPython is built, and no extra can add it to a build without it. A plain
+        # `ImportError` means `_zstd` exists but can't load, for example when the zstd shared library is missing.
         if exc.name != '_zstd':
             raise
+        # The name must match the `dependency_name` that `http_compressors/__init__.py` passes to `try_import`.
         raise ModuleNotFoundError(
-            'zstd compression is unavailable: this Python build was compiled without zstd support (`compression.zstd`)',
+            'zstd compression is unavailable: this Python build was compiled without zstd support, or its zstd library '
+            f'cannot be loaded (`compression.zstd`): {exc}',
             name='_zstd',
         ) from exc
 else:

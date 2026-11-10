@@ -34,7 +34,7 @@ def resolve_compressor(compression: HttpCompressionAlgorithm | HttpCompressor) -
 
         return BrotliHttpCompressor()
     if compression == 'zstd':
-        # Imported here for the same reason as brotli: before Python 3.14 zstd needs the `zstd` extra.
+        # Imported here so a missing `zstd` extra, or a Python build without zstd, raises `ImportError` at call time.
         from apify_client.http_compressors import ZstdHttpCompressor  # noqa: PLC0415
 
         return ZstdHttpCompressor()

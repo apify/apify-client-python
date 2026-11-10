@@ -34,18 +34,21 @@ pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 
 @contextmanager
-def _dependency_unavailable(dependency: str, *importers: str) -> Generator[None]:
+def _dependency_unavailable(
+    dependency: str, *importers: str, error: type[ImportError] = ModuleNotFoundError
+) -> Generator[None]:
     """Reimport the `http_compressors` package with the `dependency` import forced to fail.
 
     Simulates an environment where the optional extra providing `dependency` is not installed, and restores the
     original module state afterwards so other tests in the same worker are unaffected. `importers` names cached
     packages outside `http_compressors` that import `dependency`; they and their submodules are reimported too.
+    `error` is the exception the import raises: `ImportError` simulates a module that exists but can't load.
     """
 
     class _Blocker:
         def find_spec(self, name: str, *_args: object) -> None:
             if name == dependency or name.startswith(f'{dependency}.'):
-                raise ModuleNotFoundError(f"No module named '{name}'", name=dependency)
+                raise error(f"No module named '{name}'", name=dependency)
 
     def _affected(name: str) -> bool:
         prefixes = tuple(f'{package}.' for package in (dependency, *importers))
@@ -88,7 +91,7 @@ def test_gzip_compressor_round_trips_at_quality(quality: int) -> None:
     assert gzip.decompress(GzipHttpCompressor(quality=quality).compress(b'payload')) == b'payload'
 
 
-def test_zstd_compressor_defaults_to_level_3(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_zstd_compressor_defaults_to_quality_3(monkeypatch: pytest.MonkeyPatch) -> None:
     """Zstd compressor uses compression level `3` when no quality is given."""
     compress = Mock(return_value=b'compressed')
     monkeypatch.setattr(zstd, 'compress', compress)
@@ -241,9 +244,16 @@ def test_resolve_compressor_zstd_raises_clear_error_when_extra_missing() -> None
 
 
 @pytest.mark.skipif(sys.version_info < (3, 14), reason='zstd is in the standard library only from Python 3.14')
-def test_zstd_import_hook_raises_clear_error_when_python_lacks_zstd() -> None:
+@pytest.mark.parametrize(
+    'error',
+    [
+        pytest.param(ModuleNotFoundError, id='module missing'),
+        pytest.param(ImportError, id='module fails to load'),
+    ],
+)
+def test_zstd_import_hook_raises_clear_error_when_python_lacks_zstd(error: type[ImportError]) -> None:
     """On a Python 3.14+ build without zstd, the package still imports and `ZstdHttpCompressor` raises `ImportError`."""
-    with _dependency_unavailable('_zstd', 'compression'):
+    with _dependency_unavailable('_zstd', 'compression', error=error):
         module = importlib.import_module('apify_client.http_compressors')
         assert module.GzipHttpCompressor is not None
         with pytest.raises(ImportError, match='compiled without zstd support'):

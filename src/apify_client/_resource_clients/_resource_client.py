@@ -153,38 +153,28 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
     @staticmethod
     def _clean_json_payload(data: dict) -> dict:
-        """Remove None values and empty nested dicts from an API request payload.
+        """Remove unset top-level fields and empty nested dicts from an API request payload.
 
-        The Apify API ignores missing fields but may reject fields explicitly set to None.
-        Nested sub-models serialized by Pydantic may produce empty dicts when all their
-        fields are None - these are also removed.
+        A top-level `None` means the caller did not pass the argument, so the field is left out. `None` inside
+        a nested value the caller passed is kept and sent as `null`, so for example
+        `tagged_builds={'beta': None}` sends `{"taggedBuilds": {"beta": null}}` and removes the tag.
 
-        Uses an iterative stack-based approach, analogous to _build_params for query params.
+        Nested sub-models serialized by Pydantic with `exclude_none=True` produce empty dicts when all their
+        fields are unset - these are removed at every nesting level.
         """
-        result: dict = {}
-        stack: list[tuple[dict, dict]] = [(data, result)]
 
-        while stack:
-            source, target = stack.pop()
-            for key, val in source.items():
-                if val is None:
-                    continue
+        def _remove_empty(d: dict) -> dict:
+            result: dict = {}
+            for key, val in d.items():
                 if isinstance(val, dict):
-                    nested: dict = {}
-                    target[key] = nested
-                    stack.append((val, nested))
+                    cleaned = _remove_empty(val)
+                    if cleaned:
+                        result[key] = cleaned
                 else:
-                    target[key] = val
+                    result[key] = val
+            return result
 
-        # Remove dicts that became empty after None filtering
-        def _remove_empty(d: dict) -> None:
-            for key in [k for k, v in d.items() if isinstance(v, dict)]:
-                _remove_empty(d[key])
-                if not d[key]:
-                    del d[key]
-
-        _remove_empty(result)
-        return result
+        return _remove_empty({key: val for key, val in data.items() if val is not None})
 
 
 @docs_group('Resource clients')

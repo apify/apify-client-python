@@ -14,8 +14,8 @@ if sys.version_info >= (3, 14):
             raise
         # The name must match the `dependency_name` that `http_compressors/__init__.py` passes to `try_import`.
         raise ModuleNotFoundError(
-            'zstd compression is unavailable: this Python build was compiled without zstd support, or its zstd library '
-            f'cannot be loaded (`compression.zstd`): {exc}',
+            'zstd compression is unavailable because this Python build was compiled without zstd support, or its zstd '
+            f"library cannot be loaded ({exc}). Use compression='gzip' or compression='brotli' instead.",
             name='_zstd',
         ) from exc
 else:

@@ -1385,7 +1385,7 @@ def test_streamed_log_sync_redirects_line_before_next_message(httpserver: HTTPSe
             [b'2025-05-13T07:24:12.588Z ERROR boom\n', b'  traceback line\n', b'2025-05-13T07:24:13.588Z next\n'],
             [
                 (logging.ERROR, '2025-05-13T07:24:12.588Z ERROR boom'),
-                (logging.ERROR, 'traceback line'),
+                (logging.ERROR, '  traceback line'),
                 (logging.INFO, '2025-05-13T07:24:13.588Z next'),
             ],
             id='continuation-in-later-chunk-keeps-level',

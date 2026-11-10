@@ -79,7 +79,7 @@ class StreamedLogBase:
 
         all_parts = re.split(self._split_marker, complete)
         # Lines before the first marker continue a message whose first lines an earlier chunk already redirected.
-        continuation = all_parts[0].decode('utf-8').strip()
+        continuation = all_parts[0].decode('utf-8').lstrip('\n').rstrip()
         if continuation and self._last_message_level is not None:
             self._to_logger.log(level=self._last_message_level, msg=continuation)
 

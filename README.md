@@ -57,8 +57,8 @@
     uv add "apify-client[brotli]"
     ```
 
-    To compress with `zstd`, pass `compression='zstd'`. Python 3.14 and newer have it in the standard library; on older
-    versions install the optional `zstd` extra: `pip install "apify-client[zstd]"`.
+    To compress with `zstd`, pass `compression='zstd'`. Python 3.14 and newer have it in the standard library. On older
+    versions, install the optional `zstd` extra: `pip install "apify-client[zstd]"`.
 
     [Impit](https://github.com/apify/impit) is the default HTTP client and is installed automatically. To use the
     built-in [HTTPX2](https://github.com/pydantic/httpx2) client instead, install the optional `httpx2` extra, which

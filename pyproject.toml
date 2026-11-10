@@ -36,6 +36,8 @@ dependencies = [
 [project.optional-dependencies]
 brotli = ["brotli>=1.0.9"]
 httpx2 = ["httpx2>=2.0.0"]
+# zstd is in the standard library (`compression.zstd`) from Python 3.14; older versions use its official backport.
+zstd = ["backports.zstd>=1.0.0; python_version < '3.14'"]
 
 [project.urls]
 "Apify Homepage" = "https://apify.com"

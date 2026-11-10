@@ -76,8 +76,8 @@ def to_path_segment(value: str) -> str:
 def is_compressible_content_type(content_type: str | None) -> bool:
     """Decide whether a request body with the given content type is worth compressing.
 
-    Images, audio, video and archives already carry their own compression. Running them through gzip or brotli
-    burns CPU, holds a second full copy of the body in memory, and usually produces output slightly larger than
+    Images, audio, video and archives already carry their own compression. Running them through gzip, brotli or
+    zstd burns CPU, holds a second full copy of the body in memory, and usually produces output slightly larger than
     the input. Formats that are raw despite such a media type, for example `image/bmp` or `audio/wav`, are still
     compressed. A body with no content type is assumed to be compressible.
 

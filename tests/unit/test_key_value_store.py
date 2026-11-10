@@ -532,6 +532,8 @@ _GET_RECORD_CASES = [
     pytest.param('application/json-patch+json', b'[{"op": "remove"}]', [{'op': 'remove'}], id='+json is parsed'),
     pytest.param('application/jsonl', b'{"a":1}\n{"a":2}', '{"a":1}\n{"a":2}', id='jsonl is returned as text'),
     pytest.param('application/json-seq', b'\x1e{"a":1}\n', '\x1e{"a":1}\n', id='json-seq is returned as text'),
+    pytest.param('APPLICATION/JSONL', b'{"a":1}\n{"a":2}', '{"a":1}\n{"a":2}', id='uppercase jsonl is text'),
+    pytest.param('application/vnd.api+json', b'{"a": 1}', b'{"a": 1}', id='vnd +json is returned as bytes'),
 ]
 
 

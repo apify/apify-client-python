@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.5.1 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Return JSON lines records as text in `get_record()` ([#1215](https://github.com/apify/apify-client-python/pull/1215)) ([eb8ded4](https://github.com/apify/apify-client-python/commit/eb8ded40d74d333de0187616a9c382c65af866ba)) by [@dheerajitbhu](https://github.com/dheerajitbhu), closes [#1140](https://github.com/apify/apify-client-python/issues/1140)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.5.0](https://github.com/apify/apify-client-python/releases/tag/v3.5.0) (2026-11-09)
 
 ### 🚀 Features

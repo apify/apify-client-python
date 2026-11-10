@@ -101,7 +101,7 @@ Then pass `compression='brotli'` to the client constructor. If you request brotl
 
 ## Enabling zstd
 
-Python 3.14 and newer ship zstd in the standard library as `compression.zstd`, so `compression='zstd'` works there without an extra. On a Python build compiled without zstd support, or whose zstd library can't be loaded, `compression.zstd` can't be imported. On older Python versions, install the optional extra, which brings in the `backports.zstd` package:
+Python 3.14 and newer ship zstd in the standard library as `compression.zstd`, so `compression='zstd'` works there without an extra. On older Python versions, install the optional extra, which brings in the `backports.zstd` package:
 
 ```bash
 pip install "apify-client[zstd]"

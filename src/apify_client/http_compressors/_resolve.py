@@ -19,7 +19,7 @@ def resolve_compressor(compression: HttpCompressionAlgorithm | HttpCompressor) -
         A ready-to-use `HttpCompressor`.
 
     Raises:
-        ImportError: If the requested algorithm needs an optional extra that is not installed, or for `'zstd'` on
+        ImportError: If the requested algorithm needs an optional extra that is not installed, or, for `'zstd'` on
             Python 3.14 and newer, if the Python build lacks zstd support.
         ValueError: If `compression` is not a recognized compression algorithm.
     """

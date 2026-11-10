@@ -163,7 +163,7 @@ class ApifyClient:
 
         Raises:
             ValueError: If `max_retries` is negative.
-            ImportError: If `compression` is `'brotli'` or `'zstd'` and the extra it needs is not installed, or for
+            ImportError: If `compression` is `'brotli'` or `'zstd'` and the extra it needs is not installed, or, for
                 `'zstd'` on Python 3.14 and newer, if the Python build lacks zstd support.
         """
         if max_retries < 0:
@@ -549,7 +549,7 @@ class ApifyClientAsync:
 
         Raises:
             ValueError: If `max_retries` is negative.
-            ImportError: If `compression` is `'brotli'` or `'zstd'` and the extra it needs is not installed, or for
+            ImportError: If `compression` is `'brotli'` or `'zstd'` and the extra it needs is not installed, or, for
                 `'zstd'` on Python 3.14 and newer, if the Python build lacks zstd support.
         """
         if max_retries < 0:

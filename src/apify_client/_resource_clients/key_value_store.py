@@ -53,8 +53,8 @@ def _parse_get_record_response(response: HttpResponse) -> Any:
         if re.search(r'^application/json(?:$|.*\+json$)', content_type, flags=re.IGNORECASE):
             response_data = response.json()
         elif (
-            # Other `application/json*` types, such as `application/jsonl` or `application/json-seq`, are not
-            # a single JSON document, so they are returned as text rather than failing to parse.
+            # Other `application/json*` types, such as `application/jsonl` or `application/json-seq`, are not a
+            # single JSON document, so they are returned as text.
             re.search(r'^application/json', content_type, flags=re.IGNORECASE)
             or re.search(r'^application/.*xml$', content_type, flags=re.IGNORECASE)
             or re.search(r'^text/', content_type, flags=re.IGNORECASE)

@@ -539,7 +539,7 @@ _GET_RECORD_CASES = [
 def test_get_record_decodes_value_by_content_type_sync(
     *, httpserver: HTTPServer, api_url: str, content_type: str, body: bytes, expected_value: Any
 ) -> None:
-    """`application/json*` records that are not a single JSON document come back as text instead of failing."""
+    """JSON document records are parsed, and other `application/json*` records are returned as text."""
     httpserver.expect_request(_RECORD_PATH, method='GET').respond_with_data(body, content_type=content_type)
     client = ApifyClient(token='test_token', api_url=api_url)
 
@@ -553,7 +553,7 @@ def test_get_record_decodes_value_by_content_type_sync(
 async def test_get_record_decodes_value_by_content_type_async(
     *, httpserver: HTTPServer, api_url: str, content_type: str, body: bytes, expected_value: Any
 ) -> None:
-    """`application/json*` records that are not a single JSON document come back as text instead of failing."""
+    """JSON document records are parsed, and other `application/json*` records are returned as text."""
     httpserver.expect_request(_RECORD_PATH, method='GET').respond_with_data(body, content_type=content_type)
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 

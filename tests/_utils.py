@@ -2,14 +2,19 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 import secrets
 import string
 import time
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
 import pytest
+
+from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._consts import DEFAULT_API_URL
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -63,6 +68,31 @@ class HttpClientClasses:
 
     sync: type[HttpClient]
     async_: type[HttpClientAsync]
+
+
+@asynccontextmanager
+async def make_client(
+    token: str, client_type: str, http_client_classes: HttpClientClasses
+) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
+    """Build a sync or async client with the given token and HTTP client implementation, closing it on exit."""
+    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    if client_type == 'sync':
+        http_client = http_client_classes.sync()
+        yield ApifyClient.with_custom_http_client(
+            token,
+            api_url=api_url,
+            http_client=http_client,
+        )
+        http_client.close()
+        return
+
+    http_client_async = http_client_classes.async_()
+    yield ApifyClientAsync.with_custom_http_client(
+        token,
+        api_url=api_url,
+        http_client=http_client_async,
+    )
+    await http_client_async.aclose()
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:

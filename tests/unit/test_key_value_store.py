@@ -20,7 +20,7 @@ from apify_client.http_clients import StreamedRequestBody
 if sys.version_info >= (3, 14):
     from compression import zstd
 else:
-    import backports.zstd as zstd  # noqa: PLR0402 - the same import form as `http_compressors/_zstd.py`
+    from backports import zstd
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable, Iterator

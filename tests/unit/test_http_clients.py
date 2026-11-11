@@ -259,27 +259,6 @@ def test_set_default_authorization_sets_token_when_missing() -> None:
     assert client._headers['Authorization'] == 'Bearer test_token'
 
 
-@pytest.mark.parametrize(
-    ('base', 'override', 'expected'),
-    [
-        pytest.param(None, None, {}, id='both none'),
-        pytest.param({'Accept': 'a'}, None, {'Accept': 'a'}, id='override none'),
-        pytest.param(None, {'Accept': 'a'}, {'Accept': 'a'}, id='base none'),
-        pytest.param({'Accept': 'a'}, {'X-Custom': 'b'}, {'Accept': 'a', 'X-Custom': 'b'}, id='disjoint names'),
-        pytest.param({'Authorization': 'x'}, {'Authorization': 'y'}, {'Authorization': 'y'}, id='same casing'),
-        pytest.param({'Authorization': 'x'}, {'authorization': 'y'}, {'authorization': 'y'}, id='lowercase override'),
-        pytest.param({'authorization': 'x'}, {'AUTHORIZATION': 'y'}, {'AUTHORIZATION': 'y'}, id='uppercase override'),
-    ],
-)
-def test_merge_headers(
-    base: dict[str, str] | None,
-    override: dict[str, str] | None,
-    expected: dict[str, str],
-) -> None:
-    """_merge_headers merges case-insensitively, override values win and keep their casing."""
-    assert HttpClient._merge_headers(base, override) == expected
-
-
 def test_http_client_creates_sync_impit_client() -> None:
     """The synchronous adapter creates the Impit client, defers the one without redirects, and closes them."""
     client = ImpitHttpClient(token='test_token_123')

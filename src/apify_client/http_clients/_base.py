@@ -31,7 +31,7 @@ from apify_client._consts import (
 from apify_client._docs import docs_group
 from apify_client._logging import LoggerOnce, log_context, logger_name
 from apify_client._statistics import ClientStatistics
-from apify_client._utils.http import is_compressible_content_type
+from apify_client._utils.http import is_compressible_content_type, merge_headers
 from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients._streamed_body import StreamedRequestBody
@@ -188,7 +188,7 @@ class HttpClientBase:
         if token is not None:
             default_headers['Authorization'] = f'Bearer {token}'
 
-        self._headers = self._merge_headers(default_headers, headers)
+        self._headers = merge_headers(default_headers, headers)
 
     def set_default_authorization(self, token: str) -> None:
         """Set the `Authorization` header from the token, unless an authorization header is already configured.
@@ -215,20 +215,6 @@ class HttpClientBase:
         """
         _ = exc
         return False
-
-    @staticmethod
-    def _merge_headers(base: dict[str, str] | None, override: dict[str, str] | None) -> dict[str, str]:
-        """Merge two header dicts, treating header names case-insensitively.
-
-        A header from `override` replaces a same-named header in `base` regardless of the casing
-        of either name, and keeps the casing it was passed with.
-        """
-        merged = dict(base) if base else {}
-        for key, value in (override or {}).items():
-            for existing_key in [k for k in merged if k.lower() == key.lower()]:
-                del merged[existing_key]
-            merged[key] = value
-        return merged
 
     @staticmethod
     def _get_header(headers: dict[str, str], name: str) -> str | None:
@@ -353,9 +339,9 @@ class HttpClientBase:
             without_authorization = {
                 key: value for key, value in default_headers.items() if key.lower() != 'authorization'
             }
-            default_headers = self._merge_headers(without_authorization, {authorization_header: authorization})
+            default_headers = merge_headers(without_authorization, {authorization_header: authorization})
 
-        headers = self._merge_headers(default_headers, headers)
+        headers = merge_headers(default_headers, headers)
 
         # Dump JSON data to a string so it can be sent as a request body.
         if json is not None:
@@ -385,7 +371,7 @@ class HttpClientBase:
                 and is_compressible_content_type(self._get_header(headers, 'content-type'))
             ):
                 content = compressor.compress(content)
-                headers = self._merge_headers(headers, {'Content-Encoding': compressor.content_encoding})
+                headers = merge_headers(headers, {'Content-Encoding': compressor.content_encoding})
 
         elif data is not None:
             # Without this the request would go out with no body at all, losing the payload without a word.

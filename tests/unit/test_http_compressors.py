@@ -20,7 +20,7 @@ from apify_client.http_compressors._resolve import resolve_compressor
 if sys.version_info >= (3, 14):
     from compression import zstd
 else:
-    import backports.zstd as zstd  # noqa: PLR0402 - the same import form as `http_compressors/_zstd.py`
+    from backports import zstd
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
@@ -241,6 +241,16 @@ def test_resolve_compressor_zstd_raises_clear_error_when_extra_missing() -> None
     """Resolving `compression='zstd'` without the extra raises `ImportError` at resolution time."""
     with _dependency_unavailable('backports.zstd'), pytest.raises(ImportError):
         resolve_compressor('zstd')
+
+
+@pytest.mark.skipif(sys.version_info >= (3, 14), reason='zstd is in the standard library from Python 3.14')
+def test_zstd_import_hook_raises_clear_error_when_backport_fails_to_load() -> None:
+    """If `backports.zstd` is installed but fails to load, the package still imports and `ZstdHttpCompressor` raises."""
+    with _dependency_unavailable('backports.zstd', error=ImportError):
+        module = importlib.import_module('apify_client.http_compressors')
+        assert module.GzipHttpCompressor is not None
+        with pytest.raises(ImportError, match='installed but cannot be loaded'):
+            _ = module.ZstdHttpCompressor
 
 
 @pytest.mark.skipif(sys.version_info < (3, 14), reason='zstd is in the standard library only from Python 3.14')

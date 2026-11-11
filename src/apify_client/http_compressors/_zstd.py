@@ -21,7 +21,17 @@ if sys.version_info >= (3, 14):
 else:
     # Not `from backports import zstd`: when another `backports.*` package is installed but this one is not, that
     # raises a plain `ImportError` instead of the `ModuleNotFoundError` the optional-extra handling expects.
-    import backports.zstd as zstd  # noqa: PLR0402
+    try:
+        import backports.zstd as zstd  # noqa: PLR0402
+    except ModuleNotFoundError:
+        raise
+    except ImportError as exc:
+        # The package is installed but its C extension can't load. Without this, `import apify_client` would fail for
+        # every user, not only for those who pick zstd.
+        raise ModuleNotFoundError(
+            f'`backports.zstd` is installed but cannot be loaded ({exc})',
+            name='backports.zstd',
+        ) from exc
 
 
 class ZstdHttpCompressor(HttpCompressor):

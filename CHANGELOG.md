@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Return JSON lines records as text in `get_record()` ([#1215](https://github.com/apify/apify-client-python/pull/1215)) ([eb8ded4](https://github.com/apify/apify-client-python/commit/eb8ded40d74d333de0187616a9c382c65af866ba)) by [@dheerajitbhu](https://github.com/dheerajitbhu), closes [#1140](https://github.com/apify/apify-client-python/issues/1140)
+- Allow removing Actor build tags and clearing lists in `update()` ([#1221](https://github.com/apify/apify-client-python/pull/1221)) ([6f7375b](https://github.com/apify/apify-client-python/commit/6f7375bc2336bd55b8158ba5848abe2240c6a121)) by [@dheerajitbhu](https://github.com/dheerajitbhu), closes [#1136](https://github.com/apify/apify-client-python/issues/1136)
 
 
 <!-- git-cliff-unreleased-end -->

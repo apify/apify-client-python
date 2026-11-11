@@ -32,6 +32,9 @@ DEFAULT_WAIT_FOR_FINISH = timedelta(seconds=999999)
 DEFAULT_WAIT_WHEN_JOB_NOT_EXIST = timedelta(seconds=3)
 """How long to wait for a job to exist before giving up."""
 
+MAX_WAIT_FOR_FINISH_HOLD = timedelta(seconds=60)
+"""Longest time the API holds a response for the `waitForFinish` parameter."""
+
 OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 """Headers that can be overridden by users, but will trigger a warning if they do so, as it may lead to API errors."""
 

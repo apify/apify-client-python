@@ -287,7 +287,8 @@ class TaskClient(ResourceClient):
                 `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The run object.
@@ -313,7 +314,7 @@ class TaskClient(ResourceClient):
                 headers={'content-type': 'application/json; charset=utf-8'},
                 json=task_input.model_dump() if task_input is not None else None,
                 params=request_params,
-                timeout=timeout,
+                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -724,7 +725,8 @@ class TaskClientAsync(ResourceClientAsync):
                 `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The run object.
@@ -750,7 +752,7 @@ class TaskClientAsync(ResourceClientAsync):
                 headers={'content-type': 'application/json; charset=utf-8'},
                 json=task_input.model_dump() if task_input is not None else None,
                 params=request_params,
-                timeout=timeout,
+                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
             ),
             wait_for_resources=wait_for_resources,
         )

@@ -153,28 +153,14 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
     @staticmethod
     def _clean_json_payload(data: dict) -> dict:
-        """Remove unset top-level fields and empty nested dicts from an API request payload.
+        """Remove unset top-level fields from an API request payload.
 
-        A top-level `None` means the caller did not pass the argument, so the field is left out. `None` inside
-        a nested value the caller passed is kept and sent as `null`, so for example
-        `tagged_builds={'beta': None}` sends `{"taggedBuilds": {"beta": null}}` and removes the tag.
-
-        Nested sub-models serialized by Pydantic with `exclude_none=True` produce empty dicts when all their
-        fields are unset - these are removed at every nesting level.
+        A top-level `None` means the caller did not pass the argument, so the field is left out. A top-level empty dict
+        is a sub-model dumped with `exclude_none=True` whose fields are all unset, so it is left out too. Nested values
+        the caller passed are sent as given, so for example `tagged_builds={'beta': None}` sends
+        `{"taggedBuilds": {"beta": null}}` and removes the tag.
         """
-
-        def _remove_empty(d: dict) -> dict:
-            result: dict = {}
-            for key, val in d.items():
-                if isinstance(val, dict):
-                    cleaned = _remove_empty(val)
-                    if cleaned:
-                        result[key] = cleaned
-                else:
-                    result[key] = val
-            return result
-
-        return _remove_empty({key: val for key, val in data.items() if val is not None})
+        return {key: val for key, val in data.items() if val is not None and val != {}}
 
 
 @docs_group('Resource clients')

@@ -250,7 +250,7 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
         pytest.param({'a': {'b': {'c': None, 'd': 4}}}, {'a': {'b': {'c': None, 'd': 4}}}, id='Deep nesting'),
         pytest.param({'a': None, 'b': None}, {}, id='Empty dict after filtering'),
         pytest.param({'a': {}, 'c': 3}, {'c': 3}, id='Remove empty dicts'),
-        pytest.param({'a': {'b': {}}, 'c': 3}, {'c': 3}, id='Remove nested empty dicts'),
+        pytest.param({'a': {'b': {}}, 'c': 3}, {'a': {'b': {}}, 'c': 3}, id='Keep nested empty dicts'),
         pytest.param({'a': {'b': None}, 'c': 3}, {'a': {'b': None}, 'c': 3}, id='Dict with only None is kept'),
         pytest.param({'a': [], 'b': [None]}, {'a': [], 'b': [None]}, id='Keep lists as passed'),
         pytest.param({'a': 0, 'b': '', 'c': False}, {'a': 0, 'b': '', 'c': False}, id='Keep falsy non-None values'),

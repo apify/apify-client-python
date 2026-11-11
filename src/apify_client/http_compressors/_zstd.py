@@ -29,7 +29,7 @@ else:
         # The package is installed but its C extension can't load. Without this, `import apify_client` would fail for
         # every user, not only for those who pick zstd.
         raise ModuleNotFoundError(
-            f'`backports.zstd` is installed but cannot be loaded ({exc})',
+            f'`backports.zstd` failed to load ({exc})',
             name='backports.zstd',
         ) from exc
 

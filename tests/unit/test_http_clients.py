@@ -41,7 +41,7 @@ from apify_client.http_compressors._zstd import ZstdHttpCompressor
 if sys.version_info >= (3, 14):
     from compression import zstd
 else:
-    from backports import zstd
+    import backports.zstd as zstd  # noqa: PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

@@ -6,6 +6,7 @@ from apify_client._docs import docs_group
 from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.http import response_to_dict
+from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -35,18 +36,26 @@ class BuildClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Build | None:
+    def get(self, *, wait_for_finish: timedelta | None = None, timeout: Timeout = 'short') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Args:
-            timeout: Timeout for the API HTTP request.
+            wait_for_finish: The maximum duration to wait for the build to finish before returning the
+                (unfinished) build object. The API holds the response for at most 60 seconds, so a longer
+                duration has no additional effect.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The retrieved Actor build data.
         """
-        result = self._get(timeout=timeout)
+        wait_for_finish_secs = to_seconds(wait_for_finish, as_int=True)
+        result = self._get(
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
+            waitForFinish=wait_for_finish_secs,
+        )
         if result is None:
             return None
         return BuildResponse.model_validate(result).data
@@ -155,18 +164,26 @@ class BuildClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Build | None:
+    async def get(self, *, wait_for_finish: timedelta | None = None, timeout: Timeout = 'short') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Args:
-            timeout: Timeout for the API HTTP request.
+            wait_for_finish: The maximum duration to wait for the build to finish before returning the
+                (unfinished) build object. The API holds the response for at most 60 seconds, so a longer
+                duration has no additional effect.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The retrieved Actor build data.
         """
-        result = await self._get(timeout=timeout)
+        wait_for_finish_secs = to_seconds(wait_for_finish, as_int=True)
+        result = await self._get(
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
+            waitForFinish=wait_for_finish_secs,
+        )
         if result is None:
             return None
         return BuildResponse.model_validate(result).data

@@ -219,7 +219,7 @@ class ResourceClient(ResourceClientBase):
             api_base_url=api_base_url,
         )
 
-    def _get(self, *, timeout: Timeout) -> dict | None:
+    def _get(self, *, timeout: Timeout, **kwargs: QueryParamValue) -> dict | None:
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
         404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
@@ -229,7 +229,7 @@ class ResourceClient(ResourceClientBase):
             response = self._http_client.call(
                 url=self._build_url(),
                 method='GET',
-                params=self._build_params(),
+                params=self._build_params(**kwargs),
                 timeout=timeout,
             )
             return response_to_dict(response)
@@ -414,7 +414,7 @@ class ResourceClientAsync(ResourceClientBase):
             api_base_url=api_base_url,
         )
 
-    async def _get(self, *, timeout: Timeout) -> dict | None:
+    async def _get(self, *, timeout: Timeout, **kwargs: QueryParamValue) -> dict | None:
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
         404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
@@ -424,7 +424,7 @@ class ResourceClientAsync(ResourceClientBase):
             response = await self._http_client.call(
                 url=self._build_url(),
                 method='GET',
-                params=self._build_params(),
+                params=self._build_params(**kwargs),
                 timeout=timeout,
             )
             return response_to_dict(response)

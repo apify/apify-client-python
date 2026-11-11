@@ -161,7 +161,9 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         A request that times out while the API still holds it is retried, and a retried POST starts a second run or
         build. An explicit `timedelta` and `'no_timeout'` are used as given.
         """
-        if isinstance(timeout, timedelta) or timeout == 'no_timeout' or wait_for_finish is None or wait_for_finish <= 0:
+        if isinstance(timeout, timedelta) or timeout == 'no_timeout':
+            return timeout
+        if wait_for_finish is None or wait_for_finish <= 0:
             return timeout
         hold = min(timedelta(seconds=wait_for_finish), MAX_WAIT_FOR_FINISH_HOLD)
         return self._http_client._resolve_timeout(timeout) + hold  # noqa: SLF001

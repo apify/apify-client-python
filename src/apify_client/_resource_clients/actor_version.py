@@ -111,10 +111,10 @@ class ActorVersionClient(ResourceClient):
         """
         version_fields = UpdateVersionRequest(
             build_tag=build_tag,
-            env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars else None,
+            env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars is not None else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
             source_type=source_type,
-            source_files=_source_file_list_adapter.validate_python(source_files) if source_files else None,
+            source_files=_source_file_list_adapter.validate_python(source_files) if source_files is not None else None,
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
@@ -235,10 +235,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
         """
         version_fields = UpdateVersionRequest(
             build_tag=build_tag,
-            env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars else None,
+            env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars is not None else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
             source_type=source_type,
-            source_files=_source_file_list_adapter.validate_python(source_files) if source_files else None,
+            source_files=_source_file_list_adapter.validate_python(source_files) if source_files is not None else None,
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,

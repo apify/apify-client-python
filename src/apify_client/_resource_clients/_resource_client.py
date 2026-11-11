@@ -153,38 +153,14 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
     @staticmethod
     def _clean_json_payload(data: dict) -> dict:
-        """Remove None values and empty nested dicts from an API request payload.
+        """Remove unset top-level fields from an API request payload.
 
-        The Apify API ignores missing fields but may reject fields explicitly set to None.
-        Nested sub-models serialized by Pydantic may produce empty dicts when all their
-        fields are None - these are also removed.
-
-        Uses an iterative stack-based approach, analogous to _build_params for query params.
+        A top-level `None` means the caller did not pass the argument, so the field is left out. A top-level empty dict
+        is a sub-model dumped with `exclude_none=True` whose fields are all unset, so it is left out too. Nested values
+        the caller passed are sent as given, so for example `tagged_builds={'beta': None}` sends
+        `{"taggedBuilds": {"beta": null}}` and removes the tag.
         """
-        result: dict = {}
-        stack: list[tuple[dict, dict]] = [(data, result)]
-
-        while stack:
-            source, target = stack.pop()
-            for key, val in source.items():
-                if val is None:
-                    continue
-                if isinstance(val, dict):
-                    nested: dict = {}
-                    target[key] = nested
-                    stack.append((val, nested))
-                else:
-                    target[key] = val
-
-        # Remove dicts that became empty after None filtering
-        def _remove_empty(d: dict) -> None:
-            for key in [k for k, v in d.items() if isinstance(v, dict)]:
-                _remove_empty(d[key])
-                if not d[key]:
-                    del d[key]
-
-        _remove_empty(result)
-        return result
+        return {key: val for key, val in data.items() if val is not None and val != {}}
 
 
 @docs_group('Resource clients')

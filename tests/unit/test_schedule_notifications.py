@@ -129,3 +129,25 @@ async def test_create_sends_notifications_async(httpserver: HTTPServer, async_cl
 
     assert len(captured) == 1
     assert body_of(captured[0])['notifications'] == {'email': True}
+
+
+def test_update_sends_empty_actions(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`update` sends an explicitly passed empty `actions` list instead of dropping it."""
+    captured: list[Request] = []
+    httpserver.expect_request(_SCHEDULE_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    sync_client.schedule(_MOCKED_SCHEDULE_ID).update(actions=[])
+
+    assert len(captured) == 1
+    assert body_of(captured[0]) == {'actions': []}
+
+
+async def test_update_sends_empty_actions_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async `update` sends an explicitly passed empty `actions` list instead of dropping it."""
+    captured: list[Request] = []
+    httpserver.expect_request(_SCHEDULE_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    await async_client.schedule(_MOCKED_SCHEDULE_ID).update(actions=[])
+
+    assert len(captured) == 1
+    assert body_of(captured[0]) == {'actions': []}

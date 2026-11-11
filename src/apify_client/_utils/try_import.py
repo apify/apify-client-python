@@ -25,9 +25,11 @@ def try_import(
     """Context manager to attempt importing symbols into a module.
 
     If the named optional dependency is missing, the symbols are replaced with `FailedImport` objects whose message
-    names the extra that installs it, or is the import error's own message when `extra_name` is `None` because no extra
-    can install the dependency. A dotted `dependency_name` also counts as missing when its parent package is missing.
-    Import errors caused by the importing module itself or by another dependency are propagated instead of being masked.
+    names the extra that installs it. The message is the import error's own when `extra_name` is `None` because no extra
+    can install the dependency, or when the error was raised from another one because the dependency is installed but
+    can't load, which installing the extra doesn't fix. A dotted `dependency_name` also counts as missing when its
+    parent package is missing. Import errors caused by the importing module itself or by another dependency are
+    propagated instead of being masked.
     """
     state = ImportState()
     try:
@@ -37,7 +39,7 @@ def try_import(
             raise
         state.available = False
         message = exc.args[0]
-        if extra_name is not None:
+        if extra_name is not None and exc.__cause__ is None:
             message += (
                 f". Install the optional '{extra_name}' extra to use it: pip install 'apify-client[{extra_name}]'"
             )

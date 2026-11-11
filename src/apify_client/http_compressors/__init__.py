@@ -14,8 +14,8 @@ _install_import_hook(__name__)
 with _try_import(__name__, 'BrotliHttpCompressor', dependency_name='brotli', extra_name='brotli') as _brotli_import:
     from apify_client.http_compressors._brotli import BrotliHttpCompressor
 
-# zstd is in the standard library from Python 3.14, so no extra applies there: a build without it can't be fixed by
-# one. Older versions need `backports.zstd` from the `zstd` extra.
+# zstd is in the standard library from Python 3.14, and no extra can add it to a build without it. Older versions need
+# `backports.zstd` from the `zstd` extra.
 if _sys.version_info >= (3, 14):
     _zstd_dependency, _zstd_extra = '_zstd', None
 else:

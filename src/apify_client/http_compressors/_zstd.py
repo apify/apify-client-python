@@ -29,7 +29,9 @@ else:
         # The package is installed but its C extension can't load. Without this, `import apify_client` would fail for
         # every user, not only for those who pick zstd.
         raise ModuleNotFoundError(
-            f'`backports.zstd` failed to load ({exc})',
+            f'`backports.zstd` is installed but cannot be loaded ({exc}). Reinstall it with '
+            "`pip install --force-reinstall backports.zstd`, or use compression='gzip' or compression='brotli' "
+            'instead.',
             name='backports.zstd',
         ) from exc
 

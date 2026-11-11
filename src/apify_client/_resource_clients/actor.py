@@ -333,7 +333,8 @@ class ActorClient(ResourceClient):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
                 generator, is sent only once, so its start is not retried.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The run object.
@@ -360,7 +361,7 @@ class ActorClient(ResourceClient):
                 headers={'content-type': content_type},
                 data=run_input,
                 params=request_params,
-                timeout=timeout,
+                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -497,7 +498,8 @@ class ActorClient(ResourceClient):
                 This is to enable quick rebuild during development. By default, the cache is not used.
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The build object.
@@ -514,7 +516,7 @@ class ActorClient(ResourceClient):
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
-            timeout=timeout,
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
         )
 
         result = response_to_dict(response)
@@ -547,7 +549,8 @@ class ActorClient(ResourceClient):
         Args:
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The resource client for the default build of this Actor.
@@ -560,7 +563,7 @@ class ActorClient(ResourceClient):
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
-            timeout=timeout,
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
         )
         result = response_to_dict(response)
 
@@ -974,7 +977,8 @@ class ActorClientAsync(ResourceClientAsync):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
                 generator, is sent only once, so its start is not retried.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The run object.
@@ -1001,7 +1005,7 @@ class ActorClientAsync(ResourceClientAsync):
                 headers={'content-type': content_type},
                 data=run_input,
                 params=request_params,
-                timeout=timeout,
+                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -1139,7 +1143,8 @@ class ActorClientAsync(ResourceClientAsync):
                 This is to enable quick rebuild during development. By default, the cache is not used.
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The build object.
@@ -1156,7 +1161,7 @@ class ActorClientAsync(ResourceClientAsync):
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
-            timeout=timeout,
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
         )
 
         result = response_to_dict(response)
@@ -1189,7 +1194,8 @@ class ActorClientAsync(ResourceClientAsync):
         Args:
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
-            timeout: Timeout for the API HTTP request.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The resource client for the default build of this Actor.
@@ -1202,7 +1208,7 @@ class ActorClientAsync(ResourceClientAsync):
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
-            timeout=timeout,
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
         )
         result = response_to_dict(response)
 

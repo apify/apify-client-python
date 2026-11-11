@@ -11,7 +11,7 @@ from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from importlib import metadata
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 from urllib.parse import urlencode
 
 # `Protocol` comes from `typing_extensions`, not `typing`, because its runtime `isinstance` check looks attributes
@@ -275,6 +275,16 @@ class HttpClientBase:
             return len(data) >= MIN_COMPRESSION_SIZE
         return False
 
+    def _resolve_timeout(self, timeout: timedelta | Literal['short', 'medium', 'long']) -> timedelta:
+        """Resolve a timeout tier to its configured duration. A `timedelta` is returned as given."""
+        if timeout == 'short':
+            return self._timeout_short
+        if timeout == 'medium':
+            return self._timeout_medium
+        if timeout == 'long':
+            return self._timeout_long
+        return timeout
+
     def _compute_timeout(self, timeout: Timeout, *, attempt: int) -> int | float | None:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
@@ -292,14 +302,7 @@ class HttpClientBase:
         if timeout == 'no_timeout':
             return None
 
-        if timeout == 'short':
-            resolved = self._timeout_short
-        elif timeout == 'medium':
-            resolved = self._timeout_medium
-        elif timeout == 'long':
-            resolved = self._timeout_long
-        else:
-            resolved = timeout
+        resolved = self._resolve_timeout(timeout)
 
         if resolved > self._timeout_max:
             # Keyed per timeout kind, so retries and repeated calls do not spam the log with the same warning.

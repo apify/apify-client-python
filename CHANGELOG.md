@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Allow removing Actor build tags and clearing lists in `update()` ([#1221](https://github.com/apify/apify-client-python/pull/1221)) ([6f7375b](https://github.com/apify/apify-client-python/commit/6f7375bc2336bd55b8158ba5848abe2240c6a121)) by [@dheerajitbhu](https://github.com/dheerajitbhu), closes [#1136](https://github.com/apify/apify-client-python/issues/1136)
 - Extend the request timeout by `wait_for_finish` in `start()` and `build()` ([#1225](https://github.com/apify/apify-client-python/pull/1225)) ([941d114](https://github.com/apify/apify-client-python/commit/941d1148732a6249c8984ce4680ad3530533e9ed)) by [@vdusek](https://github.com/vdusek), closes [#1132](https://github.com/apify/apify-client-python/issues/1132)
 - Redirect streamed log lines without waiting for the next message ([#1219](https://github.com/apify/apify-client-python/pull/1219)) ([ef066f8](https://github.com/apify/apify-client-python/commit/ef066f84f6145b6b133b02bbfd1581d08e12c3e7)) by [@Pijukatel](https://github.com/Pijukatel)
+- Add missing `parent_request_id` to `server().request` method ([#1214](https://github.com/apify/apify-client-python/pull/1214)) ([3c41109](https://github.com/apify/apify-client-python/commit/3c411094ddaa39c1fbe7dd51476e236007ce1ec3)) by [@janbuchar](https://github.com/janbuchar)
 
 
 <!-- git-cliff-unreleased-end -->

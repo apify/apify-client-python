@@ -14,6 +14,8 @@ import ServerAsyncExample from '!!raw-loader!./code/14_server_async.py';
 import ServerSyncExample from '!!raw-loader!./code/14_server_sync.py';
 import ServerUrlSpecAsyncExample from '!!raw-loader!./code/14_server_url_spec_async.py';
 import ServerUrlSpecSyncExample from '!!raw-loader!./code/14_server_url_spec_sync.py';
+import ServerParentRequestAsyncExample from '!!raw-loader!./code/14_server_parent_request_async.py';
+import ServerParentRequestSyncExample from '!!raw-loader!./code/14_server_parent_request_sync.py';
 
 A [Server Actor](https://docs.apify.com/platform/actors/running/standby) (formerly Actor Standby) runs a web server. You call it over HTTP, and the platform keeps a run ready to answer, so each call skips the run startup.
 
@@ -82,16 +84,20 @@ For details, see [How do I authenticate my requests](https://docs.apify.com/plat
 
 A multi-tenant Server Actor shares the developer's runs among its users, so the platform tells requests apart by an ID it sends in the `X-Actor-Request-ID` header of each request it forwards to the Actor. The Actor uses that ID to charge the request's caller, and to pass the caller's pricing tier on to Actors it calls.
 
-When your multi-tenant Server Actor calls another one while handling a request, pass the incoming `X-Actor-Request-ID` header in `parent_request_id`. The client sends it as the same header, so the called Actor charges at the pricing tier of your incoming request. Use a client created with the run's `APIFY_TOKEN`. For details, see [Compose multi-tenant Server Actors](https://docs.apify.com/platform/actors/development/programming-interface/standby#compose-server-actors).
+When your multi-tenant Server Actor calls another one while handling a request, pass the `X-Actor-Request-ID` header of the incoming request in `parent_request_id`. The client sends it as the same header on the outgoing request, so the called Actor charges at the pricing tier of the incoming one. Use a client created with the run's `APIFY_TOKEN`. For details, see [Compose multi-tenant Server Actors](https://docs.apify.com/platform/actors/development/programming-interface/standby#compose-server-actors).
 
-```python
-server_client = client.actor('username/other-actor').server()
-response = await server_client.request(
-    '/search',
-    params={'q': 'apify'},
-    parent_request_id=request.headers['x-actor-request-id'],
-)
-```
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {ServerParentRequestAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {ServerParentRequestSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
 
 ## Timeouts, retries, and errors
 

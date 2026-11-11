@@ -20,6 +20,7 @@ from apify_client._utils.encoding import encode_key_value_store_record_value, en
 from apify_client._utils.errors import catch_not_found_or_throw
 from apify_client._utils.http import (
     is_compressible_content_type,
+    merge_headers,
     response_to_dict,
     response_to_list,
     to_path_segment,
@@ -571,3 +572,24 @@ def test_create_storage_signature() -> None:
     # Test with version parameter
     signature_v1 = create_storage_content_signature('resource_123', 'secret_key', version=1)
     assert signature != signature_v1
+
+
+@pytest.mark.parametrize(
+    ('base', 'override', 'expected'),
+    [
+        pytest.param(None, None, {}, id='both none'),
+        pytest.param({'Accept': 'a'}, None, {'Accept': 'a'}, id='override none'),
+        pytest.param(None, {'Accept': 'a'}, {'Accept': 'a'}, id='base none'),
+        pytest.param({'Accept': 'a'}, {'X-Custom': 'b'}, {'Accept': 'a', 'X-Custom': 'b'}, id='disjoint names'),
+        pytest.param({'Authorization': 'x'}, {'Authorization': 'y'}, {'Authorization': 'y'}, id='same casing'),
+        pytest.param({'Authorization': 'x'}, {'authorization': 'y'}, {'authorization': 'y'}, id='lowercase override'),
+        pytest.param({'authorization': 'x'}, {'AUTHORIZATION': 'y'}, {'AUTHORIZATION': 'y'}, id='uppercase override'),
+    ],
+)
+def test_merge_headers(
+    base: dict[str, str] | None,
+    override: dict[str, str] | None,
+    expected: dict[str, str],
+) -> None:
+    """merge_headers merges case-insensitively, override values win and keep their casing."""
+    assert merge_headers(base, override) == expected

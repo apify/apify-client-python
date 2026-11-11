@@ -909,7 +909,7 @@ class ChargeRunRequest(BaseModel):
     count: Annotated[int, Field(examples=[1])]
     request_id: Annotated[str | None, Field(examples=['7Hs2kQw9LxP4mN1vB'])] = None
     """
-    ID of the Server Actor request being charged, from the `X-Actor-Request-ID` header of the incoming request. Required for multi-tenant Server Actor runs, where it identifies the request the charge belongs to.
+    ID of the Server Actor request being charged, from the `X-Actor-Request-ID` header of the incoming request. Required for multi-tenant Server Actor runs, where it identifies the request the charge belongs to. Runs of single-tenant Server Actors ignore it.
     """
 
 
@@ -987,7 +987,7 @@ class CreateActorRequest(BaseModel):
     default_run_options: DefaultRunOptions | None = None
     actor_standby: ActorStandby | None = None
     """
-    The configuration of the Actor's standby mode. For details, see [Standby mode](https://docs.apify.com/platform/actors/development/programming-interface/standby).
+    The configuration of the Actor's standby mode. For details, see [Develop Server Actors](https://docs.apify.com/platform/actors/development/programming-interface/server-actors).
     """
     example_run_input: ExampleRunInput | None = None
     """
@@ -3593,7 +3593,7 @@ class Run(BaseModel):
     """
     usage_usd: RunUsageUsd | None = None
     """
-    Platform usage costs breakdown in USD. Only present if you own the run and are paying for platform usage (pay-per-usage or pay-per-event with usage costs like Standby Actors). Not available for standard pay-per-event Actors. Requires authentication token to access.
+    Platform usage costs breakdown in USD. Only present if you own the run and are paying for platform usage (pay per usage, or pay per event with usage costs, such as runs of single-tenant Server Actors). Not available for standard pay-per-event Actors. Requires authentication token to access.
     """
     metamorphs: list[RunMetamorphEvent] | None = None
     """
@@ -4570,7 +4570,7 @@ class UpdateActorRequest(BaseModel):
     """
     actor_standby: ActorStandby | None = None
     """
-    The configuration of the Actor's standby mode. For details, see [Standby mode](https://docs.apify.com/platform/actors/development/programming-interface/standby).
+    The configuration of the Actor's standby mode. For details, see [Develop Server Actors](https://docs.apify.com/platform/actors/development/programming-interface/server-actors).
     """
     example_run_input: ExampleRunInput | None = None
     """

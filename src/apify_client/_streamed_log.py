@@ -62,8 +62,8 @@ class StreamedLogBase:
     def _log_buffer_content(self, *, include_last_part: bool = False) -> None:
         """Redirect every complete line in the buffer and keep only the unterminated last line.
 
-        A line is complete once its newline arrives, so a message is redirected as soon as it is written, not when the
-        next message starts. With `include_last_part`, the unterminated last line is redirected too.
+        A line is complete once its newline arrives. With `include_last_part`, the unterminated last line is redirected
+        too.
         """
         buffer = b''.join(self._stream_buffer)
         last_newline = buffer.rfind(b'\n')

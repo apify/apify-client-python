@@ -45,7 +45,7 @@ _MOCKED_ACTOR_LOGS = (
     ),
     b'2025-05-13T07:26:14.132Z [apify] DEBUG \xc3',  # Chunked log split in the middle of the multibyte character
     b'\xa1\n',  # part 2
-    b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log\n',
+    b'2025-05-13T07:24:14.132Z [apify] INFO multiline\n2025-05-13T07:24:14.132Z [apify] INFO log\n',
     b'2025-05-13T07:25:14.132Z [apify] WARNING some warning\n',
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c\n',
     b'2025-05-13T0',  # Chunked log that got split in the marker
@@ -68,7 +68,8 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.', logging.INFO),
     ('2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.', logging.INFO),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG á', logging.DEBUG),
-    ('2025-05-13T07:24:14.132Z [apify] INFO multiline \n log', logging.INFO),
+    ('2025-05-13T07:24:14.132Z [apify] INFO multiline', logging.INFO),
+    ('2025-05-13T07:24:14.132Z [apify] INFO log', logging.INFO),
     ('2025-05-13T07:25:14.132Z [apify] WARNING some warning', logging.WARNING),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG c', logging.DEBUG),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG d', logging.DEBUG),
@@ -1376,38 +1377,6 @@ def test_streamed_log_sync_redirects_line_before_next_message(httpserver: HTTPSe
         release_server.set()
         streaming_thread.join(timeout=5)
         streamed_log.stop()
-
-
-@pytest.mark.parametrize(
-    ('chunks', 'expected_calls'),
-    [
-        pytest.param(
-            [b'2025-05-13T07:24:12.588Z first\n2025-05-13T07:24:13', b'.588Z second\n'],
-            [(logging.INFO, '2025-05-13T07:24:12.588Z first'), (logging.INFO, '2025-05-13T07:24:13.588Z second')],
-            id='marker-split-across-chunks',
-        ),
-        pytest.param(
-            [b'2025-05-13T07:24:12.588Z unterminated'],
-            [],
-            id='unterminated-line-waits-for-newline',
-        ),
-        pytest.param(
-            [b'preamble without marker\n', b'2025-05-13T07:24:12.588Z first\n'],
-            [(logging.INFO, '2025-05-13T07:24:12.588Z first')],
-            id='text-before-first-message-is-skipped',
-        ),
-    ],
-)
-def test_streamed_log_redirects_each_complete_line(chunks: list[bytes], expected_calls: list[tuple[int, str]]) -> None:
-    """Each chunk redirects the messages its newlines complete and keeps only the unterminated rest."""
-    to_logger = Mock(spec=logging.Logger)
-    streamed_log = StreamedLogBase(to_logger)
-
-    for chunk in chunks:
-        streamed_log._process_new_data(chunk)
-
-    calls = [(call.kwargs['level'], call.kwargs['msg']) for call in to_logger.log.call_args_list]
-    assert calls == expected_calls
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')

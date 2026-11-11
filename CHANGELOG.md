@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.5.1 - **not yet released**
+## [3.5.1](https://github.com/apify/apify-client-python/releases/tag/v3.5.1) (2026-11-11)
 
 ### 🐛 Bug Fixes
 
@@ -14,7 +13,6 @@ All notable changes to this project will be documented in this file.
 - Add missing `parent_request_id` to `server().request` method ([#1214](https://github.com/apify/apify-client-python/pull/1214)) ([3c41109](https://github.com/apify/apify-client-python/commit/3c411094ddaa39c1fbe7dd51476e236007ce1ec3)) by [@janbuchar](https://github.com/janbuchar)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.5.0](https://github.com/apify/apify-client-python/releases/tag/v3.5.0) (2026-11-09)
 
 ### 🚀 Features

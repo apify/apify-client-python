@@ -161,8 +161,8 @@ def response_to_list(response: HttpResponse) -> list:
 def merge_headers(base: dict[str, str] | None, override: dict[str, str] | None) -> dict[str, str]:
     """Merge two header dicts, treating header names case-insensitively.
 
-    A header from `override` replaces a same-named header in `base` regardless of the casing
-    of either name, and keeps the casing it was passed with.
+    A header from `override` replaces a same-named header in `base` regardless of the casing of either name, and keeps
+    the casing it was passed with.
     """
     merged = dict(base) if base else {}
     for key, value in (override or {}).items():

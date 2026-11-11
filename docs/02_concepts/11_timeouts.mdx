@@ -59,6 +59,10 @@ client.dataset('id').list_items(timeout='no_timeout')
 
 A `timedelta` longer than `timeout_max` is capped at `timeout_max`, and the client logs a warning. To let such a call use its full timeout, raise `timeout_max` in the client constructor.
 
+## Waiting for a job to finish
+
+Methods with a `wait_for_finish` parameter, such as <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink> and <ApiLink to="class/ActorClient#build">`ActorClient.build`</ApiLink>, ask the API to hold the response until the run or build finishes, for at most 60 seconds. When `timeout` is a tier, the client adds `wait_for_finish` (capped at 60 seconds) to the tier's value, so the request doesn't time out while the API still holds it. A `timedelta` and `'no_timeout'` are used as given.
+
 ## Interaction with retries
 
 Timeouts work together with the [retry system](/api/client/python/docs/concepts/retries). When a request times out, it counts as a failed attempt and triggers a retry (up to `max_retries`). The timeout applies to each individual attempt, not the total time across all retries.

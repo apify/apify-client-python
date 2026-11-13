@@ -24,7 +24,7 @@ The Apify API reads `Authorization`. Actor servers also accept `X-Apify-Authoriz
 before the request reaches the Actor, so the `Authorization` header stays free for the Actor's own authentication.
 """
 
-HttpCompressionAlgorithm = Literal['brotli', 'gzip']
+HttpCompressionAlgorithm = Literal['brotli', 'gzip', 'zstd']
 """Accepted string literals for the `compression` parameter on `ApifyClient` and `ApifyClientAsync`."""
 
 QueryParamValue = str | int | float | bool | Decimal | datetime | list[str] | None

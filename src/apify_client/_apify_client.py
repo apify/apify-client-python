@@ -157,11 +157,14 @@ class ApifyClient:
             compression: Compression algorithm for request bodies. Defaults to `'gzip'`. Pass a string literal to select
                 an algorithm, or an `HttpCompressor` instance for finer-grained control. `'brotli'` needs the `brotli`
                 extra (`pip install "apify-client[brotli]"`). It is not the default because the `brotli` package is a C
-                extension, while gzip support is part of the Python standard library.
+                extension, while gzip support is part of the Python standard library. `'zstd'` uses the standard
+                library on Python 3.14 and newer when the Python build includes zstd, and needs the `zstd` extra
+                (`pip install "apify-client[zstd]"`) before that.
 
         Raises:
             ValueError: If `max_retries` is negative.
-            ImportError: If `compression` is `'brotli'` and the `brotli` extra is not installed.
+            ImportError: If `compression` is `'brotli'` or `'zstd'` and the extra it needs is not installed, or, for
+                `'zstd'` on Python 3.14 and newer, if the Python build lacks zstd support.
         """
         if max_retries < 0:
             raise ValueError(f'max_retries must be a non-negative integer, got {max_retries}')
@@ -540,11 +543,14 @@ class ApifyClientAsync:
             compression: Compression algorithm for request bodies. Defaults to `'gzip'`. Pass a string literal to select
                 an algorithm, or an `HttpCompressor` instance for finer-grained control. `'brotli'` needs the `brotli`
                 extra (`pip install "apify-client[brotli]"`). It is not the default because the `brotli` package is a C
-                extension, while gzip support is part of the Python standard library.
+                extension, while gzip support is part of the Python standard library. `'zstd'` uses the standard
+                library on Python 3.14 and newer when the Python build includes zstd, and needs the `zstd` extra
+                (`pip install "apify-client[zstd]"`) before that.
 
         Raises:
             ValueError: If `max_retries` is negative.
-            ImportError: If `compression` is `'brotli'` and the `brotli` extra is not installed.
+            ImportError: If `compression` is `'brotli'` or `'zstd'` and the extra it needs is not installed, or, for
+                `'zstd'` on Python 3.14 and newer, if the Python build lacks zstd support.
         """
         if max_retries < 0:
             raise ValueError(f'max_retries must be a non-negative integer, got {max_retries}')

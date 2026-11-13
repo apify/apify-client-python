@@ -61,6 +61,7 @@ To run them against a different Apify API environment, also set `APIFY_INTEGRATI
 ### Integration test fixtures
 
 - `client`: an `ApifyClient` or `ApifyClientAsync` for the main test user. Each test that uses it runs four times, once for each combination of sync or async client and `impit` or `httpx2` transport.
+- `zstd_client`: the same four combinations as `client`, with request bodies compressed with zstd instead of the default gzip.
 - `is_async`: `True` when the test runs with the async client.
 - `test_dataset_of_another_user` and `test_kvs_of_another_user`: a dataset and a key-value store owned by the second user, with known content and the signatures for accessing it.
 

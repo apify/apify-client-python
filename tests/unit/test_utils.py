@@ -72,6 +72,55 @@ def test_try_import_records_the_named_missing_dependency() -> None:
         del sys.modules[module_name]
 
 
+def test_try_import_without_extra_keeps_the_import_error_message() -> None:
+    """With no extra to install, the failed-import placeholder carries the import error's own message."""
+    module_name = 'test_missing_dependency_without_extra_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with try_import(module_name, 'OptionalSymbol', dependency_name='_optional', extra_name=None) as state:
+            raise ModuleNotFoundError('This Python build has no _optional', name='_optional')
+        assert state.available is False
+        assert sys.modules[module_name].OptionalSymbol.message == 'This Python build has no _optional'
+    finally:
+        del sys.modules[module_name]
+
+
+def test_try_import_keeps_the_message_of_a_dependency_that_fails_to_load() -> None:
+    """An error raised from another one, for an installed dependency that can't load, gets no install hint."""
+    module_name = 'test_dependency_fails_to_load_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with try_import(
+            module_name, 'OptionalSymbol', dependency_name='_optional', extra_name='optional-extra'
+        ) as state:
+            raise ModuleNotFoundError('_optional cannot be loaded', name='_optional') from ImportError('broken')
+        assert state.available is False
+        assert sys.modules[module_name].OptionalSymbol.message == '_optional cannot be loaded'
+    finally:
+        del sys.modules[module_name]
+
+
+def test_try_import_treats_a_missing_parent_package_as_the_missing_dependency() -> None:
+    """A dotted dependency counts as missing when its parent package is missing, but not a sibling of it."""
+    module_name = 'test_missing_parent_package_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with try_import(
+            module_name, 'OptionalSymbol', dependency_name='backports.zstd', extra_name='optional-extra'
+        ) as state:
+            raise ModuleNotFoundError("No module named 'backports'", name='backports')
+        assert state.available is False
+        assert isinstance(sys.modules[module_name].OptionalSymbol, FailedImport)
+
+        with (
+            pytest.raises(ModuleNotFoundError, match=r'backports\.other'),
+            try_import(module_name, 'OtherSymbol', dependency_name='backports.zstd', extra_name='optional-extra'),
+        ):
+            raise ModuleNotFoundError("No module named 'backports.other'", name='backports.other')
+    finally:
+        del sys.modules[module_name]
+
+
 def test_to_safe_id() -> None:
     assert to_safe_id('abc') == 'abc'
     assert to_safe_id('abc/def') == 'abc~def'

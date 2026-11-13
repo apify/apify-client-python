@@ -8,6 +8,7 @@ import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import impit
 import pytest
@@ -29,6 +30,7 @@ from apify_client._models import (
 )
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
+from apify_client.http_compressors import ZstdHttpCompressor
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -640,6 +642,36 @@ async def test_key_value_store_set_and_get_pre_compressed_record(client: ApifyCl
         # The record is served with the `Content-Encoding` it was stored under, so the transport decodes it back
         # to the original payload. A body compressed twice would arrive here as the gzip bytes instead, and one
         # stored without the encoding would not be decoded at all.
+        assert record['value'] == payload
+        assert 'text/plain' in record['content_type']
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_set_and_get_zstd_compressed_record(
+    zstd_client: ApifyClient | ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A record the client compresses with zstd is accepted by the API and read back as the original value."""
+    compress_spy = Mock(wraps=ZstdHttpCompressor().compress)
+    monkeypatch.setattr(ZstdHttpCompressor, 'compress', compress_spy)
+
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(zstd_client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStoreResource)
+    store_client = zstd_client.key_value_store(created_store.id)
+
+    try:
+        # Past the size threshold and of a compressible content type, so the client compresses the body.
+        payload = 'compressible payload ' * 500
+        await maybe_await(store_client.set_record('zstd-compressed', payload, content_type='text/plain'))
+        compress_spy.assert_called_once_with(payload.encode())
+
+        # Poll until the record is visible (eventual consistency)
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record('zstd-compressed'))
+
+        record = await poll_until_condition(get_record, lambda record: record is not None)
+        assert isinstance(record, dict)
         assert record['value'] == payload
         assert 'text/plain' in record['content_type']
     finally:

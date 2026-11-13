@@ -24,6 +24,7 @@ from apify_client.http_clients import (
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
+from apify_client.http_compressors import ZstdHttpCompressor
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -144,6 +145,33 @@ async def client(
         return
 
     http_client_async = http_client_classes.async_()
+    yield ApifyClientAsync.with_custom_http_client(
+        api_token,
+        api_url=api_url,
+        http_client=http_client_async,
+    )
+    await http_client_async.aclose()
+
+
+@pytest.fixture
+async def zstd_client(
+    client_type: str,
+    api_token: str,
+    http_client_classes: HttpClientClasses,
+) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
+    """Return each sync/async and HTTP client implementation combination, compressing request bodies with zstd."""
+    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    if client_type == 'sync':
+        http_client = http_client_classes.sync(http_compressor=ZstdHttpCompressor())
+        yield ApifyClient.with_custom_http_client(
+            api_token,
+            api_url=api_url,
+            http_client=http_client,
+        )
+        http_client.close()
+        return
+
+    http_client_async = http_client_classes.async_(http_compressor=ZstdHttpCompressor())
     yield ApifyClientAsync.with_custom_http_client(
         api_token,
         api_url=api_url,

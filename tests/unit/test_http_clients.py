@@ -4,6 +4,7 @@ import asyncio
 import gzip
 import json
 import logging
+import sys
 import threading
 import time
 from collections.abc import AsyncIterator, Iterator
@@ -35,6 +36,12 @@ from apify_client.http_clients import (
 from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
+from apify_client.http_compressors._zstd import ZstdHttpCompressor
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    import backports.zstd as zstd  # noqa: PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -761,6 +768,7 @@ def test_call_retries_only_the_statuses_in_retry_status_codes(monkeypatch: pytes
     params=[
         pytest.param((GzipHttpCompressor(), 'gzip', gzip.decompress), id='gzip'),
         pytest.param((BrotliHttpCompressor(), 'br', brotli.decompress), id='brotli'),
+        pytest.param((ZstdHttpCompressor(), 'zstd', zstd.decompress), id='zstd'),
     ]
 )
 def compressor_case(request: pytest.FixtureRequest) -> tuple:

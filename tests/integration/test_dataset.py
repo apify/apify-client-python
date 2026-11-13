@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from datetime import timedelta
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import impit
 import pytest
@@ -22,6 +23,7 @@ from apify_client._models import DatasetListItem, DatasetResource, DatasetStatis
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
+from apify_client.http_compressors import ZstdHttpCompressor
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -272,6 +274,36 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
             assert item['id'] == items_to_push[i]['id']
             assert item['name'] == items_to_push[i]['name']
             assert item['value'] == items_to_push[i]['value']
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
+async def test_dataset_push_zstd_compressed_items(
+    zstd_client: ApifyClient | ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Items the client compresses with zstd are accepted by the API and listed back unchanged."""
+    compress_spy = Mock(wraps=ZstdHttpCompressor().compress)
+    monkeypatch.setattr(ZstdHttpCompressor, 'compress', compress_spy)
+
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(zstd_client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, DatasetResource)
+    dataset_client = zstd_client.dataset(created_dataset.id)
+
+    try:
+        # Enough items to get the JSON body past the size threshold, so the client compresses it.
+        items_to_push = [{'id': i, 'name': f'Item {i}', 'text': 'compressible payload'} for i in range(100)]
+        await maybe_await(dataset_client.push_items(items_to_push))
+        compress_spy.assert_called_once()
+
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        items_page = await poll_until_condition(get_items, lambda page: len(page.items) == len(items_to_push))
+        assert items_page.items == items_to_push
     finally:
         await maybe_await(dataset_client.delete())
 

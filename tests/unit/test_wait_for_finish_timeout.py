@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import pytest
-from werkzeug import Response
+from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 
@@ -23,6 +23,8 @@ pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 ACTOR_ID = 'test_actor_id'
 TASK_ID = 'test_task_id'
+RUN_ID = 'test_run_id'
+BUILD_ID = 'test_build_id'
 
 RUN_RESPONSE = {
     'data': {
@@ -55,6 +57,14 @@ BUILD_RESPONSE = {
         'buildNumber': '0.0.1',
     }
 }
+
+
+def _as_wait_for_finish_timedelta(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Convert the `wait_for_finish` seconds used by the other call sites to the `timedelta` `get` expects."""
+    wait_for_finish = kwargs.get('wait_for_finish')
+    if wait_for_finish is None:
+        return kwargs
+    return {**kwargs, 'wait_for_finish': timedelta(seconds=wait_for_finish)}
 
 
 @dataclass(frozen=True)
@@ -108,6 +118,41 @@ CALL_SITES = [
             tier_secs=30,
         ),
         id='task start',
+    ),
+    pytest.param(
+        CallSite(
+            invoke=lambda client, **kwargs: client.run(RUN_ID).get(**_as_wait_for_finish_timedelta(kwargs)),
+            method='GET',
+            path=f'/v2/actor-runs/{RUN_ID}',
+            response_body=RUN_RESPONSE,
+            tier_secs=5,
+        ),
+        id='run get',
+    ),
+    pytest.param(
+        CallSite(
+            invoke=lambda client, **kwargs: client.build(BUILD_ID).get(**_as_wait_for_finish_timedelta(kwargs)),
+            method='GET',
+            path=f'/v2/actor-builds/{BUILD_ID}',
+            response_body=BUILD_RESPONSE,
+            tier_secs=5,
+        ),
+        id='build get',
+    ),
+]
+
+GET_CALL_SITES = [
+    pytest.param(
+        lambda client, **kwargs: client.run(RUN_ID).get(**kwargs),
+        f'/v2/actor-runs/{RUN_ID}',
+        RUN_RESPONSE,
+        id='run get',
+    ),
+    pytest.param(
+        lambda client, **kwargs: client.build(BUILD_ID).get(**kwargs),
+        f'/v2/actor-builds/{BUILD_ID}',
+        BUILD_RESPONSE,
+        id='build get',
     ),
 ]
 
@@ -194,3 +239,51 @@ def test_timeout_for_wait_for_finish(
     actor_client = client.actor(ACTOR_ID)
 
     assert actor_client._timeout_for_wait_for_finish(timeout, wait_for_finish) == expected
+
+
+@pytest.mark.parametrize(('invoke', 'path', 'response_body'), GET_CALL_SITES)
+async def test_get_sends_wait_for_finish_as_whole_seconds(
+    client: ApifyClient | ApifyClientAsync,
+    httpserver: HTTPServer,
+    invoke: Callable[..., Any],
+    path: str,
+    response_body: dict,
+) -> None:
+    """`get` sends `wait_for_finish` as the `waitForFinish` query parameter, rounded down to whole seconds."""
+    captured: list[Request] = []
+
+    def handler(request: Request) -> Response:
+        captured.append(request)
+        return Response(json.dumps(response_body), status=200, mimetype='application/json')
+
+    httpserver.expect_request(path, method='GET').respond_with_handler(handler)
+
+    result = invoke(client, wait_for_finish=timedelta(seconds=45, milliseconds=500))
+    if inspect.isawaitable(result):
+        await result
+
+    assert captured[0].args.get('waitForFinish') == '45'
+
+
+@pytest.mark.parametrize(('invoke', 'path', 'response_body'), GET_CALL_SITES)
+async def test_get_omits_wait_for_finish_by_default(
+    client: ApifyClient | ApifyClientAsync,
+    httpserver: HTTPServer,
+    invoke: Callable[..., Any],
+    path: str,
+    response_body: dict,
+) -> None:
+    """`get` omits the `waitForFinish` query parameter when `wait_for_finish` is not given."""
+    captured: list[Request] = []
+
+    def handler(request: Request) -> Response:
+        captured.append(request)
+        return Response(json.dumps(response_body), status=200, mimetype='application/json')
+
+    httpserver.expect_request(path, method='GET').respond_with_handler(handler)
+
+    result = invoke(client)
+    if inspect.isawaitable(result):
+        await result
+
+    assert 'waitForFinish' not in captured[0].args

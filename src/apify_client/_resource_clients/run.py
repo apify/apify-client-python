@@ -59,18 +59,26 @@ class RunClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Run | None:
+    def get(self, *, wait_for_finish: timedelta | None = None, timeout: Timeout = 'short') -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
         Args:
-            timeout: Timeout for the API HTTP request.
+            wait_for_finish: The maximum duration to wait for the run to finish before returning the (unfinished)
+                run object. The API holds the response for at most 60 seconds, so a longer duration has no
+                additional effect.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The retrieved Actor run data.
         """
-        result = self._get(timeout=timeout)
+        wait_for_finish_secs = to_seconds(wait_for_finish, as_int=True)
+        result = self._get(
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
+            waitForFinish=wait_for_finish_secs,
+        )
         if result is None:
             return None
         return RunResponse.model_validate(result).data
@@ -616,18 +624,26 @@ class RunClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Run | None:
+    async def get(self, *, wait_for_finish: timedelta | None = None, timeout: Timeout = 'short') -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
         Args:
-            timeout: Timeout for the API HTTP request.
+            wait_for_finish: The maximum duration to wait for the run to finish before returning the (unfinished)
+                run object. The API holds the response for at most 60 seconds, so a longer duration has no
+                additional effect.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The retrieved Actor run data.
         """
-        result = await self._get(timeout=timeout)
+        wait_for_finish_secs = to_seconds(wait_for_finish, as_int=True)
+        result = await self._get(
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
+            waitForFinish=wait_for_finish_secs,
+        )
         if result is None:
             return None
         return RunResponse.model_validate(result).data

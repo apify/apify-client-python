@@ -61,7 +61,7 @@ A `timedelta` longer than `timeout_max` is capped at `timeout_max`, and the clie
 
 ## Waiting for a job to finish
 
-Methods with a `wait_for_finish` parameter, such as <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink> and <ApiLink to="class/ActorClient#build">`ActorClient.build`</ApiLink>, ask the API to hold the response until the run or build finishes, for at most 60 seconds. When `timeout` is a tier, the client adds `wait_for_finish` (capped at 60 seconds) to the tier's value, so the request doesn't time out while the API still holds it. A `timedelta` and `'no_timeout'` are used as given.
+Methods with a `wait_for_finish` parameter, such as <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink>, <ApiLink to="class/ActorClient#build">`ActorClient.build`</ApiLink>, <ApiLink to="class/RunClient#get">`RunClient.get`</ApiLink>, and <ApiLink to="class/BuildClient#get">`BuildClient.get`</ApiLink>, ask the API to hold the response until the run or build finishes, for at most 60 seconds. When `timeout` is a tier, the client adds `wait_for_finish` (capped at 60 seconds) to the tier's value, so the request doesn't time out while the API still holds it. A `timedelta` and `'no_timeout'` are used as given.
 
 ## Interaction with retries
 

@@ -14,6 +14,7 @@ from .._utils import (
     HttpClientClasses,
     KvsFixture,
     get_crypto_random_object_id,
+    make_client,
 )
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
@@ -132,24 +133,8 @@ async def client(
     http_client_classes: HttpClientClasses,
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Return each sync/async and HTTP client implementation combination."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
-    if client_type == 'sync':
-        http_client = http_client_classes.sync()
-        yield ApifyClient.with_custom_http_client(
-            api_token,
-            api_url=api_url,
-            http_client=http_client,
-        )
-        http_client.close()
-        return
-
-    http_client_async = http_client_classes.async_()
-    yield ApifyClientAsync.with_custom_http_client(
-        api_token,
-        api_url=api_url,
-        http_client=http_client_async,
-    )
-    await http_client_async.aclose()
+    async with make_client(api_token, client_type, http_client_classes) as client:
+        yield client
 
 
 @pytest.fixture

@@ -97,14 +97,11 @@ class StreamedLogBase:
 
     @staticmethod
     def _guess_log_level_from_message(message: str) -> int:
-        """Guess the log level from the message."""
-        # Using only levels explicitly mentioned in the logging module
+        """Read the level token after the platform timestamp and optional bracketed logger name."""
+        match = re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z[ \t]+(?:\[[^\]\n]*\][ \t]+)?(\S+)', message)
         known_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
-        level_names_to_levels = logging.getLevelNamesMapping()
-        for level in known_levels:
-            if level in message:
-                return level_names_to_levels[level]
-        # Unknown log level. Fall back to the default.
+        if match and match[1] in known_levels:
+            return logging.getLevelNamesMapping()[match[1]]
         return logging.INFO
 
 
@@ -113,7 +110,7 @@ class StreamedLog(StreamedLogBase):
     """Streams Actor run log output to a Python logger in a background thread.
 
     The log stream is consumed in a background thread and each log message is forwarded to the provided logger with
-    an appropriate log level inferred from the message content.
+    the level token after the timestamp and optional bracketed logger name, defaulting to INFO for unknown levels.
 
     Can be used as a context manager, which automatically starts and stops the streaming thread. Alternatively,
     call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
@@ -256,11 +253,14 @@ class StreamedLogAsync(StreamedLogBase):
     """Streams Actor run log output to a Python logger in an asyncio task.
 
     The log stream is consumed in a background asyncio task and each log message is forwarded to the provided logger
-    with an appropriate log level inferred from the message content.
+    with the level token after the timestamp and optional bracketed logger name, defaulting to INFO for unknown levels.
 
     Can be used as an async context manager, which automatically starts and cancels the streaming task. Alternatively,
     call `start` and `stop` manually. Obtain an instance via `RunClientAsync.get_streamed_log`.
     """
+
+    _stop_timeout_s: ClassVar[float] = 1
+    """Grace period for in-flight log data before the streaming task is cancelled."""
 
     def __init__(self, log_client: LogClientAsync, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         """Initialize `StreamedLogAsync`.
@@ -288,7 +288,7 @@ class StreamedLogAsync(StreamedLogBase):
         return self._streaming_task
 
     async def stop(self) -> None:
-        """Stop the streaming task.
+        """Wait up to one second for the stream to end, then cancel the streaming task.
 
         If no stream has delivered anything yet, read the whole log in one request instead.
         """
@@ -296,7 +296,12 @@ class StreamedLogAsync(StreamedLogBase):
             raise RuntimeError('Streaming task is not active')
 
         was_streaming = not self._streaming_task.done()
-        self._streaming_task.cancel()
+        try:
+            await asyncio.wait_for(asyncio.shield(self._streaming_task), timeout=self._stop_timeout_s)
+        except TimeoutError:
+            self._streaming_task.cancel()
+        except asyncio.CancelledError:
+            pass
         try:
             await self._streaming_task
         except asyncio.CancelledError:

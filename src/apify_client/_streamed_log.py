@@ -290,6 +290,7 @@ class StreamedLogAsync(StreamedLogBase):
     async def stop(self) -> None:
         """Wait up to one second for the stream to end, then cancel the streaming task.
 
+        Caller cancellation cancels the streaming task and propagates without reading the whole log.
         If no stream has delivered anything yet, read the whole log in one request instead.
         """
         if not self._streaming_task:
@@ -298,8 +299,17 @@ class StreamedLogAsync(StreamedLogBase):
         was_streaming = not self._streaming_task.done()
         try:
             await asyncio.wait_for(asyncio.shield(self._streaming_task), timeout=self._stop_timeout_s)
-        except (TimeoutError, asyncio.CancelledError):
+        except TimeoutError:
             self._streaming_task.cancel()
+        except asyncio.CancelledError:
+            self._streaming_task.cancel()
+            try:
+                await self._streaming_task
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._streaming_task = None
+            raise
         try:
             await self._streaming_task
         except asyncio.CancelledError:

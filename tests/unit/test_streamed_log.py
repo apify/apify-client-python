@@ -111,7 +111,7 @@ async def test_async_stop_cancels_silent_stream(monkeypatch: pytest.MonkeyPatch)
 async def test_async_stop_cancels_stream_when_caller_is_cancelled() -> None:
     """Cancelling stop during the grace period must not leave it waiting for the stream."""
     stream = StreamedLogAsync(Mock(), to_logger=Mock(spec=logging.Logger))
-    stream._received_data = True
+    stream._log_client.get_as_bytes = AsyncMock()
     task = asyncio.create_task(asyncio.Event().wait())
     stream._streaming_task = task
     stopper = asyncio.create_task(stream.stop())
@@ -120,8 +120,29 @@ async def test_async_stop_cancels_stream_when_caller_is_cancelled() -> None:
     try:
         done, _ = await asyncio.wait({stopper}, timeout=0.1)
         assert stopper in done
+        assert stopper.cancelled()
+        stream._log_client.get_as_bytes.assert_not_awaited()
         assert task.cancelled()
         assert stream._streaming_task is None
     finally:
         task.cancel()
         await asyncio.gather(task, stopper, return_exceptions=True)
+
+
+async def test_async_stop_propagates_caller_timeout() -> None:
+    """A caller timeout cancels the stream and skips the whole-log fallback."""
+    client = Mock()
+    client.get_as_bytes = AsyncMock()
+    stream = StreamedLogAsync(client, to_logger=Mock(spec=logging.Logger))
+    task = asyncio.create_task(asyncio.Event().wait())
+    stream._streaming_task = task
+    try:
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(0.01):
+                await stream.stop()
+        assert task.cancelled()
+        assert stream._streaming_task is None
+        client.get_as_bytes.assert_not_awaited()
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)

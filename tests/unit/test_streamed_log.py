@@ -106,3 +106,22 @@ async def test_async_stop_cancels_silent_stream(monkeypatch: pytest.MonkeyPatch)
     await stream.stop()
     assert task.cancelled()
     assert stream._streaming_task is None
+
+
+async def test_async_stop_cancels_stream_when_caller_is_cancelled() -> None:
+    """Cancelling stop during the grace period must not leave it waiting for the stream."""
+    stream = StreamedLogAsync(Mock(), to_logger=Mock(spec=logging.Logger))
+    stream._received_data = True
+    task = asyncio.create_task(asyncio.Event().wait())
+    stream._streaming_task = task
+    stopper = asyncio.create_task(stream.stop())
+    await asyncio.sleep(0)
+    stopper.cancel()
+    try:
+        done, _ = await asyncio.wait({stopper}, timeout=0.1)
+        assert stopper in done
+        assert task.cancelled()
+        assert stream._streaming_task is None
+    finally:
+        task.cancel()
+        await asyncio.gather(task, stopper, return_exceptions=True)

@@ -298,10 +298,8 @@ class StreamedLogAsync(StreamedLogBase):
         was_streaming = not self._streaming_task.done()
         try:
             await asyncio.wait_for(asyncio.shield(self._streaming_task), timeout=self._stop_timeout_s)
-        except TimeoutError:
+        except (TimeoutError, asyncio.CancelledError):
             self._streaming_task.cancel()
-        except asyncio.CancelledError:
-            pass
         try:
             await self._streaming_task
         except asyncio.CancelledError:

@@ -190,6 +190,11 @@ class HttpClientBase:
 
         self._headers = merge_headers(default_headers, headers)
 
+    @property
+    def statistics(self) -> ClientStatistics:
+        """Statistics about API client usage and rate limit errors."""
+        return self._statistics
+
     def set_default_authorization(self, token: str) -> None:
         """Set the `Authorization` header from the token, unless an authorization header is already configured.
 

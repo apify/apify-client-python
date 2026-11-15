@@ -3,7 +3,10 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 
+from apify_client._docs import docs_group
 
+
+@docs_group('Other')
 @dataclass
 class ClientStatistics:
     """Statistics about API client usage and rate limit errors."""

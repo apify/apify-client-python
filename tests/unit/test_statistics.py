@@ -1,8 +1,16 @@
 from __future__ import annotations
 
-import pytest
+from typing import TYPE_CHECKING
 
-from apify_client._statistics import ClientStatistics
+import pytest
+from werkzeug import Response
+
+import apify_client
+from apify_client import ApifyClient, ApifyClientAsync, ClientStatistics
+from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
+
+if TYPE_CHECKING:
+    from pytest_httpserver import HTTPServer
 
 
 @pytest.mark.parametrize(
@@ -120,3 +128,89 @@ def test_add_rate_limit_error_large_attempt() -> None:
 
     stats.add_rate_limit_error(10000)
     assert stats.rate_limit_errors[9999] == 1
+
+
+def test_client_statistics_is_exported() -> None:
+    """Test that ClientStatistics is exported from the top-level apify_client package."""
+    assert 'ClientStatistics' in apify_client.__all__
+    assert apify_client.ClientStatistics is ClientStatistics
+
+
+def test_apify_client_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClient.statistics tracks calls and requests on the default HTTP client."""
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    client = ApifyClient('test-token', api_url=httpserver.url_for('/'))
+
+    assert isinstance(client.statistics, ClientStatistics)
+    assert client.statistics is client.http_client.statistics
+    assert client.statistics.calls == 0
+    assert client.statistics.requests == 0
+
+    client.log('test-id').get()
+
+    assert client.statistics.calls == 1
+    assert client.statistics.requests == 1
+
+
+def test_apify_client_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClient.with_custom_http_client points client.statistics to the custom HTTP client's stats."""
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    custom_http_client = ImpitHttpClient()
+    client = ApifyClient.with_custom_http_client(
+        'test-token',
+        api_url=httpserver.url_for('/'),
+        http_client=custom_http_client,
+    )
+
+    assert client.statistics is custom_http_client.statistics
+    assert client.statistics.calls == 0
+    assert client.statistics.requests == 0
+
+    client.log('test-id').get()
+
+    assert client.statistics.calls == 1
+    assert client.statistics.requests == 1
+
+
+async def test_apify_client_async_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClientAsync.statistics tracks calls and requests on the default HTTP client."""
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    client = ApifyClientAsync('test-token', api_url=httpserver.url_for('/'))
+
+    assert isinstance(client.statistics, ClientStatistics)
+    assert client.statistics is client.http_client.statistics
+    assert client.statistics.calls == 0
+    assert client.statistics.requests == 0
+
+    await client.log('test-id').get()
+
+    assert client.statistics.calls == 1
+    assert client.statistics.requests == 1
+
+
+async def test_apify_client_async_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClientAsync.with_custom_http_client points client.statistics to the custom HTTP client's stats."""
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    custom_http_client = ImpitHttpClientAsync()
+    client = ApifyClientAsync.with_custom_http_client(
+        'test-token',
+        api_url=httpserver.url_for('/'),
+        http_client=custom_http_client,
+    )
+
+    assert client.statistics is custom_http_client.statistics
+    assert client.statistics.calls == 0
+    assert client.statistics.requests == 0
+
+    await client.log('test-id').get()
+
+    assert client.statistics.calls == 1
+    assert client.statistics.requests == 1

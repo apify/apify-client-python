@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, overload
-
-if TYPE_CHECKING:
-    from datetime import timedelta
+from datetime import timedelta
+from typing import Literal, overload
 
 
 @overload
@@ -30,3 +28,10 @@ def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | N
         return None
     seconds = td.total_seconds()
     return int(seconds) if as_int else seconds
+
+
+def to_whole_seconds(duration: timedelta | int | None) -> int | None:
+    """Convert a duration given as a `timedelta` or as a number of seconds to whole seconds."""
+    if isinstance(duration, timedelta):
+        return to_seconds(duration, as_int=True)
+    return duration

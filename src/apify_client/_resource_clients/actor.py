@@ -26,7 +26,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.server_args import build_actor_standby
-from apify_client._utils.time import to_seconds
+from apify_client._utils.time import to_seconds, to_whole_seconds
 from apify_client._utils.wait_for_resources import (
     prepare_resendable_body,
     start_waiting_for_resources,
@@ -288,7 +288,7 @@ class ActorClient(ResourceClient):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         webhooks: WebhooksList | None = None,
         wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
@@ -316,8 +316,8 @@ class ActorClient(ResourceClient):
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
-            wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
-                it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the run to finish, as a `timedelta` or a number of
+                seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
@@ -342,6 +342,7 @@ class ActorClient(ResourceClient):
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
         run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
+        wait_for_finish_secs = to_whole_seconds(wait_for_finish)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -349,7 +350,7 @@ class ActorClient(ResourceClient):
             restartOnError=restart_on_error,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
             forcePermissionLevel=force_permission_level,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
@@ -361,7 +362,7 @@ class ActorClient(ResourceClient):
                 headers={'content-type': content_type},
                 data=run_input,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -480,7 +481,7 @@ class ActorClient(ResourceClient):
         beta_packages: bool | None = None,
         tag: str | None = None,
         use_cache: bool | None = None,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         timeout: Timeout = 'medium',
     ) -> Build:
         """Build the Actor.
@@ -496,27 +497,28 @@ class ActorClient(ResourceClient):
             use_cache: If true, the Actor's Docker container will be rebuilt using layer cache
                 (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).
                 This is to enable quick rebuild during development. By default, the cache is not used.
-            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
-                By default it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the build to finish, as a `timedelta` or a number
+                of seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
                 request outlasts the time the API holds the response.
 
         Returns:
             The build object.
         """
+        wait_for_finish_secs = to_whole_seconds(wait_for_finish)
         request_params = self._build_params(
             version=version_number,
             betaPackages=beta_packages,
             tag=tag,
             useCache=use_cache,
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = self._http_client.call(
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
         )
 
         result = response_to_dict(response)
@@ -539,7 +541,7 @@ class ActorClient(ResourceClient):
     def default_build(
         self,
         *,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         timeout: Timeout = 'short',
     ) -> BuildClient:
         """Retrieve Actor's default build.
@@ -547,23 +549,24 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/api/v2/act-build-default-get
 
         Args:
-            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
-                By default it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the build to finish, as a `timedelta` or a number
+                of seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
                 request outlasts the time the API holds the response.
 
         Returns:
             The resource client for the default build of this Actor.
         """
+        wait_for_finish_secs = to_whole_seconds(wait_for_finish)
         request_params = self._build_params(
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = self._http_client.call(
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
         )
         result = response_to_dict(response)
 
@@ -932,7 +935,7 @@ class ActorClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         webhooks: WebhooksList | None = None,
         wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
@@ -960,8 +963,8 @@ class ActorClientAsync(ResourceClientAsync):
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
-            wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
-                it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the run to finish, as a `timedelta` or a number of
+                seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
@@ -986,6 +989,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
         run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
+        wait_for_finish_secs = to_whole_seconds(wait_for_finish)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -993,7 +997,7 @@ class ActorClientAsync(ResourceClientAsync):
             restartOnError=restart_on_error,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
             forcePermissionLevel=force_permission_level,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
@@ -1005,7 +1009,7 @@ class ActorClientAsync(ResourceClientAsync):
                 headers={'content-type': content_type},
                 data=run_input,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -1125,7 +1129,7 @@ class ActorClientAsync(ResourceClientAsync):
         beta_packages: bool | None = None,
         tag: str | None = None,
         use_cache: bool | None = None,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         timeout: Timeout = 'medium',
     ) -> Build:
         """Build the Actor.
@@ -1141,27 +1145,28 @@ class ActorClientAsync(ResourceClientAsync):
             use_cache: If true, the Actor's Docker container will be rebuilt using layer cache
                 (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).
                 This is to enable quick rebuild during development. By default, the cache is not used.
-            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
-                By default it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the build to finish, as a `timedelta` or a number
+                of seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
                 request outlasts the time the API holds the response.
 
         Returns:
             The build object.
         """
+        wait_for_finish_secs = to_whole_seconds(wait_for_finish)
         request_params = self._build_params(
             version=version_number,
             betaPackages=beta_packages,
             tag=tag,
             useCache=use_cache,
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = await self._http_client.call(
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
         )
 
         result = response_to_dict(response)
@@ -1184,7 +1189,7 @@ class ActorClientAsync(ResourceClientAsync):
     async def default_build(
         self,
         *,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         timeout: Timeout = 'short',
     ) -> BuildClientAsync:
         """Retrieve Actor's default build.
@@ -1192,23 +1197,24 @@ class ActorClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2/act-build-default-get
 
         Args:
-            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
-                By default it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the build to finish, as a `timedelta` or a number
+                of seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
                 request outlasts the time the API holds the response.
 
         Returns:
             The resource client for the default build of this Actor.
         """
+        wait_for_finish_secs = to_whole_seconds(wait_for_finish)
         request_params = self._build_params(
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = await self._http_client.call(
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
         )
         result = response_to_dict(response)
 

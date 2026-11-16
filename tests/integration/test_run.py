@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Generator, Iterator
-from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -403,8 +402,8 @@ async def test_run_metamorph(
         assert final_run.status == 'SUCCEEDED'
         assert final_run.metamorphs
     finally:
-        # The run may have finished already, and then the abort can fail.
-        with suppress(ApifyApiError):
+        current_run = await maybe_await(run_client.get())
+        if isinstance(current_run, Run) and current_run.status in ('READY', 'RUNNING'):
             await maybe_await(run_client.abort())
         await maybe_await(run_client.wait_for_finish())
         await maybe_await(run_client.delete())

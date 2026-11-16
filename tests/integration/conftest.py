@@ -25,7 +25,12 @@ from apify_client.http_clients import (
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
-from apify_client.http_compressors import ZstdHttpCompressor
+from apify_client.http_compressors import (
+    BrotliHttpCompressor,
+    GzipHttpCompressor,
+    HttpCompressor,
+    ZstdHttpCompressor,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -138,14 +143,27 @@ async def client(
         yield client
 
 
+@pytest.fixture(
+    params=[
+        pytest.param(GzipHttpCompressor, id='gzip'),
+        pytest.param(BrotliHttpCompressor, id='brotli'),
+        pytest.param(ZstdHttpCompressor, id='zstd'),
+    ]
+)
+def http_compressor_class(request: pytest.FixtureRequest) -> type[HttpCompressor]:
+    """Return the class of the request-body compressor the test runs with, once per built-in compressor."""
+    return request.param
+
+
 @pytest.fixture
-async def zstd_client(
+async def compressing_client(
     client_type: ClientType,
     api_token: str,
     http_client_classes: HttpClientClasses,
+    http_compressor_class: type[HttpCompressor],
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
-    """Return each sync/async and HTTP client implementation combination, compressing request bodies with zstd."""
-    async with open_apify_client(api_token, client_type, http_client_classes, ZstdHttpCompressor()) as client:
+    """Return each sync/async, HTTP client, and compressor combination, compressing request bodies explicitly."""
+    async with open_apify_client(api_token, client_type, http_client_classes, http_compressor_class()) as client:
         yield client
 
 

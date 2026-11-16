@@ -23,10 +23,10 @@ from apify_client._models import DatasetListItem, DatasetResource, DatasetStatis
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
-from apify_client.http_compressors import ZstdHttpCompressor
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client.http_compressors import HttpCompressor
 
 
 async def test_dataset_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
@@ -278,18 +278,20 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_push_zstd_compressed_items(
-    zstd_client: ApifyClient | ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
+async def test_dataset_push_compressed_items(
+    compressing_client: ApifyClient | ApifyClientAsync,
+    http_compressor_class: type[HttpCompressor],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Items the client compresses with zstd are accepted by the API and listed back unchanged."""
+    """Items the client compresses with each compressor are accepted by the API and listed back unchanged."""
     # Spies on the method itself, so the fixture's own compressor still compresses the body.
-    compress_spy = create_autospec(ZstdHttpCompressor.compress, side_effect=ZstdHttpCompressor.compress)
-    monkeypatch.setattr(ZstdHttpCompressor, 'compress', compress_spy)
+    compress_spy = create_autospec(http_compressor_class.compress, side_effect=http_compressor_class.compress)
+    monkeypatch.setattr(http_compressor_class, 'compress', compress_spy)
 
     dataset_name = get_random_resource_name('dataset')
-    created_dataset = await maybe_await(zstd_client.datasets().get_or_create(name=dataset_name))
+    created_dataset = await maybe_await(compressing_client.datasets().get_or_create(name=dataset_name))
     assert isinstance(created_dataset, DatasetResource)
-    dataset_client = zstd_client.dataset(created_dataset.id)
+    dataset_client = compressing_client.dataset(created_dataset.id)
 
     try:
         # Enough items to get the JSON body past the size threshold, so the client compresses it.

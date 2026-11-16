@@ -9,6 +9,7 @@ import pytest
 from .._utils import (
     TOKEN_ENV_VAR,
     TOKEN_ENV_VAR_2,
+    ClientType,
     DatasetFixture,
     HttpClientClasses,
     KvsFixture,
@@ -120,14 +121,14 @@ def http_client_classes(request: pytest.FixtureRequest) -> HttpClientClasses:
 
 
 @pytest.fixture(params=['sync', 'async'])
-def client_type(request: pytest.FixtureRequest) -> str:
+def client_type(request: pytest.FixtureRequest) -> ClientType:
     """Parametrize tests to run with both sync and async clients."""
     return request.param
 
 
 @pytest.fixture
 async def client(
-    client_type: str,
+    client_type: ClientType,
     api_token: str,
     http_client_classes: HttpClientClasses,
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:

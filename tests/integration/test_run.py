@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .._utils import (
+    ClientType,
     HttpClientClasses,
     get_api_url,
     get_random_resource_name,
@@ -376,7 +377,7 @@ def metamorph_actor_id(api_token: str) -> Generator[str]:
 
 async def test_run_metamorph(
     client: ApifyClient | ApifyClientAsync,
-    client_type: str,
+    client_type: ClientType,
     http_client_classes: HttpClientClasses,
     metamorph_actor_id: str,
 ) -> None:

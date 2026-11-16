@@ -9,7 +9,7 @@ import time
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar, cast, overload
 
 import pytest
 
@@ -27,6 +27,8 @@ TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'
 API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
 T = TypeVar('T')
+
+ClientType = Literal['sync', 'async']
 
 
 class _HasId(Protocol):
@@ -77,7 +79,7 @@ def get_api_url() -> str:
 
 @asynccontextmanager
 async def open_apify_client(
-    token: str, client_type: str, http_client_classes: HttpClientClasses
+    token: str, client_type: ClientType, http_client_classes: HttpClientClasses
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Build a sync or async client with the given token and HTTP client implementation, closing it on exit."""
     api_url = get_api_url()

@@ -23,20 +23,26 @@ def try_import(module_name: str, *symbol_names: str, dependency_name: str, extra
     """Context manager to attempt importing symbols into a module.
 
     If the named optional dependency is missing, the symbols are replaced with `FailedImport` objects whose message
-    names the extra that installs it. Import errors caused by the importing module itself or by another dependency
-    are propagated instead of being masked.
+    names the extra that installs it. An import error raised from another one means the dependency is installed but
+    can't load, so its message gets no install hint. A dotted `dependency_name` also counts as missing when its parent
+    package is missing. Import errors caused by the importing module itself or by another dependency are propagated
+    instead of being masked.
     """
     state = ImportState()
     try:
         yield state
     except ModuleNotFoundError as exc:
-        if exc.name != dependency_name:
+        is_dependency = exc.name is not None and (
+            exc.name == dependency_name or dependency_name.startswith(f'{exc.name}.')
+        )
+        if not is_dependency:
             raise
         state.available = False
-        message = (
-            f"{exc.args[0]}. Install the optional '{extra_name}' extra to use it: "
-            f"pip install 'apify-client[{extra_name}]'"
-        )
+        message = exc.args[0]
+        if exc.__cause__ is None:
+            message += (
+                f". Install the optional '{extra_name}' extra to use it: pip install 'apify-client[{extra_name}]'"
+            )
         for symbol_name in symbol_names:
             setattr(sys.modules[module_name], symbol_name, FailedImport(message))
 

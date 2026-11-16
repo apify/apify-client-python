@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import pytest
 
@@ -24,6 +25,12 @@ from apify_client.http_clients import (
     Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
+)
+from apify_client.http_compressors import (
+    BrotliHttpCompressor,
+    GzipHttpCompressor,
+    HttpCompressor,
+    ZstdHttpCompressor,
 )
 
 if TYPE_CHECKING:
@@ -134,6 +141,33 @@ async def client(
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Return each sync/async and HTTP client implementation combination."""
     async with open_apify_client(api_token, client_type, http_client_classes) as client:
+        yield client
+
+
+@pytest.fixture(
+    params=[
+        pytest.param(GzipHttpCompressor, id='gzip'),
+        pytest.param(BrotliHttpCompressor, id='brotli'),
+        pytest.param(ZstdHttpCompressor, id='zstd'),
+    ]
+)
+def request_body_compressor(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> HttpCompressor:
+    """Return each built-in request-body compressor, with its `compress` wrapped in a `Mock` that records calls."""
+    compressor = request.param()
+    monkeypatch.setattr(compressor, 'compress', Mock(wraps=compressor.compress))
+    return compressor
+
+
+@pytest.fixture
+async def client_with_request_body_compressor(
+    api_token: str, request_body_compressor: HttpCompressor
+) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
+    """Return a sync Impit client that compresses request bodies with `request_body_compressor`.
+
+    The compressor runs the same way for every sync/async and HTTP client combination, so one combination is enough.
+    """
+    http_client_classes = HttpClientClasses(sync=ImpitHttpClient, async_=ImpitHttpClientAsync)
+    async with open_apify_client(api_token, 'sync', http_client_classes, request_body_compressor) as client:
         yield client
 
 

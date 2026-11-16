@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+import sys
+
+from apify_client.http_compressors._base import HttpCompressor
+from apify_client.http_compressors._zstd_dependency import ZSTD_DEPENDENCY_NAME
+
+if sys.version_info >= (3, 14):
+    try:
+        from compression import zstd
+    except ImportError as exc:
+        # `compression.zstd` is optional when CPython is built, and no extra can add it to a build without it. A plain
+        # `ImportError` means `_zstd` exists but can't load, for example when the zstd shared library is missing.
+        if exc.name != '_zstd':
+            raise
+        raise ModuleNotFoundError(
+            'zstd compression is unavailable because this Python build was compiled without zstd support, or its zstd '
+            f"library cannot be loaded ({exc}). Use compression='gzip' instead.",
+            name=ZSTD_DEPENDENCY_NAME,
+        ) from exc
+else:
+    # Not `from backports import zstd`: when another `backports.*` package is installed but this one is not, that
+    # raises a plain `ImportError` instead of the `ModuleNotFoundError` the optional-extra handling expects.
+    try:
+        import backports.zstd as zstd  # noqa: PLR0402
+    except ImportError as exc:
+        if isinstance(exc, ModuleNotFoundError) and exc.name in ('backports', 'backports.zstd'):
+            raise
+        # The package is installed but it or one of its submodules can't load. Without this, `import apify_client`
+        # would fail for every user, not only for those who pick zstd.
+        raise ModuleNotFoundError(
+            f'`backports.zstd` is installed but cannot be loaded ({exc}). Reinstall it with '
+            "`pip install --force-reinstall backports.zstd`, or use compression='gzip' instead.",
+            name=ZSTD_DEPENDENCY_NAME,
+        ) from exc
+
+
+class ZstdHttpCompressor(HttpCompressor):
+    """Compresses request bodies using zstd.
+
+    Uses the standard library `compression.zstd` module on Python 3.14 and newer, provided the Python build includes
+    it. On older versions it requires the `zstd` extra: `pip install "apify-client[zstd]"`.
+    """
+
+    content_encoding = 'zstd'
+
+    _min_quality = 1
+    """Lowest valid quality (fastest, least compression)."""
+
+    _max_quality = 19
+    """Highest valid quality (slowest, best compression); zstd's levels 20 to 22 exceed the RFC 9659 window limit."""
+
+    def __init__(self, *, quality: int = 3) -> None:
+        """Initialize the zstd compressor.
+
+        Args:
+            quality: Compression level, from the fastest to the best compression. zstd's levels 20 to 22 are not
+                accepted: their window exceeds the 8 MB that HTTP decoders are required to support.
+
+        Raises:
+            ValueError: If `quality` is out of the valid range.
+        """
+        if not self._min_quality <= quality <= self._max_quality:
+            raise ValueError(
+                f'zstd quality must be between {self._min_quality} and {self._max_quality}, got {quality}.'
+            )
+        self._quality = quality
+
+    def compress(self, data: bytes) -> bytes:
+        return zstd.compress(data, level=self._quality)

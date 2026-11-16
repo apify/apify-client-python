@@ -384,9 +384,9 @@ class KeyValueStoreClient(ResourceClient):
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
-                compressing them itself. The API accepts `gzip`, `br`, `deflate`, and `identity`, and stores the
-                record exactly as uploaded, so this also becomes the encoding the record is served with. A `str`, a
-                JSON-serializable object, or a text-mode file cannot be carrying a compression and raises
+                compressing them itself. The API accepts `gzip`, `br`, `zstd`, `deflate`, and `identity`, and stores
+                the record exactly as uploaded, so this also becomes the encoding the record is served with. A `str`,
+                a JSON-serializable object, or a text-mode file cannot be carrying a compression and raises
                 `TypeError`; a streamed value is taken at its word, since its bytes are only seen as they are sent.
             timeout: Timeout for the API HTTP request.
         """
@@ -828,9 +828,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
-                compressing them itself. The API accepts `gzip`, `br`, `deflate`, and `identity`, and stores the
-                record exactly as uploaded, so this also becomes the encoding the record is served with. A `str`, a
-                JSON-serializable object, or a text-mode file cannot be carrying a compression and raises
+                compressing them itself. The API accepts `gzip`, `br`, `zstd`, `deflate`, and `identity`, and stores
+                the record exactly as uploaded, so this also becomes the encoding the record is served with. A `str`,
+                a JSON-serializable object, or a text-mode file cannot be carrying a compression and raises
                 `TypeError`; a streamed value is taken at its word, since its bytes are only seen as they are sent.
             timeout: Timeout for the API HTTP request.
         """

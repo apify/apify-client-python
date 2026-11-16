@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator
 
     from apify_client.http_clients import HttpClient, HttpClientAsync
+    from apify_client.http_compressors import HttpCompressor
 
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -80,12 +81,15 @@ def get_api_url() -> str:
 
 @asynccontextmanager
 async def open_apify_client(
-    token: str, client_type: ClientType, http_client_classes: HttpClientClasses
+    token: str,
+    client_type: ClientType,
+    http_client_classes: HttpClientClasses,
+    http_compressor: HttpCompressor | None = None,
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Build a sync or async client with the given token and HTTP client implementation, closing it on exit."""
     api_url = get_api_url()
     if client_type == 'sync':
-        http_client = http_client_classes.sync()
+        http_client = http_client_classes.sync(http_compressor=http_compressor)
         try:
             yield ApifyClient.with_custom_http_client(
                 token,
@@ -96,7 +100,7 @@ async def open_apify_client(
             http_client.close()
         return
 
-    http_client_async = http_client_classes.async_()
+    http_client_async = http_client_classes.async_(http_compressor=http_compressor)
     try:
         yield ApifyClientAsync.with_custom_http_client(
             token,

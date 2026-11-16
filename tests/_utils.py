@@ -71,7 +71,7 @@ class HttpClientClasses:
 
 
 @asynccontextmanager
-async def make_client(
+async def open_apify_client(
     token: str, client_type: str, http_client_classes: HttpClientClasses
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Build a sync or async client with the given token and HTTP client implementation, closing it on exit."""

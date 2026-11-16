@@ -14,7 +14,7 @@ from .._utils import (
     HttpClientClasses,
     KvsFixture,
     get_crypto_random_object_id,
-    make_client,
+    open_apify_client,
 )
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
@@ -133,7 +133,7 @@ async def client(
     http_client_classes: HttpClientClasses,
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Return each sync/async and HTTP client implementation combination."""
-    async with make_client(api_token, client_type, http_client_classes) as client:
+    async with open_apify_client(api_token, client_type, http_client_classes) as client:
         yield client
 
 

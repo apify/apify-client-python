@@ -13,8 +13,8 @@ from .._utils import (
     API_URL_ENV_VAR,
     HttpClientClasses,
     get_random_resource_name,
-    make_client,
     maybe_await,
+    open_apify_client,
     poll_until_condition,
 )
 from apify_client import ApifyClient
@@ -403,7 +403,7 @@ async def test_run_metamorph(
         )
         assert record is not None
 
-        async with make_client(record['value'], client_type, http_client_classes) as run_token_client:
+        async with open_apify_client(record['value'], client_type, http_client_classes) as run_token_client:
             metamorphed_run = await maybe_await(
                 run_token_client.run(run.id).metamorph(
                     target_actor_id=HELLO_WORLD_ACTOR,

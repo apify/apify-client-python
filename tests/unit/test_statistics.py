@@ -137,25 +137,25 @@ def test_client_statistics_is_exported() -> None:
 
 
 def test_apify_client_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
-    """Test that ApifyClient.statistics tracks calls and requests on the default HTTP client."""
+    """Test that ApifyClient.stats tracks calls and requests on the default HTTP client."""
     httpserver.expect_request('/v2/logs/test-id').respond_with_response(
         Response('ok', status=200, content_type='text/plain')
     )
     client = ApifyClient('test-token', api_url=httpserver.url_for('/'))
 
-    assert isinstance(client.statistics, ClientStatistics)
-    assert client.statistics is client.http_client.statistics
-    assert client.statistics.calls == 0
-    assert client.statistics.requests == 0
+    assert isinstance(client.stats, ClientStatistics)
+    assert client.stats is client.http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
 
     client.log('test-id').get()
 
-    assert client.statistics.calls == 1
-    assert client.statistics.requests == 1
+    assert client.stats.calls == 1
+    assert client.stats.requests == 1
 
 
 def test_apify_client_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
-    """Test that ApifyClient.with_custom_http_client points client.statistics to the custom HTTP client's stats."""
+    """Test that ApifyClient.with_custom_http_client points client.stats to the custom HTTP client's stats."""
     httpserver.expect_request('/v2/logs/test-id').respond_with_response(
         Response('ok', status=200, content_type='text/plain')
     )
@@ -166,36 +166,36 @@ def test_apify_client_exposes_custom_http_client_statistics(httpserver: HTTPServ
         http_client=custom_http_client,
     )
 
-    assert client.statistics is custom_http_client.statistics
-    assert client.statistics.calls == 0
-    assert client.statistics.requests == 0
+    assert client.stats is custom_http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
 
     client.log('test-id').get()
 
-    assert client.statistics.calls == 1
-    assert client.statistics.requests == 1
+    assert client.stats.calls == 1
+    assert client.stats.requests == 1
 
 
 async def test_apify_client_async_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
-    """Test that ApifyClientAsync.statistics tracks calls and requests on the default HTTP client."""
+    """Test that ApifyClientAsync.stats tracks calls and requests on the default HTTP client."""
     httpserver.expect_request('/v2/logs/test-id').respond_with_response(
         Response('ok', status=200, content_type='text/plain')
     )
     client = ApifyClientAsync('test-token', api_url=httpserver.url_for('/'))
 
-    assert isinstance(client.statistics, ClientStatistics)
-    assert client.statistics is client.http_client.statistics
-    assert client.statistics.calls == 0
-    assert client.statistics.requests == 0
+    assert isinstance(client.stats, ClientStatistics)
+    assert client.stats is client.http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
 
     await client.log('test-id').get()
 
-    assert client.statistics.calls == 1
-    assert client.statistics.requests == 1
+    assert client.stats.calls == 1
+    assert client.stats.requests == 1
 
 
 async def test_apify_client_async_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
-    """Test that ApifyClientAsync.with_custom_http_client points client.statistics to the custom HTTP client's stats."""
+    """Test that ApifyClientAsync.with_custom_http_client points client.stats to the custom HTTP client's stats."""
     httpserver.expect_request('/v2/logs/test-id').respond_with_response(
         Response('ok', status=200, content_type='text/plain')
     )
@@ -206,11 +206,11 @@ async def test_apify_client_async_exposes_custom_http_client_statistics(httpserv
         http_client=custom_http_client,
     )
 
-    assert client.statistics is custom_http_client.statistics
-    assert client.statistics.calls == 0
-    assert client.statistics.requests == 0
+    assert client.stats is custom_http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
 
     await client.log('test-id').get()
 
-    assert client.statistics.calls == 1
-    assert client.statistics.requests == 1
+    assert client.stats.calls == 1
+    assert client.stats.requests == 1

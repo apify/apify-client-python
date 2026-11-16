@@ -191,7 +191,7 @@ class HttpClientBase:
         self._headers = merge_headers(default_headers, headers)
 
     @property
-    def statistics(self) -> ClientStatistics:
+    def stats(self) -> ClientStatistics:
         """Statistics about API client usage and rate limit errors."""
         return self._statistics
 

@@ -277,7 +277,7 @@ class ApifyClient:
         if token is not None:
             http_client.set_default_authorization(token)
         instance._http_client = http_client
-        instance._statistics = http_client.statistics
+        instance._statistics = http_client.stats
         return instance
 
     @property
@@ -286,7 +286,7 @@ class ApifyClient:
         return self._token
 
     @property
-    def statistics(self) -> ClientStatistics:
+    def stats(self) -> ClientStatistics:
         """Statistics about API client usage and rate limit errors."""
         return self._statistics
 
@@ -666,7 +666,7 @@ class ApifyClientAsync:
         if token is not None:
             http_client.set_default_authorization(token)
         instance._http_client = http_client
-        instance._statistics = http_client.statistics
+        instance._statistics = http_client.stats
         return instance
 
     @property
@@ -675,7 +675,7 @@ class ApifyClientAsync:
         return self._token
 
     @property
-    def statistics(self) -> ClientStatistics:
+    def stats(self) -> ClientStatistics:
         """Statistics about API client usage and rate limit errors."""
         return self._statistics
 

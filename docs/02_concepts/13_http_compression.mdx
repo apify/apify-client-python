@@ -17,7 +17,7 @@ The Apify client compresses request bodies before sending them to the API. It re
 
 ## How it works
 
-The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports gzip, brotli, and zstd and decompresses the request body transparently. A body is compressed only when it's large enough to benefit, its content type isn't already compressed, the request carries no `Content-Encoding` of its own, and the body isn't streamed from a file or an iterator. For details, see [Minimum body size](#minimum-body-size), [Already-compressed payloads](#already-compressed-payloads), [Pre-compressed bodies](#pre-compressed-bodies), and [Streaming uploads](./09_streaming.mdx#streaming-uploads).
+The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports [gzip](https://en.wikipedia.org/wiki/Gzip), [brotli](https://en.wikipedia.org/wiki/Brotli), and [zstd](https://en.wikipedia.org/wiki/Zstandard) and decompresses the request body transparently. A body is compressed only when it's large enough to benefit, its content type isn't already compressed, the request carries no `Content-Encoding` of its own, and the body isn't streamed from a file or an iterator. For details, see [Minimum body size](#minimum-body-size), [Already-compressed payloads](#already-compressed-payloads), [Pre-compressed bodies](#pre-compressed-bodies), and [Streaming uploads](./09_streaming.mdx#streaming-uploads).
 
 ## Minimum body size
 

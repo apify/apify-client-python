@@ -12,7 +12,7 @@ class ClientStatistics:
     """Statistics about API client usage and rate limit errors."""
 
     calls: int = 0
-    """Total number of API method calls made by the client."""
+    """Total number of calls made by the client, including requests to Actor servers."""
 
     requests: int = 0
     """Total number of HTTP requests sent, including retries."""

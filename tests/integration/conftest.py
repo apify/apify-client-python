@@ -138,6 +138,6 @@ async def client(
 
 
 @pytest.fixture
-def is_async(client_type: str) -> bool:
+def is_async(client_type: ClientType) -> bool:
     """True if current test is using async client."""
     return client_type == 'async'

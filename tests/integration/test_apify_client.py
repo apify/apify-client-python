@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .._utils import get_api_url, maybe_await
+from .._utils import ClientType, get_api_url, maybe_await
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._models import UserPrivateInfo, UserPublicInfo
 from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
@@ -16,7 +16,7 @@ async def test_apify_client(client: ApifyClient | ApifyClientAsync) -> None:
     assert me.username is not None
 
 
-async def test_plain_constructor_reaches_the_api(client_type: str, api_token: str) -> None:
+async def test_plain_constructor_reaches_the_api(client_type: ClientType, api_token: str) -> None:
     """The plain constructor - the form users write - reaches the API with the HTTP client it builds itself.
 
     The rest of the suite injects a transport through `with_custom_http_client` to run against every built-in

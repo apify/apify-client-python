@@ -73,10 +73,8 @@ class RunClient(ResourceClient):
         Returns:
             The retrieved Actor run data.
         """
-        result = self._get(
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
-        )
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
+        result = self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
         return RunResponse.model_validate(result).data
@@ -636,10 +634,8 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor run data.
         """
-        result = await self._get(
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
-        )
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
+        result = await self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
         return RunResponse.model_validate(result).data

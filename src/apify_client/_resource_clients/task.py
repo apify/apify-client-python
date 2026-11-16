@@ -17,7 +17,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.server_args import build_actor_standby
-from apify_client._utils.time import to_seconds, to_timedelta
+from apify_client._utils.time import to_seconds
 from apify_client._utils.wait_for_resources import start_waiting_for_resources, start_waiting_for_resources_async
 
 if TYPE_CHECKING:
@@ -296,7 +296,7 @@ class TaskClient(ResourceClient):
         if task_input is not None and not isinstance(task_input, TaskInput):
             task_input = TaskInput.model_validate(task_input)
 
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -304,7 +304,7 @@ class TaskClient(ResourceClient):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
@@ -315,7 +315,7 @@ class TaskClient(ResourceClient):
                 headers={'content-type': 'application/json; charset=utf-8'},
                 json=task_input.model_dump() if task_input is not None else None,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=request_timeout,
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -735,7 +735,7 @@ class TaskClientAsync(ResourceClientAsync):
         if task_input is not None and not isinstance(task_input, TaskInput):
             task_input = TaskInput.model_validate(task_input)
 
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -743,7 +743,7 @@ class TaskClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
@@ -754,7 +754,7 @@ class TaskClientAsync(ResourceClientAsync):
                 headers={'content-type': 'application/json; charset=utf-8'},
                 json=task_input.model_dump() if task_input is not None else None,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=request_timeout,
             ),
             wait_for_resources=wait_for_resources,
         )

@@ -6,7 +6,6 @@ from apify_client._docs import docs_group
 from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.http import response_to_dict
-from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -50,10 +49,8 @@ class BuildClient(ResourceClient):
         Returns:
             The retrieved Actor build data.
         """
-        result = self._get(
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
-        )
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
+        result = self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
         return BuildResponse.model_validate(result).data
@@ -176,10 +173,8 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor build data.
         """
-        result = await self._get(
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
-        )
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
+        result = await self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
         return BuildResponse.model_validate(result).data

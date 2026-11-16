@@ -16,7 +16,7 @@ from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils.errors import catch_not_found_for_resource_or_throw, catch_not_found_or_throw
 from apify_client._utils.http import response_to_dict, to_path_segment, to_safe_id
-from apify_client._utils.time import to_seconds
+from apify_client._utils.time import to_seconds, to_timedelta
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -167,6 +167,17 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
             return timeout
         hold = min(wait_for_finish, MAX_WAIT_FOR_FINISH_HOLD)
         return self._http_client._resolve_timeout(timeout) + hold  # noqa: SLF001
+
+    def _resolve_wait_for_finish(
+        self,
+        wait_for_finish: timedelta | int | None,
+        timeout: Timeout,
+    ) -> tuple[int | None, Timeout]:
+        """Return the `waitForFinish` query value in whole seconds and the request timeout extended by the wait."""
+        duration = to_timedelta(wait_for_finish)
+        wait_for_finish_secs = to_seconds(duration, as_int=True)
+        request_timeout = self._timeout_for_wait_for_finish(timeout, duration)
+        return wait_for_finish_secs, request_timeout
 
     @staticmethod
     def _clean_json_payload(data: dict) -> dict:

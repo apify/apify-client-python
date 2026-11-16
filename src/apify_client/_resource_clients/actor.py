@@ -26,7 +26,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.server_args import build_actor_standby
-from apify_client._utils.time import to_seconds, to_timedelta
+from apify_client._utils.time import to_seconds
 from apify_client._utils.wait_for_resources import (
     prepare_resendable_body,
     start_waiting_for_resources,
@@ -342,7 +342,7 @@ class ActorClient(ResourceClient):
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
         run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -350,7 +350,7 @@ class ActorClient(ResourceClient):
             restartOnError=restart_on_error,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
             forcePermissionLevel=force_permission_level,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
@@ -362,7 +362,7 @@ class ActorClient(ResourceClient):
                 headers={'content-type': content_type},
                 data=run_input,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=request_timeout,
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -505,20 +505,20 @@ class ActorClient(ResourceClient):
         Returns:
             The build object.
         """
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             version=version_number,
             betaPackages=beta_packages,
             tag=tag,
             useCache=use_cache,
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = self._http_client.call(
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=request_timeout,
         )
 
         result = response_to_dict(response)
@@ -557,16 +557,16 @@ class ActorClient(ResourceClient):
         Returns:
             The resource client for the default build of this Actor.
         """
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = self._http_client.call(
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=request_timeout,
         )
         result = response_to_dict(response)
 
@@ -989,7 +989,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
         run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -997,7 +997,7 @@ class ActorClientAsync(ResourceClientAsync):
             restartOnError=restart_on_error,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
             forcePermissionLevel=force_permission_level,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
@@ -1009,7 +1009,7 @@ class ActorClientAsync(ResourceClientAsync):
                 headers={'content-type': content_type},
                 data=run_input,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=request_timeout,
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -1153,20 +1153,20 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The build object.
         """
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             version=version_number,
             betaPackages=beta_packages,
             tag=tag,
             useCache=use_cache,
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = await self._http_client.call(
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=request_timeout,
         )
 
         result = response_to_dict(response)
@@ -1205,16 +1205,16 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the default build of this Actor.
         """
-        wait_for_finish = to_timedelta(wait_for_finish)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
-            waitForFinish=to_seconds(wait_for_finish, as_int=True),
+            waitForFinish=wait_for_finish_secs,
         )
 
         response = await self._http_client.call(
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            timeout=request_timeout,
         )
         result = response_to_dict(response)
 

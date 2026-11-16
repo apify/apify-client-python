@@ -224,9 +224,16 @@ def test_resolve_compressor_brotli_raises_clear_error_when_extra_missing() -> No
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 14), reason='zstd is in the standard library from Python 3.14')
-def test_zstd_import_hook_raises_clear_error_when_extra_missing() -> None:
+@pytest.mark.parametrize(
+    'missing_module',
+    [
+        pytest.param('backports', id='no backports package'),
+        pytest.param('backports.zstd', id='other backports packages only'),
+    ],
+)
+def test_zstd_import_hook_raises_clear_error_when_extra_missing(missing_module: str) -> None:
     """Accessing `ZstdHttpCompressor` without the `zstd` extra raises an `ImportError` naming the extra."""
-    with _dependency_unavailable('backports.zstd'):
+    with _dependency_unavailable(missing_module):
         module = importlib.import_module('apify_client.http_compressors')
         with pytest.raises(ImportError, match=r'apify-client\[zstd\]'):
             _ = module.ZstdHttpCompressor

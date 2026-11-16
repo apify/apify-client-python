@@ -48,11 +48,7 @@ class ZstdHttpCompressor(HttpCompressor):
     """Lowest valid quality (fastest, least compression)."""
 
     _max_quality = 19
-    """Highest valid quality (slowest, best compression).
-
-    zstd itself goes up to 22, but levels 20 to 22 use a window above the 8 MB that RFC 9659 requires HTTP decoders
-    to support, so a record stored at those levels could fail to decode in a client that accepts zstd.
-    """
+    """Highest valid quality (slowest, best compression); zstd's levels 20 to 22 exceed the RFC 9659 window limit."""
 
     def __init__(self, *, quality: int = 3) -> None:
         """Initialize the zstd compressor.

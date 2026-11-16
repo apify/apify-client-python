@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .._utils import get_api_url, get_random_resource_name, maybe_await
+from .._utils import create_built_actor, get_api_url, get_random_resource_name, maybe_await
 from apify_client import ApifyClient
 
 if TYPE_CHECKING:
@@ -57,34 +57,20 @@ def server_actor_id(api_token: str) -> Generator[str]:
         'usesStandbyMode': True,
         'webServerSchema': OPENAPI_SPEC,
     }
-    actor = client.actors().create(
-        name=actor_name,
-        versions=[
-            {
-                'versionNumber': '0.0',
-                'sourceType': 'SOURCE_FILES',
-                'buildTag': 'latest',
-                'sourceFiles': [
-                    {'name': 'Dockerfile', 'format': 'TEXT', 'content': DOCKERFILE},
-                    {'name': 'main.js', 'format': 'TEXT', 'content': ECHO_SERVER_SOURCE},
-                    {'name': '.actor/actor.json', 'format': 'TEXT', 'content': json.dumps(actor_json)},
-                ],
-            }
-        ],
+    source_files = [
+        {'name': 'Dockerfile', 'format': 'TEXT', 'content': DOCKERFILE},
+        {'name': 'main.js', 'format': 'TEXT', 'content': ECHO_SERVER_SOURCE},
+        {'name': '.actor/actor.json', 'format': 'TEXT', 'content': json.dumps(actor_json)},
+    ]
+    with create_built_actor(
+        client,
+        actor_name,
+        source_files,
         server_is_enabled=True,
         server_memory_mbytes=256,
         server_idle_timeout=timedelta(minutes=1),
-    )
-    actor_client = client.actor(actor.id)
-
-    try:
-        build = actor_client.build(version_number='0.0')
-        finished_build = client.build(build.id).wait_for_finish(wait_duration=timedelta(minutes=5))
-        assert finished_build is not None
-        assert finished_build.status == 'SUCCEEDED'
-        yield actor.id
-    finally:
-        actor_client.delete()
+    ) as actor_id:
+        yield actor_id
 
 
 async def test_actor_server(client: ApifyClient | ApifyClientAsync, server_actor_id: str) -> None:

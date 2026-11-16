@@ -7,8 +7,9 @@ import secrets
 import string
 import time
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar, cast, overload
 
 import pytest
@@ -17,7 +18,7 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
+    from collections.abc import Awaitable, Callable, Generator
 
     from apify_client.http_clients import HttpClient, HttpClientAsync
 
@@ -104,6 +105,35 @@ async def open_apify_client(
         )
     finally:
         await http_client_async.aclose()
+
+
+@contextmanager
+def create_built_actor(
+    client: ApifyClient, name: str, source_files: list[dict[str, Any]], **create_kwargs: Any
+) -> Generator[str]:
+    """Create an Actor from source files and build it, yield its ID, and delete it on exit."""
+    actor = client.actors().create(
+        name=name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': source_files,
+            }
+        ],
+        **create_kwargs,
+    )
+    actor_client = client.actor(actor.id)
+
+    try:
+        build = actor_client.build(version_number='0.0')
+        finished_build = client.build(build.id).wait_for_finish(wait_duration=timedelta(minutes=5))
+        assert finished_build is not None
+        assert finished_build.status == 'SUCCEEDED'
+        yield actor.id
+    finally:
+        actor_client.delete()
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:

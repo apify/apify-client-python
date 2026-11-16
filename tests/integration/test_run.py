@@ -12,6 +12,7 @@ import pytest
 from .._utils import (
     ClientType,
     HttpClientClasses,
+    create_built_actor,
     get_api_url,
     get_random_resource_name,
     maybe_await,
@@ -353,27 +354,8 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
 def metamorph_actor_id(api_token: str) -> Generator[str]:
     """Create and build an Actor that stores its run token, and delete it after the module's tests."""
     client = ApifyClient(api_token, api_url=get_api_url())
-    actor = client.actors().create(
-        name=get_random_resource_name('actor'),
-        versions=[
-            {
-                'versionNumber': '0.0',
-                'sourceType': 'SOURCE_FILES',
-                'buildTag': 'latest',
-                'sourceFiles': METAMORPH_SOURCE_FILES,
-            }
-        ],
-    )
-    actor_client = client.actor(actor.id)
-
-    try:
-        build = actor_client.build(version_number='0.0')
-        finished_build = client.build(build.id).wait_for_finish()
-        assert finished_build is not None
-        assert finished_build.status == 'SUCCEEDED'
-        yield actor.id
-    finally:
-        actor_client.delete()
+    with create_built_actor(client, get_random_resource_name('actor'), METAMORPH_SOURCE_FILES) as actor_id:
+        yield actor_id
 
 
 async def test_run_metamorph(

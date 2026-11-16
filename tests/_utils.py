@@ -78,21 +78,25 @@ async def make_client(
     api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
     if client_type == 'sync':
         http_client = http_client_classes.sync()
-        yield ApifyClient.with_custom_http_client(
-            token,
-            api_url=api_url,
-            http_client=http_client,
-        )
-        http_client.close()
+        try:
+            yield ApifyClient.with_custom_http_client(
+                token,
+                api_url=api_url,
+                http_client=http_client,
+            )
+        finally:
+            http_client.close()
         return
 
     http_client_async = http_client_classes.async_()
-    yield ApifyClientAsync.with_custom_http_client(
-        token,
-        api_url=api_url,
-        http_client=http_client_async,
-    )
-    await http_client_async.aclose()
+    try:
+        yield ApifyClientAsync.with_custom_http_client(
+            token,
+            api_url=api_url,
+            http_client=http_client_async,
+        )
+    finally:
+        await http_client_async.aclose()
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:

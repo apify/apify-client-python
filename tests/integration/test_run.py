@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
+import os
+from collections.abc import AsyncIterator, Generator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from .._utils import HttpClientClasses, get_random_resource_name, make_client, maybe_await, poll_until_condition
+import pytest
+
+from .._utils import (
+    API_URL_ENV_VAR,
+    HttpClientClasses,
+    get_random_resource_name,
+    make_client,
+    maybe_await,
+    poll_until_condition,
+)
+from apify_client import ApifyClient
+from apify_client._consts import DEFAULT_API_URL
 from apify_client._models import (
     ActorResource,
     Build,
@@ -20,7 +32,7 @@ from apify_client._models import (
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client import ApifyClientAsync
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
@@ -51,6 +63,27 @@ for (let index = 0; index < {LIVE_ITEM_COUNT}; index++) {{
     },
 ]
 """Source of an Actor that pushes `LIVE_ITEM_COUNT` items tagged with its run ID to its dataset, one per second."""
+
+
+METAMORPH_SOURCE_FILES = [
+    {
+        'name': 'Dockerfile',
+        'format': 'TEXT',
+        'content': 'FROM apify/actor-node:22\nCOPY . ./\nCMD ["node", "main.js"]\n',
+    },
+    {
+        'name': 'main.js',
+        'format': 'TEXT',
+        'content': """
+const { Actor } = require('apify');
+Actor.main(async () => {
+    await Actor.setValue('TOKEN', process.env.APIFY_TOKEN, { contentType: 'text/plain' });
+    await new Promise((resolve) => setTimeout(resolve, 60000));
+});
+""",
+    },
+]
+"""Source of an Actor that stores its run token under `TOKEN` in its key-value store, then waits for 60 seconds."""
 
 
 async def test_run_collection_list_multiple_statuses(client: ApifyClient | ApifyClientAsync) -> None:
@@ -316,81 +349,70 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
         assert first_run.act_id is not None
 
 
-async def test_run_metamorph(client_type: str, http_client_classes: HttpClientClasses, api_token: str) -> None:
+@pytest.fixture(scope='module')
+def metamorph_actor_id(api_token: str) -> Generator[str]:
+    """Create and build an Actor that stores its run token, and delete it after the module's tests."""
+    client = ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL)
+    actor = client.actors().create(
+        name=get_random_resource_name('actor'),
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': METAMORPH_SOURCE_FILES,
+            }
+        ],
+    )
+    actor_client = client.actor(actor.id)
+
+    try:
+        build = actor_client.build(version_number='0.0')
+        finished_build = client.build(build.id).wait_for_finish()
+        assert finished_build is not None
+        assert finished_build.status == 'SUCCEEDED'
+        yield actor.id
+    finally:
+        actor_client.delete()
+
+
+async def test_run_metamorph(
+    client: ApifyClient | ApifyClientAsync,
+    client_type: str,
+    http_client_classes: HttpClientClasses,
+    metamorph_actor_id: str,
+) -> None:
     """Test metamorphing a run into another Actor.
 
-    We have to cheat a bit - metamorphing from outside is disallowed, so we need the Actor to leak its run token into
-    the key-value store, which we then use to construct a new client and do the test we want.
+    A metamorph must use the run's own token, so the Actor writes `APIFY_TOKEN` to its key-value store and the test
+    reads it from there.
     """
-    async with make_client(api_token, client_type, http_client_classes) as default_client:
-        created_actor = await maybe_await(
-            default_client.actors().create(
-                name=get_random_resource_name('actor'),
-                versions=[
-                    {
-                        'versionNumber': '0.0',
-                        'sourceType': 'SOURCE_FILES',
-                        'buildTag': 'latest',
-                        # The Actor stores its own run token in its key-value store, so the test can metamorph with it.
-                        'sourceFiles': [
-                            {
-                                'name': 'Dockerfile',
-                                'format': 'TEXT',
-                                'content': 'FROM apify/actor-node:22\nCOPY . ./\nCMD ["node", "main.js"]\n',
-                            },
-                            {
-                                'name': 'main.js',
-                                'format': 'TEXT',
-                                'content': """
-                                    const { Actor } = require('apify');
-                                    Actor.main(async () => {
-                                        await Actor.setValue(
-                                            'TOKEN', process.env.APIFY_TOKEN, { contentType: 'text/plain' }
-                                        );
-                                        await new Promise((resolve) => setTimeout(resolve, 60000));
-                                    });
-    """,
-                            },
-                        ],
-                    }
-                ],
-            )
+    run = await maybe_await(
+        client.actor(metamorph_actor_id).start(memory_mbytes=256, run_timeout=timedelta(seconds=120))
+    )
+    assert isinstance(run, Run)
+    run_client = client.run(run.id)
+
+    try:
+
+        async def get_token_record() -> dict | None:
+            return await maybe_await(client.key_value_store(run.default_key_value_store_id).get_record('TOKEN'))
+
+        record = await poll_until_condition(
+            get_token_record, lambda rec: rec is not None, timeout=120, backoff_factor=2
         )
-        assert isinstance(created_actor, ActorResource)
-        actor_client = default_client.actor(created_actor.id)
-        run_client = None
+        assert record is not None
 
-        try:
-            # build and run the Actor
-            started_build = await maybe_await(actor_client.build(version_number='0.0'))
-            assert isinstance(started_build, Build)
-            await maybe_await(default_client.build(started_build.id).wait_for_finish())
-            run = await maybe_await(actor_client.start())
-            assert isinstance(run, Run)
-            run_client = default_client.run(run.id)
-
-            # get the run token
-            async def get_token_record() -> dict | None:
-                return await maybe_await(
-                    default_client.key_value_store(run.default_key_value_store_id).get_record('TOKEN')
-                )
-
-            record = await poll_until_condition(get_token_record, lambda rec: rec is not None, backoff_factor=2)
-            assert record is not None
-
-            # the actual test
-            async with make_client(record['value'], client_type, http_client_classes) as run_token_client:
-                metamorphed_run = await maybe_await(
-                    run_token_client.run(run.id).metamorph(target_actor_id=HELLO_WORLD_ACTOR)
-                )
-            assert isinstance(metamorphed_run, Run)
-            assert metamorphed_run.id == run.id
-        finally:
-            if run_client is not None:
-                await maybe_await(run_client.abort())
-                await maybe_await(run_client.wait_for_finish())
-                await maybe_await(run_client.delete())
-            await maybe_await(actor_client.delete())
+        async with make_client(record['value'], client_type, http_client_classes) as run_token_client:
+            metamorphed_run = await maybe_await(
+                run_token_client.run(run.id).metamorph(target_actor_id=HELLO_WORLD_ACTOR)
+            )
+        assert isinstance(metamorphed_run, Run)
+        assert metamorphed_run.id == run.id
+    finally:
+        await maybe_await(run_client.abort())
+        await maybe_await(run_client.wait_for_finish())
+        await maybe_await(run_client.delete())
 
 
 async def test_run_reboot(client: ApifyClient | ApifyClientAsync) -> None:

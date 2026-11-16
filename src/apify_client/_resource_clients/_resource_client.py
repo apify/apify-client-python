@@ -158,8 +158,9 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
     def _timeout_for_wait_for_finish(self, timeout: Timeout, wait_for_finish: timedelta | None) -> Timeout:
         """Extend a timeout tier by the time the API may hold the response for `wait_for_finish`.
 
-        A request that times out while the API still holds it is retried, and a retried POST starts a second run or
-        build. An explicit `timedelta` and `'no_timeout'` are used as given.
+        A request that times out while the API still holds it is retried: a retried POST starts a second run or build,
+        and a GET can use up its retries before the wait ends. An explicit `timedelta` and `'no_timeout'` are used as
+        given.
         """
         if isinstance(timeout, timedelta) or timeout == 'no_timeout':
             return timeout

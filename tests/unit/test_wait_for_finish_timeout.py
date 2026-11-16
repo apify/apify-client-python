@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import pytest
-from werkzeug import Response
+from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 
@@ -23,6 +23,8 @@ pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 ACTOR_ID = 'test_actor_id'
 TASK_ID = 'test_task_id'
+RUN_ID = 'test_run_id'
+BUILD_ID = 'test_build_id'
 
 RUN_RESPONSE = {
     'data': {
@@ -109,6 +111,26 @@ CALL_SITES = [
         ),
         id='task start',
     ),
+    pytest.param(
+        CallSite(
+            invoke=lambda client, **kwargs: client.run(RUN_ID).get(**kwargs),
+            method='GET',
+            path=f'/v2/actor-runs/{RUN_ID}',
+            response_body=RUN_RESPONSE,
+            tier_secs=5,
+        ),
+        id='run get',
+    ),
+    pytest.param(
+        CallSite(
+            invoke=lambda client, **kwargs: client.build(BUILD_ID).get(**kwargs),
+            method='GET',
+            path=f'/v2/actor-builds/{BUILD_ID}',
+            response_body=BUILD_RESPONSE,
+            tier_secs=5,
+        ),
+        id='build get',
+    ),
 ]
 
 
@@ -143,6 +165,28 @@ async def call_and_capture_timeout(
     return send_request.call_args_list[0].kwargs['timeout']
 
 
+async def call_and_capture_wait_for_finish(
+    client: ApifyClient | ApifyClientAsync,
+    httpserver: HTTPServer,
+    call_site: CallSite,
+    wait_for_finish: timedelta | int | None,
+) -> str | None:
+    """Invoke the call site against a mocked endpoint and return the `waitForFinish` query parameter it sent."""
+    captured: list[Request] = []
+
+    def handler(request: Request) -> Response:
+        captured.append(request)
+        return Response(json.dumps(call_site.response_body), status=200, mimetype='application/json')
+
+    httpserver.expect_request(call_site.path, method=call_site.method).respond_with_handler(handler)
+
+    result = call_site.invoke(client, wait_for_finish=wait_for_finish)
+    if inspect.isawaitable(result):
+        await result
+
+    return captured[0].args.get('waitForFinish')
+
+
 @pytest.mark.parametrize('call_site', CALL_SITES)
 async def test_default_timeout_covers_wait_for_finish(
     client: ApifyClient | ApifyClientAsync,
@@ -151,6 +195,21 @@ async def test_default_timeout_covers_wait_for_finish(
     call_site: CallSite,
 ) -> None:
     """The default timeout tier is extended by `wait_for_finish`, so the request outlasts the API's hold."""
+    timeout = await call_and_capture_timeout(
+        client, monkeypatch, httpserver, call_site, wait_for_finish=timedelta(seconds=60)
+    )
+
+    assert timeout == call_site.tier_secs + 60
+
+
+@pytest.mark.parametrize('call_site', CALL_SITES)
+async def test_default_timeout_covers_wait_for_finish_in_seconds(
+    client: ApifyClient | ApifyClientAsync,
+    monkeypatch: pytest.MonkeyPatch,
+    httpserver: HTTPServer,
+    call_site: CallSite,
+) -> None:
+    """The default timeout tier is extended by a `wait_for_finish` given as a number of seconds."""
     timeout = await call_and_capture_timeout(client, monkeypatch, httpserver, call_site, wait_for_finish=60)
 
     assert timeout == call_site.tier_secs + 60
@@ -165,7 +224,7 @@ async def test_explicit_timeout_ignores_wait_for_finish(
 ) -> None:
     """An explicit `timedelta` timeout is used as given, whatever `wait_for_finish` is."""
     timeout = await call_and_capture_timeout(
-        client, monkeypatch, httpserver, call_site, wait_for_finish=60, timeout=timedelta(seconds=7)
+        client, monkeypatch, httpserver, call_site, wait_for_finish=timedelta(seconds=60), timeout=timedelta(seconds=7)
     )
 
     assert timeout == 7
@@ -175,22 +234,55 @@ async def test_explicit_timeout_ignores_wait_for_finish(
     ('timeout', 'wait_for_finish', 'expected'),
     [
         pytest.param('medium', None, 'medium', id='no wait'),
-        pytest.param('medium', 0, 'medium', id='zero wait'),
-        pytest.param('medium', -5, 'medium', id='negative wait'),
-        pytest.param('medium', 20, timedelta(seconds=50), id='medium tier'),
-        pytest.param('short', 20, timedelta(seconds=25), id='short tier'),
-        pytest.param('medium', 600, timedelta(seconds=90), id='wait above API maximum'),
-        pytest.param('no_timeout', 60, 'no_timeout', id='no timeout'),
-        pytest.param(timedelta(seconds=7), 60, timedelta(seconds=7), id='explicit timedelta'),
+        pytest.param('medium', timedelta(0), 'medium', id='zero wait'),
+        pytest.param('medium', timedelta(seconds=-5), 'medium', id='negative wait'),
+        pytest.param('medium', timedelta(seconds=20), timedelta(seconds=50), id='medium tier'),
+        pytest.param('short', timedelta(seconds=20), timedelta(seconds=25), id='short tier'),
+        pytest.param('medium', timedelta(seconds=600), timedelta(seconds=90), id='wait above API maximum'),
+        pytest.param('no_timeout', timedelta(seconds=60), 'no_timeout', id='no timeout'),
+        pytest.param(timedelta(seconds=7), timedelta(seconds=60), timedelta(seconds=7), id='explicit timedelta'),
     ],
 )
 def test_timeout_for_wait_for_finish(
     client: ApifyClient | ApifyClientAsync,
     timeout: Timeout,
-    wait_for_finish: int | None,
+    wait_for_finish: timedelta | None,
     expected: Timeout,
 ) -> None:
     """A timeout tier is extended by `wait_for_finish`, capped at the API's 60 s hold; other timeouts stay as given."""
     actor_client = client.actor(ACTOR_ID)
 
     assert actor_client._timeout_for_wait_for_finish(timeout, wait_for_finish) == expected
+
+
+@pytest.mark.parametrize(
+    ('wait_for_finish', 'expected'),
+    [
+        pytest.param(timedelta(seconds=45, milliseconds=500), '45', id='rounded down to whole seconds'),
+        pytest.param(None, None, id='omitted by default'),
+    ],
+)
+@pytest.mark.parametrize('call_site', CALL_SITES)
+async def test_sends_wait_for_finish_in_whole_seconds(
+    client: ApifyClient | ApifyClientAsync,
+    httpserver: HTTPServer,
+    call_site: CallSite,
+    wait_for_finish: timedelta | None,
+    expected: str | None,
+) -> None:
+    """A `timedelta` `wait_for_finish` is sent as `waitForFinish` in whole seconds, and an unset one is omitted."""
+    sent = await call_and_capture_wait_for_finish(client, httpserver, call_site, wait_for_finish)
+
+    assert sent == expected
+
+
+@pytest.mark.parametrize('call_site', CALL_SITES)
+async def test_accepts_wait_for_finish_in_seconds(
+    client: ApifyClient | ApifyClientAsync,
+    httpserver: HTTPServer,
+    call_site: CallSite,
+) -> None:
+    """`wait_for_finish` is also accepted as a number of seconds."""
+    sent = await call_and_capture_wait_for_finish(client, httpserver, call_site, 45)
+
+    assert sent == '45'

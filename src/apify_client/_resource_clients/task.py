@@ -249,7 +249,7 @@ class TaskClient(ResourceClient):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         webhooks: WebhooksList | None = None,
         wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
@@ -271,8 +271,8 @@ class TaskClient(ResourceClient):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
-                it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the run to finish, as a `timedelta` or a number of
+                seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
@@ -296,6 +296,7 @@ class TaskClient(ResourceClient):
         if task_input is not None and not isinstance(task_input, TaskInput):
             task_input = TaskInput.model_validate(task_input)
 
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -303,7 +304,7 @@ class TaskClient(ResourceClient):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
@@ -314,7 +315,7 @@ class TaskClient(ResourceClient):
                 headers={'content-type': 'application/json; charset=utf-8'},
                 json=task_input.model_dump() if task_input is not None else None,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=request_timeout,
             ),
             wait_for_resources=wait_for_resources,
         )
@@ -687,7 +688,7 @@ class TaskClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        wait_for_finish: int | None = None,
+        wait_for_finish: timedelta | int | None = None,
         webhooks: WebhooksList | None = None,
         wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
@@ -709,8 +710,8 @@ class TaskClientAsync(ResourceClientAsync):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
-                it is 0, the maximum value is 60.
+            wait_for_finish: The maximum time the server waits for the run to finish, as a `timedelta` or a number of
+                seconds. By default it is 0, and the API holds the response for at most 60 seconds.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
@@ -734,6 +735,7 @@ class TaskClientAsync(ResourceClientAsync):
         if task_input is not None and not isinstance(task_input, TaskInput):
             task_input = TaskInput.model_validate(task_input)
 
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -741,7 +743,7 @@ class TaskClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
-            waitForFinish=wait_for_finish,
+            waitForFinish=wait_for_finish_secs,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
@@ -752,7 +754,7 @@ class TaskClientAsync(ResourceClientAsync):
                 headers={'content-type': 'application/json; charset=utf-8'},
                 json=task_input.model_dump() if task_input is not None else None,
                 params=request_params,
-                timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+                timeout=request_timeout,
             ),
             wait_for_resources=wait_for_resources,
         )

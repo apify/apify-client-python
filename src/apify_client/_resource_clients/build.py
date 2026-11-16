@@ -35,18 +35,22 @@ class BuildClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Build | None:
+    def get(self, *, wait_for_finish: timedelta | int | None = None, timeout: Timeout = 'short') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Args:
-            timeout: Timeout for the API HTTP request.
+            wait_for_finish: The maximum time the server waits for the build to finish, as a `timedelta` or a number
+                of seconds. The API holds the response for at most 60 seconds.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The retrieved Actor build data.
         """
-        result = self._get(timeout=timeout)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
+        result = self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
         return BuildResponse.model_validate(result).data
@@ -155,18 +159,22 @@ class BuildClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Build | None:
+    async def get(self, *, wait_for_finish: timedelta | int | None = None, timeout: Timeout = 'short') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Args:
-            timeout: Timeout for the API HTTP request.
+            wait_for_finish: The maximum time the server waits for the build to finish, as a `timedelta` or a number
+                of seconds. The API holds the response for at most 60 seconds.
+            timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
+                request outlasts the time the API holds the response.
 
         Returns:
             The retrieved Actor build data.
         """
-        result = await self._get(timeout=timeout)
+        wait_for_finish_secs, request_timeout = self._resolve_wait_for_finish(wait_for_finish, timeout)
+        result = await self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
         return BuildResponse.model_validate(result).data

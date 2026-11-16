@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.5.2 - **not yet released**
+
+### 🚀 Features
+
+- Expose request statistics via `ApifyClient.stats` ([#1228](https://github.com/apify/apify-client-python/pull/1228)) ([27a3f61](https://github.com/apify/apify-client-python/commit/27a3f61b3c614c4f78aaa28b7a94a63bbb6b193b)) by [@cobanfurkanx](https://github.com/cobanfurkanx), closes [#1175](https://github.com/apify/apify-client-python/issues/1175)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.5.1](https://github.com/apify/apify-client-python/releases/tag/v3.5.1) (2026-11-11)
 
 ### 🐛 Bug Fixes

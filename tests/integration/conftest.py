@@ -7,17 +7,16 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .._utils import (
-    API_URL_ENV_VAR,
     TOKEN_ENV_VAR,
     TOKEN_ENV_VAR_2,
     DatasetFixture,
     HttpClientClasses,
     KvsFixture,
+    get_api_url,
     get_crypto_random_object_id,
     open_apify_client,
 )
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 from apify_client.http_clients import (
     Httpx2HttpClient,
@@ -51,7 +50,7 @@ def api_token_2() -> str:
 @pytest.fixture(scope='session')
 def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
     """Dataset owned by secondary user for testing cross-user access restrictions."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    api_url = get_api_url()
     client = ApifyClient(api_token_2, api_url=api_url)
 
     # Create dataset with test data
@@ -80,7 +79,7 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
 @pytest.fixture(scope='session')
 def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     """Key-value store owned by secondary user for testing cross-user access restrictions."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    api_url = get_api_url()
     client = ApifyClient(api_token_2, api_url=api_url)
 
     # Create key-value store with test data

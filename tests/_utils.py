@@ -70,12 +70,17 @@ class HttpClientClasses:
     async_: type[HttpClientAsync]
 
 
+def get_api_url() -> str:
+    """Return the API URL for integration tests, from `API_URL_ENV_VAR` or the default."""
+    return os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+
+
 @asynccontextmanager
 async def open_apify_client(
     token: str, client_type: str, http_client_classes: HttpClientClasses
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Build a sync or async client with the given token and HTTP client implementation, closing it on exit."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    api_url = get_api_url()
     if client_type == 'sync':
         http_client = http_client_classes.sync()
         try:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import AsyncIterator, Generator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
@@ -10,15 +9,14 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .._utils import (
-    API_URL_ENV_VAR,
     HttpClientClasses,
+    get_api_url,
     get_random_resource_name,
     maybe_await,
     open_apify_client,
     poll_until_condition,
 )
 from apify_client import ApifyClient
-from apify_client._consts import DEFAULT_API_URL
 from apify_client._models import (
     ActorResource,
     Build,
@@ -352,7 +350,7 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
 @pytest.fixture(scope='module')
 def metamorph_actor_id(api_token: str) -> Generator[str]:
     """Create and build an Actor that stores its run token, and delete it after the module's tests."""
-    client = ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL)
+    client = ApifyClient(api_token, api_url=get_api_url())
     actor = client.actors().create(
         name=get_random_resource_name('actor'),
         versions=[

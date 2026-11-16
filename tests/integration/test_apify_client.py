@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import os
-
-from .._utils import API_URL_ENV_VAR, maybe_await
+from .._utils import get_api_url, maybe_await
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._consts import DEFAULT_API_URL
 from apify_client._models import UserPrivateInfo, UserPublicInfo
 from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
@@ -25,7 +22,7 @@ async def test_plain_constructor_reaches_the_api(client_type: str, api_token: st
     The rest of the suite injects a transport through `with_custom_http_client` to run against every built-in
     implementation, which leaves the default construction path untested against the live API.
     """
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    api_url = get_api_url()
 
     if client_type == 'sync':
         sync_client = ApifyClient(api_token, api_url=api_url)

@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import json
-import os
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
 
-from .._utils import API_URL_ENV_VAR, get_random_resource_name, maybe_await
+from .._utils import get_api_url, get_random_resource_name, maybe_await
 from apify_client import ApifyClient
-from apify_client._consts import DEFAULT_API_URL
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -50,7 +48,7 @@ CMD ["node", "main.js"]
 @pytest.fixture(scope='module')
 def server_actor_id(api_token: str) -> Generator[str]:
     """Create and build a Server Actor running an echo server, and delete it after the module's tests."""
-    client = ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL)
+    client = ApifyClient(api_token, api_url=get_api_url())
     actor_name = get_random_resource_name('server')
     actor_json = {
         'actorSpecification': 1,

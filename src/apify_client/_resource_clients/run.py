@@ -65,9 +65,8 @@ class RunClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
         Args:
-            wait_for_finish: The maximum duration to wait for the run to finish before returning the (unfinished)
-                run object. The API holds the response for at most 60 seconds, so a longer duration has no
-                additional effect.
+            wait_for_finish: The maximum time the server waits for the run to finish. The API holds the response
+                for at most 60 seconds.
             timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
                 request outlasts the time the API holds the response.
 
@@ -629,9 +628,8 @@ class RunClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
         Args:
-            wait_for_finish: The maximum duration to wait for the run to finish before returning the (unfinished)
-                run object. The API holds the response for at most 60 seconds, so a longer duration has no
-                additional effect.
+            wait_for_finish: The maximum time the server waits for the run to finish. The API holds the response
+                for at most 60 seconds.
             timeout: Timeout for the API HTTP request. A timeout tier is extended by `wait_for_finish`, so the
                 request outlasts the time the API holds the response.
 

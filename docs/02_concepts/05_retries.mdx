@@ -54,7 +54,7 @@ The client counts its calls, HTTP requests, and rate limit errors. To read the c
 
 - `calls` is the number of calls made through the client, including requests to Actor servers.
 - `requests` is the number of HTTP requests sent, including retries and requests to Actor servers.
-- `rate_limit_errors` maps each attempt to the number of rate limit (429) errors it got. Index `0` is the first attempt, index `1` is the first retry, and so on. Only API calls count here. A 429 from an Actor server called through <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink> is not counted.
+- `rate_limit_errors` maps each attempt to the number of rate limit (429) errors it got. Key `0` is the first attempt, key `1` is the first retry, and so on. The field is a `defaultdict`, so reading a missing key adds it. To read a count without changing the dict, use `.get()`. Only API calls count here. A 429 from an Actor server called through <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink> is not counted.
 
 With a custom HTTP client, `stats` returns the statistics of that client. For details, see [HTTP clients](/api/client/python/docs/concepts/custom-http-clients).
 

@@ -18,7 +18,10 @@ class ClientStatistics:
     """Total number of HTTP requests sent, including retries."""
 
     rate_limit_errors: defaultdict[int, int] = field(default_factory=lambda: defaultdict(int))
-    """Number of rate limit (429) errors per attempt, keyed by the 0-based attempt index."""
+    """Number of rate limit (429) errors per attempt, keyed by the 0-based attempt index.
+
+    Reading a missing key adds it with a count of `0`. Use `.get()` to read a count without changing the dict.
+    """
 
     def add_rate_limit_error(self, attempt: int) -> None:
         """Add rate limit error for specific attempt.

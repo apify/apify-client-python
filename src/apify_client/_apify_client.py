@@ -277,7 +277,6 @@ class ApifyClient:
         if token is not None:
             http_client.set_default_authorization(token)
         instance._http_client = http_client
-        instance._statistics = http_client.stats
         return instance
 
     @property
@@ -287,8 +286,12 @@ class ApifyClient:
 
     @property
     def stats(self) -> ClientStatistics:
-        """Statistics about API client usage and rate limit errors."""
-        return self._statistics
+        """Statistics about API client usage and rate limit errors.
+
+        These are the statistics of the HTTP client in use. A custom HTTP client that overrides `call` counts only
+        what its own implementation records.
+        """
+        return self.http_client.stats
 
     @property
     def http_client(self) -> HttpClient:
@@ -666,7 +669,6 @@ class ApifyClientAsync:
         if token is not None:
             http_client.set_default_authorization(token)
         instance._http_client = http_client
-        instance._statistics = http_client.stats
         return instance
 
     @property
@@ -676,8 +678,12 @@ class ApifyClientAsync:
 
     @property
     def stats(self) -> ClientStatistics:
-        """Statistics about API client usage and rate limit errors."""
-        return self._statistics
+        """Statistics about API client usage and rate limit errors.
+
+        These are the statistics of the HTTP client in use. A custom HTTP client that overrides `call` counts only
+        what its own implementation records.
+        """
+        return self.http_client.stats
 
     @property
     def http_client(self) -> HttpClientAsync:

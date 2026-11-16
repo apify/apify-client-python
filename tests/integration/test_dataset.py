@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from datetime import timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import Mock
+from unittest.mock import create_autospec
 
 import impit
 import pytest
@@ -282,7 +282,8 @@ async def test_dataset_push_zstd_compressed_items(
     zstd_client: ApifyClient | ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Items the client compresses with zstd are accepted by the API and listed back unchanged."""
-    compress_spy = Mock(wraps=ZstdHttpCompressor().compress)
+    # Spies on the method itself, so the fixture's own compressor still compresses the body.
+    compress_spy = create_autospec(ZstdHttpCompressor.compress, side_effect=ZstdHttpCompressor.compress)
     monkeypatch.setattr(ZstdHttpCompressor, 'compress', compress_spy)
 
     dataset_name = get_random_resource_name('dataset')

@@ -8,7 +8,7 @@ import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import Mock
+from unittest.mock import ANY, create_autospec
 
 import impit
 import pytest
@@ -652,7 +652,8 @@ async def test_key_value_store_set_and_get_zstd_compressed_record(
     zstd_client: ApifyClient | ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A record the client compresses with zstd is accepted by the API and read back as the original value."""
-    compress_spy = Mock(wraps=ZstdHttpCompressor().compress)
+    # Spies on the method itself, so the fixture's own compressor still compresses the body.
+    compress_spy = create_autospec(ZstdHttpCompressor.compress, side_effect=ZstdHttpCompressor.compress)
     monkeypatch.setattr(ZstdHttpCompressor, 'compress', compress_spy)
 
     store_name = get_random_resource_name('kvs')
@@ -664,7 +665,7 @@ async def test_key_value_store_set_and_get_zstd_compressed_record(
         # Past the size threshold and of a compressible content type, so the client compresses the body.
         payload = 'compressible payload ' * 500
         await maybe_await(store_client.set_record('zstd-compressed', payload, content_type='text/plain'))
-        compress_spy.assert_called_once_with(payload.encode())
+        compress_spy.assert_called_once_with(ANY, payload.encode())
 
         # Poll until the record is visible (eventual consistency)
         async def get_record() -> dict | None:

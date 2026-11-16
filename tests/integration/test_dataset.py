@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from datetime import timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import create_autospec
+from unittest.mock import Mock
 
 import impit
 import pytest
@@ -279,19 +279,16 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
 
 
 async def test_dataset_push_compressed_items(
-    compressing_client: ApifyClient | ApifyClientAsync,
-    http_compressor_class: type[HttpCompressor],
-    monkeypatch: pytest.MonkeyPatch,
+    client_with_request_body_compressor: ApifyClient | ApifyClientAsync, request_body_compressor: HttpCompressor
 ) -> None:
     """Items the client compresses with each compressor are accepted by the API and listed back unchanged."""
-    # Spies on the method itself, so the fixture's own compressor still compresses the body.
-    compress_spy = create_autospec(http_compressor_class.compress, side_effect=http_compressor_class.compress)
-    monkeypatch.setattr(http_compressor_class, 'compress', compress_spy)
+    compress_spy = request_body_compressor.compress
+    assert isinstance(compress_spy, Mock)
 
     dataset_name = get_random_resource_name('dataset')
-    created_dataset = await maybe_await(compressing_client.datasets().get_or_create(name=dataset_name))
+    created_dataset = await maybe_await(client_with_request_body_compressor.datasets().get_or_create(name=dataset_name))
     assert isinstance(created_dataset, DatasetResource)
-    dataset_client = compressing_client.dataset(created_dataset.id)
+    dataset_client = client_with_request_body_compressor.dataset(created_dataset.id)
 
     try:
         # Enough items to get the JSON body past the size threshold, so the client compresses it.

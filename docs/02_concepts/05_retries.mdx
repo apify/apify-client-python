@@ -54,7 +54,7 @@ The client counts its API calls, HTTP requests, and rate limit errors. To read t
 
 - `calls` is the number of API calls made through the client.
 - `requests` is the number of HTTP requests sent, including retries.
-- `rate_limit_errors` maps each attempt to the number of rate limit (429) errors it got. Index `0` is the first attempt, index `1` is the first retry, and so on.
+- `rate_limit_errors` maps each attempt to the number of rate limit (429) errors it got. Index `0` is the first attempt, index `1` is the first retry, and so on. Only API calls count here. A 429 from an Actor server called through <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink> is not counted.
 
 With a custom HTTP client, `stats` returns the statistics of that client. For details, see [HTTP clients](/api/client/python/docs/concepts/custom-http-clients).
 

@@ -12,6 +12,8 @@ import ApiLink from '@theme/ApiLink';
 
 import RetriesAsyncExample from '!!raw-loader!./code/05_retries_async.py';
 import RetriesSyncExample from '!!raw-loader!./code/05_retries_sync.py';
+import StatsAsyncExample from '!!raw-loader!./code/05_stats_async.py';
+import StatsSyncExample from '!!raw-loader!./code/05_stats_sync.py';
 import WaitForResourcesAsyncExample from '!!raw-loader!./code/05_wait_for_resources_async.py';
 import WaitForResourcesSyncExample from '!!raw-loader!./code/05_wait_for_resources_sync.py';
 
@@ -42,6 +44,29 @@ Retries with exponential backoff help reduce the load on the server and increase
     <TabItem value="SyncExample" label="Sync client">
         <CodeBlock className="language-python">
             {RetriesSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Request statistics
+
+The client counts its API calls, HTTP requests, and rate limit errors. To read the counts, use the <ApiLink to="class/ApifyClient#stats">`stats`</ApiLink> property. It returns a <ApiLink to="class/ClientStatistics">`ClientStatistics`</ApiLink> object with these fields:
+
+- `calls` is the number of API calls made through the client.
+- `requests` is the number of HTTP requests sent, including retries.
+- `rate_limit_errors` maps each attempt to the number of rate limit (429) errors it got. Index `0` is the first attempt, index `1` is the first retry, and so on.
+
+With a custom HTTP client, `stats` returns the statistics of that client. For details, see [HTTP clients](/api/client/python/docs/concepts/custom-http-clients).
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {StatsAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {StatsSyncExample}
         </CodeBlock>
     </TabItem>
 </Tabs>

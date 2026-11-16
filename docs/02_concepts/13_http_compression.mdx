@@ -164,7 +164,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=IdentityCompressor())
 |                               | Brotli                                  | Gzip                            | Zstd                                                  |
 |-------------------------------|-----------------------------------------|---------------------------------|-------------------------------------------------------|
 | **Compression ratio**         | Typically better than gzip              | Good                            | Close to brotli at high levels                        |
-| **CPU cost**                  | Moderate, depends on quality            | Low                             | Low at the default level, grows with it               |
+| **CPU cost**                  | Moderate, depends on quality            | Low                             | Low at the default level, higher at higher levels     |
 | **Availability**              | Requires the `brotli` extra             | Built-in, no extra needed       | Built-in from Python 3.14, else the `zstd` extra      |
 | **`Content-Encoding` header** | `br`                                    | `gzip`                          | `zstd`                                                |
 | **Quality range**             | `0–11`                                  | `1–9`                           | `1–19`                                                |

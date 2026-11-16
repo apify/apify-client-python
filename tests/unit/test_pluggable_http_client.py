@@ -698,7 +698,7 @@ def test_transport_without_follow_redirects_refuses_unfollowed_requests() -> Non
 
     class LegacyHttpClient(HttpClient):
         # The signature `send_request` had before it took `follow_redirects`.
-        def send_request(  # ty: ignore[invalid-method-override]
+        def send_request(  # ty: ignore[incompatible-method-override]
             self,
             *,
             method: str,

@@ -7,16 +7,17 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .._utils import (
-    API_URL_ENV_VAR,
     TOKEN_ENV_VAR,
     TOKEN_ENV_VAR_2,
+    ClientType,
     DatasetFixture,
     HttpClientClasses,
     KvsFixture,
+    get_api_url,
     get_crypto_random_object_id,
+    open_apify_client,
 )
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 from apify_client.http_clients import (
     Httpx2HttpClient,
@@ -50,7 +51,7 @@ def api_token_2() -> str:
 @pytest.fixture(scope='session')
 def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
     """Dataset owned by secondary user for testing cross-user access restrictions."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    api_url = get_api_url()
     client = ApifyClient(api_token_2, api_url=api_url)
 
     # Create dataset with test data
@@ -79,7 +80,7 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
 @pytest.fixture(scope='session')
 def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     """Key-value store owned by secondary user for testing cross-user access restrictions."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    api_url = get_api_url()
     client = ApifyClient(api_token_2, api_url=api_url)
 
     # Create key-value store with test data
@@ -120,39 +121,23 @@ def http_client_classes(request: pytest.FixtureRequest) -> HttpClientClasses:
 
 
 @pytest.fixture(params=['sync', 'async'])
-def client_type(request: pytest.FixtureRequest) -> str:
+def client_type(request: pytest.FixtureRequest) -> ClientType:
     """Parametrize tests to run with both sync and async clients."""
     return request.param
 
 
 @pytest.fixture
 async def client(
-    client_type: str,
+    client_type: ClientType,
     api_token: str,
     http_client_classes: HttpClientClasses,
 ) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
     """Return each sync/async and HTTP client implementation combination."""
-    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
-    if client_type == 'sync':
-        http_client = http_client_classes.sync()
-        yield ApifyClient.with_custom_http_client(
-            api_token,
-            api_url=api_url,
-            http_client=http_client,
-        )
-        http_client.close()
-        return
-
-    http_client_async = http_client_classes.async_()
-    yield ApifyClientAsync.with_custom_http_client(
-        api_token,
-        api_url=api_url,
-        http_client=http_client_async,
-    )
-    await http_client_async.aclose()
+    async with open_apify_client(api_token, client_type, http_client_classes) as client:
+        yield client
 
 
 @pytest.fixture
-def is_async(client_type: str) -> bool:
+def is_async(client_type: ClientType) -> bool:
     """True if current test is using async client."""
     return client_type == 'async'

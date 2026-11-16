@@ -148,7 +148,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
         @functools.wraps(fun)
         async def async_wrapper(resource_client: _BaseClient, *args: Any, **kwargs: Any) -> Any:
-            log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
+            log_context.client_method.set(fun.__qualname__)  # ty: ignore[missing-attribute]
             log_context.resource_id.set(resource_client._resource_id)  # noqa: SLF001
 
             return await fun(resource_client, *args, **kwargs)
@@ -159,7 +159,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
         @functools.wraps(fun)
         async def async_generator_wrapper(resource_client: _BaseClient, *args: Any, **kwargs: Any) -> Any:
-            log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
+            log_context.client_method.set(fun.__qualname__)  # ty: ignore[missing-attribute]
             log_context.resource_id.set(resource_client._resource_id)  # noqa: SLF001
 
             async for item in fun(resource_client, *args, **kwargs):
@@ -169,7 +169,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
     @functools.wraps(fun)
     def wrapper(resource_client: _BaseClient, *args: Any, **kwargs: Any) -> Any:
-        log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
+        log_context.client_method.set(fun.__qualname__)  # ty: ignore[missing-attribute]
         log_context.resource_id.set(resource_client._resource_id)  # noqa: SLF001
 
         return fun(resource_client, *args, **kwargs)

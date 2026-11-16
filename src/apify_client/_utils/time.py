@@ -30,8 +30,8 @@ def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | N
     return int(seconds) if as_int else seconds
 
 
-def to_whole_seconds(duration: timedelta | int | None) -> int | None:
-    """Convert a duration given as a `timedelta` or as a number of seconds to whole seconds."""
-    if isinstance(duration, timedelta):
-        return to_seconds(duration, as_int=True)
-    return duration
+def to_timedelta(duration: timedelta | int | None) -> timedelta | None:
+    """Convert a duration given as a `timedelta` or as a number of seconds to a `timedelta`."""
+    if duration is None or isinstance(duration, timedelta):
+        return duration
+    return timedelta(seconds=duration)

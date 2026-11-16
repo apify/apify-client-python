@@ -223,19 +223,19 @@ async def test_explicit_timeout_ignores_wait_for_finish(
     ('timeout', 'wait_for_finish', 'expected'),
     [
         pytest.param('medium', None, 'medium', id='no wait'),
-        pytest.param('medium', 0, 'medium', id='zero wait'),
-        pytest.param('medium', -5, 'medium', id='negative wait'),
-        pytest.param('medium', 20, timedelta(seconds=50), id='medium tier'),
-        pytest.param('short', 20, timedelta(seconds=25), id='short tier'),
-        pytest.param('medium', 600, timedelta(seconds=90), id='wait above API maximum'),
-        pytest.param('no_timeout', 60, 'no_timeout', id='no timeout'),
-        pytest.param(timedelta(seconds=7), 60, timedelta(seconds=7), id='explicit timedelta'),
+        pytest.param('medium', timedelta(0), 'medium', id='zero wait'),
+        pytest.param('medium', timedelta(seconds=-5), 'medium', id='negative wait'),
+        pytest.param('medium', timedelta(seconds=20), timedelta(seconds=50), id='medium tier'),
+        pytest.param('short', timedelta(seconds=20), timedelta(seconds=25), id='short tier'),
+        pytest.param('medium', timedelta(seconds=600), timedelta(seconds=90), id='wait above API maximum'),
+        pytest.param('no_timeout', timedelta(seconds=60), 'no_timeout', id='no timeout'),
+        pytest.param(timedelta(seconds=7), timedelta(seconds=60), timedelta(seconds=7), id='explicit timedelta'),
     ],
 )
 def test_timeout_for_wait_for_finish(
     client: ApifyClient | ApifyClientAsync,
     timeout: Timeout,
-    wait_for_finish: int | None,
+    wait_for_finish: timedelta | None,
     expected: Timeout,
 ) -> None:
     """A timeout tier is extended by `wait_for_finish`, capped at the API's 60 s hold; other timeouts stay as given."""

@@ -51,10 +51,9 @@ class BuildClient(ResourceClient):
         Returns:
             The retrieved Actor build data.
         """
-        wait_for_finish_secs = to_seconds(wait_for_finish, as_int=True)
         result = self._get(
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
-            waitForFinish=wait_for_finish_secs,
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            waitForFinish=to_seconds(wait_for_finish, as_int=True),
         )
         if result is None:
             return None
@@ -179,10 +178,9 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor build data.
         """
-        wait_for_finish_secs = to_seconds(wait_for_finish, as_int=True)
         result = await self._get(
-            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish_secs),
-            waitForFinish=wait_for_finish_secs,
+            timeout=self._timeout_for_wait_for_finish(timeout, wait_for_finish),
+            waitForFinish=to_seconds(wait_for_finish, as_int=True),
         )
         if result is None:
             return None

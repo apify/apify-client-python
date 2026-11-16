@@ -155,7 +155,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         merged = {**self._default_params, **kwargs}
         return {k: v for k, v in merged.items() if v is not None}
 
-    def _timeout_for_wait_for_finish(self, timeout: Timeout, wait_for_finish: int | None) -> Timeout:
+    def _timeout_for_wait_for_finish(self, timeout: Timeout, wait_for_finish: timedelta | None) -> Timeout:
         """Extend a timeout tier by the time the API may hold the response for `wait_for_finish`.
 
         A request that times out while the API still holds it is retried, and a retried POST starts a second run or
@@ -163,9 +163,9 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         """
         if isinstance(timeout, timedelta) or timeout == 'no_timeout':
             return timeout
-        if wait_for_finish is None or wait_for_finish <= 0:
+        if wait_for_finish is None or wait_for_finish <= timedelta(0):
             return timeout
-        hold = min(timedelta(seconds=wait_for_finish), MAX_WAIT_FOR_FINISH_HOLD)
+        hold = min(wait_for_finish, MAX_WAIT_FOR_FINISH_HOLD)
         return self._http_client._resolve_timeout(timeout) + hold  # noqa: SLF001
 
     @staticmethod

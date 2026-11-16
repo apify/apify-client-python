@@ -301,6 +301,16 @@ def test_zstd_import_hook_raises_clear_error_when_python_lacks_zstd(error: type[
             _ = module.ZstdHttpCompressor
 
 
+@pytest.mark.skipif(sys.version_info < (3, 14), reason='zstd is in the standard library only from Python 3.14')
+def test_resolve_compressor_zstd_raises_clear_error_when_python_lacks_zstd() -> None:
+    """Resolving `compression='zstd'` on a Python 3.14+ build without zstd raises `ImportError` at resolution time."""
+    with (
+        _dependency_unavailable('_zstd', 'compression'),
+        pytest.raises(ImportError, match='compiled without zstd support'),
+    ):
+        resolve_compressor('zstd')
+
+
 _ITEMS_PATH = '/v2/datasets/test_dataset_id/items'
 _LARGE_BODY = [{'index': index, 'url': f'https://example.com/item/{index}'} for index in range(MIN_COMPRESSION_SIZE)]
 

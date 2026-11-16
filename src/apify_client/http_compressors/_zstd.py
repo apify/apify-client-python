@@ -15,7 +15,7 @@ if sys.version_info >= (3, 14):
         # The name must match the `dependency_name` that `http_compressors/__init__.py` passes to `try_import`.
         raise ModuleNotFoundError(
             'zstd compression is unavailable because this Python build was compiled without zstd support, or its zstd '
-            f"library cannot be loaded ({exc}). Use compression='gzip' or compression='brotli' instead.",
+            f"library cannot be loaded ({exc}). Use compression='gzip' instead.",
             name='_zstd',
         ) from exc
 else:
@@ -30,8 +30,7 @@ else:
         # would fail for every user, not only for those who pick zstd.
         raise ModuleNotFoundError(
             f'`backports.zstd` is installed but cannot be loaded ({exc}). Reinstall it with '
-            "`pip install --force-reinstall backports.zstd`, or use compression='gzip' or compression='brotli' "
-            'instead.',
+            "`pip install --force-reinstall backports.zstd`, or use compression='gzip' instead.",
             name='backports.zstd',
         ) from exc
 

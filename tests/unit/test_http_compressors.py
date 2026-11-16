@@ -223,6 +223,23 @@ def test_resolve_compressor_brotli_raises_clear_error_when_extra_missing() -> No
         resolve_compressor('brotli')
 
 
+@pytest.mark.parametrize(
+    'error',
+    [
+        pytest.param(ModuleNotFoundError, id='extension missing'),
+        pytest.param(ImportError, id='extension fails to load'),
+    ],
+)
+def test_brotli_import_hook_raises_clear_error_when_brotli_fails_to_load(error: type[ImportError]) -> None:
+    """If `brotli` is installed but fails to load, the package still imports and `BrotliHttpCompressor` raises."""
+    with _dependency_unavailable('_brotli', 'brotli', error=error):
+        module = importlib.import_module('apify_client.http_compressors')
+        assert module.GzipHttpCompressor is not None
+        with pytest.raises(ImportError, match='installed but cannot be loaded') as exc_info:
+            _ = module.BrotliHttpCompressor
+        assert 'apify-client[brotli]' not in str(exc_info.value)
+
+
 @pytest.mark.skipif(sys.version_info >= (3, 14), reason='zstd is in the standard library from Python 3.14')
 @pytest.mark.parametrize(
     'missing_module',

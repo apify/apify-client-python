@@ -1,8 +1,19 @@
 from __future__ import annotations
 
-import brotli
-
 from apify_client.http_compressors._base import HttpCompressor
+
+try:
+    import brotli
+except ImportError as exc:
+    if isinstance(exc, ModuleNotFoundError) and exc.name == 'brotli':
+        raise
+    # The package is installed but it or its C extension can't load. Without this, `import apify_client` would fail
+    # for every user, not only for those who pick brotli.
+    raise ModuleNotFoundError(
+        f'`brotli` is installed but cannot be loaded ({exc}). Reinstall it with '
+        "`pip install --force-reinstall brotli`, or use compression='gzip' instead.",
+        name='brotli',
+    ) from exc
 
 
 class BrotliHttpCompressor(HttpCompressor):

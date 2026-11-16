@@ -20,6 +20,7 @@ from apify_client._utils.encoding import encode_key_value_store_record_value, en
 from apify_client._utils.errors import catch_not_found_or_throw
 from apify_client._utils.http import (
     is_compressible_content_type,
+    merge_headers,
     response_to_dict,
     response_to_list,
     to_path_segment,
@@ -295,10 +296,13 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
     ('input_dict', 'expected'),
     [
         pytest.param({'a': 1, 'b': None, 'c': 3}, {'a': 1, 'c': 3}, id='Simple case'),
-        pytest.param({'a': {'b': None, 'c': 2}, 'd': None}, {'a': {'c': 2}}, id='Nested dictionaries'),
-        pytest.param({'a': {'b': {'c': None, 'd': 4}}}, {'a': {'b': {'d': 4}}}, id='Deep nesting'),
+        pytest.param({'a': {'b': None, 'c': 2}, 'd': None}, {'a': {'b': None, 'c': 2}}, id='Keep nested None'),
+        pytest.param({'a': {'b': {'c': None, 'd': 4}}}, {'a': {'b': {'c': None, 'd': 4}}}, id='Deep nesting'),
         pytest.param({'a': None, 'b': None}, {}, id='Empty dict after filtering'),
-        pytest.param({'a': {'b': None}, 'c': 3}, {'c': 3}, id='Remove empty dicts'),
+        pytest.param({'a': {}, 'c': 3}, {'c': 3}, id='Remove empty dicts'),
+        pytest.param({'a': {'b': {}}, 'c': 3}, {'a': {'b': {}}, 'c': 3}, id='Keep nested empty dicts'),
+        pytest.param({'a': {'b': None}, 'c': 3}, {'a': {'b': None}, 'c': 3}, id='Dict with only None is kept'),
+        pytest.param({'a': [], 'b': [None]}, {'a': [], 'b': [None]}, id='Keep lists as passed'),
         pytest.param({'a': 0, 'b': '', 'c': False}, {'a': 0, 'b': '', 'c': False}, id='Keep falsy non-None values'),
     ],
 )
@@ -620,3 +624,24 @@ def test_create_storage_signature() -> None:
     # Test with version parameter
     signature_v1 = create_storage_content_signature('resource_123', 'secret_key', version=1)
     assert signature != signature_v1
+
+
+@pytest.mark.parametrize(
+    ('base', 'override', 'expected'),
+    [
+        pytest.param(None, None, {}, id='both none'),
+        pytest.param({'Accept': 'a'}, None, {'Accept': 'a'}, id='override none'),
+        pytest.param(None, {'Accept': 'a'}, {'Accept': 'a'}, id='base none'),
+        pytest.param({'Accept': 'a'}, {'X-Custom': 'b'}, {'Accept': 'a', 'X-Custom': 'b'}, id='disjoint names'),
+        pytest.param({'Authorization': 'x'}, {'Authorization': 'y'}, {'Authorization': 'y'}, id='same casing'),
+        pytest.param({'Authorization': 'x'}, {'authorization': 'y'}, {'authorization': 'y'}, id='lowercase override'),
+        pytest.param({'authorization': 'x'}, {'AUTHORIZATION': 'y'}, {'AUTHORIZATION': 'y'}, id='uppercase override'),
+    ],
+)
+def test_merge_headers(
+    base: dict[str, str] | None,
+    override: dict[str, str] | None,
+    expected: dict[str, str],
+) -> None:
+    """merge_headers merges case-insensitively, override values win and keep their casing."""
+    assert merge_headers(base, override) == expected

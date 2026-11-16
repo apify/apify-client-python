@@ -199,3 +199,27 @@ async def test_create_sends_actor_permission_level_async(
 
     assert len(captured) == 1
     assert json.loads(captured[0].get_data()) == {'name': 'test-actor', 'actorPermissionLevel': 'LIMITED_PERMISSIONS'}
+
+
+def test_update_sends_null_to_remove_tagged_build(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`update` keeps `None` inside `tagged_builds`, so a tag can be removed."""
+    captured: list[Request] = []
+    httpserver.expect_request(_ACTOR_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    sync_client.actor(_MOCKED_ACTOR_ID).update(tagged_builds={'beta': None, 'latest': {'buildId': 'abc'}})
+
+    assert len(captured) == 1
+    assert json.loads(captured[0].get_data()) == {'taggedBuilds': {'beta': None, 'latest': {'buildId': 'abc'}}}
+
+
+async def test_update_sends_null_to_remove_tagged_build_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async `update` keeps `None` inside `tagged_builds`, so a tag can be removed."""
+    captured: list[Request] = []
+    httpserver.expect_request(_ACTOR_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    await async_client.actor(_MOCKED_ACTOR_ID).update(tagged_builds={'beta': None})
+
+    assert len(captured) == 1
+    assert json.loads(captured[0].get_data()) == {'taggedBuilds': {'beta': None}}

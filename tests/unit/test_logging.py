@@ -45,7 +45,7 @@ _MOCKED_ACTOR_LOGS = (
     ),
     b'2025-05-13T07:26:14.132Z [apify] DEBUG \xc3',  # Chunked log split in the middle of the multibyte character
     b'\xa1\n',  # part 2
-    b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log\n',
+    b'2025-05-13T07:24:14.132Z [apify] INFO multiline\n2025-05-13T07:24:14.132Z [apify] INFO log\n',
     b'2025-05-13T07:25:14.132Z [apify] WARNING some warning\n',
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c\n',
     b'2025-05-13T0',  # Chunked log that got split in the marker
@@ -68,7 +68,8 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.', logging.INFO),
     ('2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.', logging.INFO),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG á', logging.DEBUG),
-    ('2025-05-13T07:24:14.132Z [apify] INFO multiline \n log', logging.INFO),
+    ('2025-05-13T07:24:14.132Z [apify] INFO multiline', logging.INFO),
+    ('2025-05-13T07:24:14.132Z [apify] INFO log', logging.INFO),
     ('2025-05-13T07:25:14.132Z [apify] WARNING some warning', logging.WARNING),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG c', logging.DEBUG),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG d', logging.DEBUG),
@@ -915,15 +916,15 @@ def _register_run_and_actor_endpoints(httpserver: HTTPServer) -> None:
 
 
 def _wait_for_blocking_read(streamed_log: StreamedLogBase, *, timeout: float = 5) -> None:
-    """Wait until a chunk has been buffered, which proves the reader reached the blocking read.
+    """Wait until a chunk has been received, which proves the reader reached the blocking read.
 
     A fixed sleep could end before the reader gets there. Async callers reach this through `asyncio.to_thread`, so
     the streaming task keeps the event loop while the wait runs.
     """
     deadline = time.monotonic() + timeout
-    while not streamed_log._stream_buffer and time.monotonic() < deadline:
+    while not streamed_log._received_data and time.monotonic() < deadline:
         time.sleep(0.01)
-    assert streamed_log._stream_buffer, 'the log stream never reached its blocking read'
+    assert streamed_log._received_data, 'the log stream never reached its blocking read'
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')
@@ -1343,6 +1344,39 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
     restarted_thread.join(timeout=5)
     assert not restarted_thread.is_alive()
     streamed_log.stop()
+
+
+def test_streamed_log_sync_redirects_line_before_next_message(httpserver: HTTPServer) -> None:
+    """A complete line is redirected while the stream stays open and silent, without waiting for the next message."""
+    release_server = threading.Event()
+    line = '2025-05-13T07:24:12.588Z ACTOR: going quiet'
+
+    def _silent_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            yield f'{line}\n'.encode()
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_silent_handler)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    to_logger = Mock(spec=logging.Logger)
+    streamed_log = StreamedLog(log_client, to_logger=to_logger)
+
+    streaming_thread = streamed_log.start()
+    try:
+        deadline = time.monotonic() + 5
+        while not to_logger.log.called and time.monotonic() < deadline:
+            time.sleep(0.01)
+        to_logger.log.assert_called_once_with(level=logging.INFO, msg=line)
+    finally:
+        release_server.set()
+        streaming_thread.join(timeout=5)
+        streamed_log.stop()
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')

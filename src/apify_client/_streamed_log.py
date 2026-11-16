@@ -55,30 +55,30 @@ class StreamedLogBase:
     def _process_new_data(self, data: bytes) -> None:
         if data:
             self._received_data = True
-        new_chunk = data
-        self._stream_buffer.append(new_chunk)
-        if re.findall(self._split_marker, new_chunk):
-            # If complete split marker was found in new chunk, then log the buffer.
+        self._stream_buffer.append(data)
+        if b'\n' in data:
             self._log_buffer_content(include_last_part=False)
 
     def _log_buffer_content(self, *, include_last_part: bool = False) -> None:
-        """Merge the whole buffer and split it into parts based on the marker.
+        """Redirect every complete line in the buffer and keep only the unterminated last line.
 
-        Log the messages created from the split parts and remove them from buffer.
-        The last part could be incomplete, and so it can be left unprocessed in the buffer until later.
+        A line is complete once its newline arrives. With `include_last_part`, the unterminated last line is redirected
+        too.
         """
-        all_parts = re.split(self._split_marker, b''.join(self._stream_buffer))[1:]  # The First split is empty
+        buffer = b''.join(self._stream_buffer)
+        last_newline = buffer.rfind(b'\n')
         if include_last_part:
-            message_markers = all_parts[0::2]
-            message_contents = all_parts[1::2]
-            self._stream_buffer = []
+            complete, rest = buffer, b''
+        elif last_newline == -1:
+            complete, rest = b'', buffer
         else:
-            message_markers = all_parts[0:-2:2]
-            message_contents = all_parts[1:-2:2]
-            # The last two parts (marker and message) are possibly not complete and will be left in the buffer
-            self._stream_buffer = all_parts[-2:]
+            complete, rest = buffer[:last_newline], buffer[last_newline + 1 :]
+        self._stream_buffer = [rest] if rest else []
 
-        for marker, content in zip(message_markers, message_contents, strict=False):
+        all_parts = re.split(self._split_marker, complete)[1:]  # Every platform log line starts with a marker
+        message_markers = all_parts[0::2]
+        message_contents = all_parts[1::2]
+        for marker, content in zip(message_markers, message_contents, strict=True):
             decoded_marker = marker.decode('utf-8')
             decoded_content = content.decode('utf-8')
             if self._relevancy_time_limit:

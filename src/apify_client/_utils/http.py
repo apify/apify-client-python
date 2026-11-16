@@ -158,6 +158,20 @@ def response_to_list(response: HttpResponse) -> list:
     raise ValueError(f'The response is not a list. Got: {type(data).__name__}')
 
 
+def merge_headers(base: dict[str, str] | None, override: dict[str, str] | None) -> dict[str, str]:
+    """Merge two header dicts, treating header names case-insensitively.
+
+    A header from `override` replaces a same-named header in `base` regardless of the casing of either name, and keeps
+    the casing it was passed with.
+    """
+    merged = dict(base) if base else {}
+    for key, value in (override or {}).items():
+        for existing_key in [k for k in merged if k.lower() == key.lower()]:
+            del merged[existing_key]
+        merged[key] = value
+    return merged
+
+
 def check_custom_headers(class_name: str, headers: dict[str, str]) -> None:
     """Warn if custom headers override important default headers."""
     overwrite_headers = [key for key in headers if key.title() in OVERRIDABLE_DEFAULT_HEADERS]

@@ -183,3 +183,27 @@ async def test_update_omits_actor_path_when_not_passed_async(
 
     assert len(captured) == 1
     assert request_body(captured[0]) == {'tarballUrl': _TARBALL_URL}
+
+
+def test_update_sends_empty_env_vars_and_source_files(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`update` sends explicitly passed empty `env_vars` and `source_files` lists instead of dropping them."""
+    captured: list[Request] = []
+    httpserver.expect_request(_VERSION_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    sync_client.actor(_MOCKED_ACTOR_ID).version(_VERSION_NUMBER).update(env_vars=[], source_files=[])
+
+    assert len(captured) == 1
+    assert request_body(captured[0]) == {'envVars': [], 'sourceFiles': []}
+
+
+async def test_update_sends_empty_env_vars_and_source_files_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async `update` sends explicitly passed empty `env_vars` and `source_files` lists instead of dropping them."""
+    captured: list[Request] = []
+    httpserver.expect_request(_VERSION_PATH, method='PUT').respond_with_handler(capture(captured))
+
+    await async_client.actor(_MOCKED_ACTOR_ID).version(_VERSION_NUMBER).update(env_vars=[], source_files=[])
+
+    assert len(captured) == 1
+    assert request_body(captured[0]) == {'envVars': [], 'sourceFiles': []}

@@ -7,7 +7,11 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Literal, get_args
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+from apify_client._consts import (
+    DEFAULT_WAIT_FOR_FINISH,
+    DEFAULT_WAIT_WHEN_JOB_NOT_EXIST,
+    MAX_WAIT_FOR_FINISH_HOLD,
+)
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils.errors import catch_not_found_for_resource_or_throw, catch_not_found_or_throw
@@ -151,40 +155,29 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         merged = {**self._default_params, **kwargs}
         return {k: v for k, v in merged.items() if v is not None}
 
+    def _timeout_for_wait_for_finish(self, timeout: Timeout, wait_for_finish: int | None) -> Timeout:
+        """Extend a timeout tier by the time the API may hold the response for `wait_for_finish`.
+
+        A request that times out while the API still holds it is retried, and a retried POST starts a second run or
+        build. An explicit `timedelta` and `'no_timeout'` are used as given.
+        """
+        if isinstance(timeout, timedelta) or timeout == 'no_timeout':
+            return timeout
+        if wait_for_finish is None or wait_for_finish <= 0:
+            return timeout
+        hold = min(timedelta(seconds=wait_for_finish), MAX_WAIT_FOR_FINISH_HOLD)
+        return self._http_client._resolve_timeout(timeout) + hold  # noqa: SLF001
+
     @staticmethod
     def _clean_json_payload(data: dict) -> dict:
-        """Remove None values and empty nested dicts from an API request payload.
+        """Remove unset top-level fields from an API request payload.
 
-        The Apify API ignores missing fields but may reject fields explicitly set to None.
-        Nested sub-models serialized by Pydantic may produce empty dicts when all their
-        fields are None - these are also removed.
-
-        Uses an iterative stack-based approach, analogous to _build_params for query params.
+        A top-level `None` means the caller did not pass the argument, so the field is left out. A top-level empty dict
+        is a sub-model dumped with `exclude_none=True` whose fields are all unset, so it is left out too. Nested values
+        the caller passed are sent as given, so for example `tagged_builds={'beta': None}` sends
+        `{"taggedBuilds": {"beta": null}}` and removes the tag.
         """
-        result: dict = {}
-        stack: list[tuple[dict, dict]] = [(data, result)]
-
-        while stack:
-            source, target = stack.pop()
-            for key, val in source.items():
-                if val is None:
-                    continue
-                if isinstance(val, dict):
-                    nested: dict = {}
-                    target[key] = nested
-                    stack.append((val, nested))
-                else:
-                    target[key] = val
-
-        # Remove dicts that became empty after None filtering
-        def _remove_empty(d: dict) -> None:
-            for key in [k for k, v in d.items() if isinstance(v, dict)]:
-                _remove_empty(d[key])
-                if not d[key]:
-                    del d[key]
-
-        _remove_empty(result)
-        return result
+        return {key: val for key, val in data.items() if val is not None and val != {}}
 
 
 @docs_group('Resource clients')

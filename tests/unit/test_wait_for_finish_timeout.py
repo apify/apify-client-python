@@ -4,7 +4,7 @@ import inspect
 import json
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import pytest
@@ -68,7 +68,6 @@ class CallSite:
     path: str
     response_body: dict
     tier_secs: int
-    accepts_int_seconds: bool = True
 
 
 CALL_SITES = [
@@ -119,7 +118,6 @@ CALL_SITES = [
             path=f'/v2/actor-runs/{RUN_ID}',
             response_body=RUN_RESPONSE,
             tier_secs=5,
-            accepts_int_seconds=False,
         ),
         id='run get',
     ),
@@ -130,13 +128,10 @@ CALL_SITES = [
             path=f'/v2/actor-builds/{BUILD_ID}',
             response_body=BUILD_RESPONSE,
             tier_secs=5,
-            accepts_int_seconds=False,
         ),
         id='build get',
     ),
 ]
-
-SECONDS_CALL_SITES = [param for param in CALL_SITES if cast('CallSite', param.values[0]).accepts_int_seconds]
 
 
 @pytest.fixture(params=[pytest.param(ApifyClient, id='sync'), pytest.param(ApifyClientAsync, id='async')])
@@ -207,7 +202,7 @@ async def test_default_timeout_covers_wait_for_finish(
     assert timeout == call_site.tier_secs + 60
 
 
-@pytest.mark.parametrize('call_site', SECONDS_CALL_SITES)
+@pytest.mark.parametrize('call_site', CALL_SITES)
 async def test_default_timeout_covers_wait_for_finish_in_seconds(
     client: ApifyClient | ApifyClientAsync,
     monkeypatch: pytest.MonkeyPatch,
@@ -281,13 +276,13 @@ async def test_sends_wait_for_finish_in_whole_seconds(
     assert sent == expected
 
 
-@pytest.mark.parametrize('call_site', SECONDS_CALL_SITES)
-async def test_start_and_build_accept_wait_for_finish_in_seconds(
+@pytest.mark.parametrize('call_site', CALL_SITES)
+async def test_accepts_wait_for_finish_in_seconds(
     client: ApifyClient | ApifyClientAsync,
     httpserver: HTTPServer,
     call_site: CallSite,
 ) -> None:
-    """The `start` and `build` methods also accept `wait_for_finish` as a number of seconds."""
+    """`wait_for_finish` is also accepted as a number of seconds."""
     sent = await call_and_capture_wait_for_finish(client, httpserver, call_site, 45)
 
     assert sent == '45'

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Generator, Iterator
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -381,11 +382,7 @@ async def test_run_metamorph(
     http_client_classes: HttpClientClasses,
     metamorph_actor_id: str,
 ) -> None:
-    """Test metamorphing a run into another Actor.
-
-    A metamorph must use the run's own token, so the Actor writes `APIFY_TOKEN` to its key-value store and the test
-    reads it from there.
-    """
+    """Test metamorphing a run into another Actor with the run's own token."""
     run = await maybe_await(
         client.actor(metamorph_actor_id).start(memory_mbytes=256, run_timeout=timedelta(seconds=120))
     )
@@ -393,14 +390,17 @@ async def test_run_metamorph(
     run_client = client.run(run.id)
 
     try:
-
+        # A metamorph needs the run's own token, which the Actor stores in its key-value store.
         async def get_token_record() -> dict | None:
             return await maybe_await(client.key_value_store(run.default_key_value_store_id).get_record('TOKEN'))
 
         record = await poll_until_condition(get_token_record, timeout=120, backoff_factor=2)
         assert record is not None
+        run_token = record['value']
+        assert isinstance(run_token, str)
+        assert run_token
 
-        async with open_apify_client(record['value'], client_type, http_client_classes) as run_token_client:
+        async with open_apify_client(run_token, client_type, http_client_classes) as run_token_client:
             metamorphed_run = await maybe_await(
                 run_token_client.run(run.id).metamorph(
                     target_actor_id=HELLO_WORLD_ACTOR,
@@ -409,8 +409,16 @@ async def test_run_metamorph(
             )
         assert isinstance(metamorphed_run, Run)
         assert metamorphed_run.id == run.id
+
+        # Hello-world replaces the waiting Actor, so the run finishes on its own.
+        final_run = await maybe_await(run_client.wait_for_finish())
+        assert isinstance(final_run, Run)
+        assert final_run.status == 'SUCCEEDED'
+        assert final_run.metamorphs
     finally:
-        await maybe_await(run_client.abort())
+        # The run may have finished already, and then the abort can fail.
+        with suppress(ApifyApiError):
+            await maybe_await(run_client.abort())
         await maybe_await(run_client.wait_for_finish())
         await maybe_await(run_client.delete())
 

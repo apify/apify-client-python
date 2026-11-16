@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 - Expose request statistics via `ApifyClient.stats` ([#1228](https://github.com/apify/apify-client-python/pull/1228)) ([27a3f61](https://github.com/apify/apify-client-python/commit/27a3f61b3c614c4f78aaa28b7a94a63bbb6b193b)) by [@cobanfurkanx](https://github.com/cobanfurkanx), closes [#1175](https://github.com/apify/apify-client-python/issues/1175)
 - Add `wait_for_finish` to run and build `get()` ([#1226](https://github.com/apify/apify-client-python/pull/1226)) ([e8c6ba6](https://github.com/apify/apify-client-python/commit/e8c6ba609da78810ccac1614ae878eaf10594e4b)) by [@dheerajitbhu](https://github.com/dheerajitbhu), closes [#1176](https://github.com/apify/apify-client-python/issues/1176)
+- Add zstd request body compression ([#1218](https://github.com/apify/apify-client-python/pull/1218)) ([95a05a2](https://github.com/apify/apify-client-python/commit/95a05a2ffbf5375795929ff525acc1b324f36020)) by [@apify-factory](https://github.com/apify-factory)
 
 
 <!-- git-cliff-unreleased-end -->

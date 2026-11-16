@@ -35,7 +35,10 @@ def try_import(
     try:
         yield state
     except ModuleNotFoundError as exc:
-        if exc.name is None or not (dependency_name == exc.name or dependency_name.startswith(f'{exc.name}.')):
+        is_dependency = exc.name is not None and (
+            exc.name == dependency_name or dependency_name.startswith(f'{exc.name}.')
+        )
+        if not is_dependency:
             raise
         state.available = False
         message = exc.args[0]

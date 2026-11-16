@@ -405,7 +405,10 @@ async def test_run_metamorph(
 
         async with make_client(record['value'], client_type, http_client_classes) as run_token_client:
             metamorphed_run = await maybe_await(
-                run_token_client.run(run.id).metamorph(target_actor_id=HELLO_WORLD_ACTOR)
+                run_token_client.run(run.id).metamorph(
+                    target_actor_id=HELLO_WORLD_ACTOR,
+                    run_input={'message': 'Hello from metamorph!'},
+                )
             )
         assert isinstance(metamorphed_run, Run)
         assert metamorphed_run.id == run.id

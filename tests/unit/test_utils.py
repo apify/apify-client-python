@@ -72,19 +72,6 @@ def test_try_import_records_the_named_missing_dependency() -> None:
         del sys.modules[module_name]
 
 
-def test_try_import_without_extra_keeps_the_import_error_message() -> None:
-    """With no extra to install, the failed-import placeholder carries the import error's own message."""
-    module_name = 'test_missing_dependency_without_extra_module'
-    sys.modules[module_name] = ModuleType(module_name)
-    try:
-        with try_import(module_name, 'OptionalSymbol', dependency_name='_optional', extra_name=None) as state:
-            raise ModuleNotFoundError('This Python build has no _optional', name='_optional')
-        assert state.available is False
-        assert sys.modules[module_name].OptionalSymbol.message == 'This Python build has no _optional'
-    finally:
-        del sys.modules[module_name]
-
-
 def test_try_import_keeps_the_message_of_a_dependency_that_fails_to_load() -> None:
     """An error raised from another one, for an installed dependency that can't load, gets no install hint."""
     module_name = 'test_dependency_fails_to_load_module'

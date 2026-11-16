@@ -7,7 +7,5 @@ import sys
 # `try_import` in `http_compressors/__init__.py` treats the dependency as missing.
 if sys.version_info >= (3, 14):
     ZSTD_DEPENDENCY_NAME = '_zstd'
-    ZSTD_EXTRA_NAME = None
 else:
     ZSTD_DEPENDENCY_NAME = 'backports.zstd'
-    ZSTD_EXTRA_NAME = 'zstd'

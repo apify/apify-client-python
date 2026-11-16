@@ -5,7 +5,6 @@ from apify_client._utils.try_import import try_import as _try_import
 from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 from apify_client.http_compressors._zstd_dependency import ZSTD_DEPENDENCY_NAME as _ZSTD_DEPENDENCY_NAME
-from apify_client.http_compressors._zstd_dependency import ZSTD_EXTRA_NAME as _ZSTD_EXTRA_NAME
 
 _install_import_hook(__name__)
 
@@ -16,7 +15,7 @@ with _try_import(__name__, 'BrotliHttpCompressor', dependency_name='brotli', ext
 
 # zstd comes from the standard library on Python 3.14 and newer, and from the `zstd` extra before that.
 with _try_import(
-    __name__, 'ZstdHttpCompressor', dependency_name=_ZSTD_DEPENDENCY_NAME, extra_name=_ZSTD_EXTRA_NAME
+    __name__, 'ZstdHttpCompressor', dependency_name=_ZSTD_DEPENDENCY_NAME, extra_name='zstd'
 ) as _zstd_import:
     from apify_client.http_compressors._zstd import ZstdHttpCompressor
 

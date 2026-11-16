@@ -17,9 +17,6 @@ import pytest
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
 
-# Re-exported for the tests that decompress zstd bodies. It is the module the client compresses with.
-from apify_client.http_compressors._zstd import zstd  # noqa: F401
-
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator
 

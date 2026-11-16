@@ -17,7 +17,6 @@ import httpx2
 import impit
 import pytest
 
-from .._utils import zstd
 from apify_client import ApifyClient, ApifyClientAsync, ClientStatistics
 from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client._logging import logger_name
@@ -35,7 +34,7 @@ from apify_client.http_clients import (
 from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
-from apify_client.http_compressors._zstd import ZstdHttpCompressor
+from apify_client.http_compressors._zstd import ZstdHttpCompressor, zstd
 
 if TYPE_CHECKING:
     from collections.abc import Callable

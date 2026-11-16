@@ -12,11 +12,11 @@ import brotli
 import pytest
 from werkzeug import Request, Response
 
-from .._utils import zstd
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor, ZstdHttpCompressor
 from apify_client.http_compressors._resolve import resolve_compressor
+from apify_client.http_compressors._zstd import zstd
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator

@@ -398,9 +398,7 @@ async def test_run_metamorph(
         async def get_token_record() -> dict | None:
             return await maybe_await(client.key_value_store(run.default_key_value_store_id).get_record('TOKEN'))
 
-        record = await poll_until_condition(
-            get_token_record, lambda rec: rec is not None, timeout=120, backoff_factor=2
-        )
+        record = await poll_until_condition(get_token_record, timeout=120, backoff_factor=2)
         assert record is not None
 
         async with open_apify_client(record['value'], client_type, http_client_classes) as run_token_client:

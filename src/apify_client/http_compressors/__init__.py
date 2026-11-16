@@ -1,11 +1,11 @@
-import sys as _sys
-
 from apify_client._utils.try_import import install_import_hook as _install_import_hook
 from apify_client._utils.try_import import try_import as _try_import
 
 # These imports have only mandatory dependencies, so they are imported directly.
 from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
+from apify_client.http_compressors._zstd_dependency import ZSTD_DEPENDENCY_NAME as _ZSTD_DEPENDENCY_NAME
+from apify_client.http_compressors._zstd_dependency import ZSTD_EXTRA_NAME as _ZSTD_EXTRA_NAME
 
 _install_import_hook(__name__)
 
@@ -14,15 +14,9 @@ _install_import_hook(__name__)
 with _try_import(__name__, 'BrotliHttpCompressor', dependency_name='brotli', extra_name='brotli') as _brotli_import:
     from apify_client.http_compressors._brotli import BrotliHttpCompressor
 
-# zstd is in the standard library from Python 3.14, and no extra can add it to a build without it. Older versions need
-# `backports.zstd` from the `zstd` extra.
-if _sys.version_info >= (3, 14):
-    _zstd_dependency, _zstd_extra = '_zstd', None
-else:
-    _zstd_dependency, _zstd_extra = 'backports.zstd', 'zstd'
-
+# zstd comes from the standard library on Python 3.14 and newer, and from the `zstd` extra before that.
 with _try_import(
-    __name__, 'ZstdHttpCompressor', dependency_name=_zstd_dependency, extra_name=_zstd_extra
+    __name__, 'ZstdHttpCompressor', dependency_name=_ZSTD_DEPENDENCY_NAME, extra_name=_ZSTD_EXTRA_NAME
 ) as _zstd_import:
     from apify_client.http_compressors._zstd import ZstdHttpCompressor
 

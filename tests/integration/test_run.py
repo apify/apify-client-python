@@ -6,6 +6,8 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
+import pytest
+
 from .._utils import get_random_resource_name, maybe_await, poll_until_condition
 from apify_client._models import (
     ActorResource,
@@ -17,7 +19,7 @@ from apify_client._models import (
     Run,
     RunListItem,
 )
-from apify_client.errors import ApifyApiError
+from apify_client.errors import ApifyApiError, InvalidRequestError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -316,9 +318,8 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
         assert first_run.act_id is not None
 
 
-async def test_run_metamorph(client: ApifyClient | ApifyClientAsync) -> None:
-    """Test metamorphing a run into another Actor."""
-    # Start an actor that will run long enough to metamorph. We use hello-world and try to metamorph it into itself
+async def test_run_metamorph_from_outside_is_rejected(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that metamorphing a run with a token other than the run's own is rejected."""
     actor = client.actor(HELLO_WORLD_ACTOR)
     run = await maybe_await(actor.start())
     assert isinstance(run, Run)
@@ -327,34 +328,17 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync) -> None:
     run_client = client.run(run.id)
 
     try:
-        # Wait until the run starts (leaves READY), with exponential backoff: container startup time varies widely
-        async def get_run() -> Run | None:
-            return await maybe_await(run_client.get())
-
-        await poll_until_condition(
-            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', backoff_factor=2
-        )
-
-        # Metamorph the run into the same actor (allowed) with new input
-        # Note: hello-world may finish before we can metamorph, so we handle that case
-        try:
-            metamorphed_run = await maybe_await(
+        # The platform checks for a finished run first, so call metamorph right after the start.
+        with pytest.raises(InvalidRequestError) as exc_info:
+            await maybe_await(
                 run_client.metamorph(
                     target_actor_id=HELLO_WORLD_ACTOR,
                     run_input={'message': 'Hello from metamorph!'},
                 )
             )
-            assert isinstance(metamorphed_run, Run)
-            assert metamorphed_run.id == run.id  # Same run ID
 
-            # Wait for the metamorphed run to finish
-            final_run = await maybe_await(run_client.wait_for_finish())
-            assert isinstance(final_run, Run)
-        except ApifyApiError as exc:
-            # If the actor finished before we could metamorph, that's OK - the test still verified the API call
-            if 'already finished' not in str(exc):
-                raise
-
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.type == 'cannot-metamorph-from-outside'
     finally:
         await maybe_await(run_client.wait_for_finish())
     await maybe_await(run_client.delete())

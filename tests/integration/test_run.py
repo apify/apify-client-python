@@ -42,7 +42,7 @@ LIVE_ITEMS_SOURCE_FILES = [
     {
         'name': 'Dockerfile',
         'format': 'TEXT',
-        'content': 'FROM apify/actor-node:22\nCOPY . ./\nCMD ["node", "main.mjs"]\n',
+        'content': 'FROM apify/actor-node:26\nCOPY . ./\nCMD ["node", "main.mjs"]\n',
     },
     {
         'name': 'main.mjs',
@@ -69,7 +69,7 @@ METAMORPH_SOURCE_FILES = [
     {
         'name': 'Dockerfile',
         'format': 'TEXT',
-        'content': 'FROM apify/actor-node:22\nCOPY . ./\nCMD ["node", "main.js"]\n',
+        'content': 'FROM apify/actor-node:26\nCOPY . ./\nCMD ["node", "main.js"]\n',
     },
     {
         'name': 'main.js',

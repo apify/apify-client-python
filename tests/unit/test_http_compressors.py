@@ -254,6 +254,16 @@ def test_zstd_import_hook_raises_clear_error_when_backport_fails_to_load() -> No
         assert 'apify-client[zstd]' not in str(exc_info.value)
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 14), reason='zstd is in the standard library from Python 3.14')
+def test_zstd_import_hook_raises_clear_error_when_backport_submodule_is_missing() -> None:
+    """With a submodule of `backports.zstd` missing, the package still imports and `ZstdHttpCompressor` raises."""
+    with _dependency_unavailable('backports.zstd._zstd', 'backports.zstd'):
+        module = importlib.import_module('apify_client.http_compressors')
+        assert module.GzipHttpCompressor is not None
+        with pytest.raises(ImportError, match='installed but cannot be loaded'):
+            _ = module.ZstdHttpCompressor
+
+
 @pytest.mark.skipif(sys.version_info < (3, 14), reason='zstd is in the standard library only from Python 3.14')
 @pytest.mark.parametrize(
     'error',

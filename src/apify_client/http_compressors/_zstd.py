@@ -23,11 +23,11 @@ else:
     # raises a plain `ImportError` instead of the `ModuleNotFoundError` the optional-extra handling expects.
     try:
         import backports.zstd as zstd  # noqa: PLR0402
-    except ModuleNotFoundError:
-        raise
     except ImportError as exc:
-        # The package is installed but its C extension can't load. Without this, `import apify_client` would fail for
-        # every user, not only for those who pick zstd.
+        if isinstance(exc, ModuleNotFoundError) and exc.name in ('backports', 'backports.zstd'):
+            raise
+        # The package is installed but it or one of its submodules can't load. Without this, `import apify_client`
+        # would fail for every user, not only for those who pick zstd.
         raise ModuleNotFoundError(
             f'`backports.zstd` is installed but cannot be loaded ({exc}). Reinstall it with '
             "`pip install --force-reinstall backports.zstd`, or use compression='gzip' or compression='brotli' "

@@ -495,7 +495,7 @@ def test_request_rate_limit_is_left_out_of_statistics(httpserver: HTTPServer) ->
 
     client.actor(_MOCKED_ACTOR_ID).server().request('/flaky')
 
-    assert client._statistics.rate_limit_errors == {}
+    assert client.stats.rate_limit_errors == {}
 
 
 def test_request_returns_last_retried_response(httpserver: HTTPServer) -> None:

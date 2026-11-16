@@ -1,8 +1,25 @@
 from __future__ import annotations
 
-import pytest
+from datetime import timedelta
+from typing import TYPE_CHECKING
 
-from apify_client._statistics import ClientStatistics
+import pytest
+from werkzeug import Response
+
+import apify_client
+from apify_client import ApifyClient, ApifyClientAsync, ClientStatistics
+from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
+
+if TYPE_CHECKING:
+    from pytest_httpserver import HTTPServer
+
+
+class _CustomHttpClient(ImpitHttpClient):
+    pass
+
+
+class _CustomHttpClientAsync(ImpitHttpClientAsync):
+    pass
 
 
 @pytest.mark.parametrize(
@@ -120,3 +137,93 @@ def test_add_rate_limit_error_large_attempt() -> None:
 
     stats.add_rate_limit_error(10000)
     assert stats.rate_limit_errors[9999] == 1
+
+
+def test_client_statistics_is_exported() -> None:
+    """Test that ClientStatistics is exported from the top-level apify_client package."""
+    assert 'ClientStatistics' in apify_client.__all__
+    assert apify_client.ClientStatistics is ClientStatistics
+
+
+def test_apify_client_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClient.stats tracks calls and requests on the default HTTP client."""
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    client = ApifyClient('test-token', api_url=httpserver.url_for('/'))
+
+    assert isinstance(client.stats, ClientStatistics)
+    assert client.stats is client.http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
+
+    client.log('test-id').get()
+
+    assert client.stats.calls == 1
+    assert client.stats.requests == 1
+
+
+def test_apify_client_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClient.with_custom_http_client tracks rate limits on a custom HTTP client subclass."""
+    httpserver.expect_oneshot_request('/v2/logs/test-id').respond_with_response(Response(status=429))
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    custom_http_client = _CustomHttpClient(min_delay_between_retries=timedelta(milliseconds=1))
+    client = ApifyClient.with_custom_http_client(
+        'test-token',
+        api_url=httpserver.url_for('/'),
+        http_client=custom_http_client,
+    )
+
+    assert client.stats is custom_http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
+
+    client.log('test-id').get()
+
+    assert client.stats.calls == 1
+    assert client.stats.requests == 2
+    assert client.stats.rate_limit_errors == {0: 1}
+
+
+async def test_apify_client_async_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClientAsync.stats tracks calls and requests on the default HTTP client."""
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    client = ApifyClientAsync('test-token', api_url=httpserver.url_for('/'))
+
+    assert isinstance(client.stats, ClientStatistics)
+    assert client.stats is client.http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
+
+    await client.log('test-id').get()
+
+    assert client.stats.calls == 1
+    assert client.stats.requests == 1
+
+
+async def test_apify_client_async_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
+    """Test that ApifyClientAsync.with_custom_http_client tracks rate limits on a custom HTTP client subclass."""
+    httpserver.expect_oneshot_request('/v2/logs/test-id').respond_with_response(Response(status=429))
+    httpserver.expect_request('/v2/logs/test-id').respond_with_response(
+        Response('ok', status=200, content_type='text/plain')
+    )
+    custom_http_client = _CustomHttpClientAsync(min_delay_between_retries=timedelta(milliseconds=1))
+    client = ApifyClientAsync.with_custom_http_client(
+        'test-token',
+        api_url=httpserver.url_for('/'),
+        http_client=custom_http_client,
+    )
+
+    assert client.stats is custom_http_client.stats
+    assert client.stats.calls == 0
+    assert client.stats.requests == 0
+
+    await client.log('test-id').get()
+
+    assert client.stats.calls == 1
+    assert client.stats.requests == 2
+    assert client.stats.rate_limit_errors == {0: 1}

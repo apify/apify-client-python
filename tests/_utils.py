@@ -5,7 +5,6 @@ import inspect
 import os
 import secrets
 import string
-import sys
 import time
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
@@ -15,14 +14,11 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar, cast, overloa
 
 import pytest
 
-# Re-exported for the tests that decompress zstd bodies.
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    import backports.zstd as zstd  # noqa: F401, PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
-
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
+
+# Re-exported for the tests that decompress zstd bodies. It is the module the client compresses with.
+from apify_client.http_compressors._zstd import zstd  # noqa: F401
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator

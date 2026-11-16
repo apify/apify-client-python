@@ -4,7 +4,7 @@ import inspect
 import json
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import Mock
 
 import pytest
@@ -68,6 +68,7 @@ class CallSite:
     path: str
     response_body: dict
     tier_secs: int
+    accepts_int_seconds: bool = True
 
 
 CALL_SITES = [
@@ -118,6 +119,7 @@ CALL_SITES = [
             path=f'/v2/actor-runs/{RUN_ID}',
             response_body=RUN_RESPONSE,
             tier_secs=5,
+            accepts_int_seconds=False,
         ),
         id='run get',
     ),
@@ -128,12 +130,13 @@ CALL_SITES = [
             path=f'/v2/actor-builds/{BUILD_ID}',
             response_body=BUILD_RESPONSE,
             tier_secs=5,
+            accepts_int_seconds=False,
         ),
         id='build get',
     ),
 ]
 
-SECONDS_CALL_SITES = [call_site for call_site in CALL_SITES if call_site.id not in {'run get', 'build get'}]
+SECONDS_CALL_SITES = [param for param in CALL_SITES if cast('CallSite', param.values[0]).accepts_int_seconds]
 
 
 @pytest.fixture(params=[pytest.param(ApifyClient, id='sync'), pytest.param(ApifyClientAsync, id='async')])
@@ -200,6 +203,19 @@ async def test_default_timeout_covers_wait_for_finish(
     timeout = await call_and_capture_timeout(
         client, monkeypatch, httpserver, call_site, wait_for_finish=timedelta(seconds=60)
     )
+
+    assert timeout == call_site.tier_secs + 60
+
+
+@pytest.mark.parametrize('call_site', SECONDS_CALL_SITES)
+async def test_default_timeout_covers_wait_for_finish_in_seconds(
+    client: ApifyClient | ApifyClientAsync,
+    monkeypatch: pytest.MonkeyPatch,
+    httpserver: HTTPServer,
+    call_site: CallSite,
+) -> None:
+    """The default timeout tier is extended by a `wait_for_finish` given as a number of seconds."""
+    timeout = await call_and_capture_timeout(client, monkeypatch, httpserver, call_site, wait_for_finish=60)
 
     assert timeout == call_site.tier_secs + 60
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,6 +12,14 @@ from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
+
+
+class _CustomHttpClient(ImpitHttpClient):
+    pass
+
+
+class _CustomHttpClientAsync(ImpitHttpClientAsync):
+    pass
 
 
 @pytest.mark.parametrize(
@@ -155,11 +164,12 @@ def test_apify_client_exposes_default_http_client_statistics(httpserver: HTTPSer
 
 
 def test_apify_client_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
-    """Test that ApifyClient.with_custom_http_client points client.stats to the custom HTTP client's stats."""
+    """Test that ApifyClient.with_custom_http_client tracks rate limits on a custom HTTP client subclass."""
+    httpserver.expect_oneshot_request('/v2/logs/test-id').respond_with_response(Response(status=429))
     httpserver.expect_request('/v2/logs/test-id').respond_with_response(
         Response('ok', status=200, content_type='text/plain')
     )
-    custom_http_client = ImpitHttpClient()
+    custom_http_client = _CustomHttpClient(min_delay_between_retries=timedelta(milliseconds=1))
     client = ApifyClient.with_custom_http_client(
         'test-token',
         api_url=httpserver.url_for('/'),
@@ -173,7 +183,8 @@ def test_apify_client_exposes_custom_http_client_statistics(httpserver: HTTPServ
     client.log('test-id').get()
 
     assert client.stats.calls == 1
-    assert client.stats.requests == 1
+    assert client.stats.requests == 2
+    assert client.stats.rate_limit_errors == {0: 1}
 
 
 async def test_apify_client_async_exposes_default_http_client_statistics(httpserver: HTTPServer) -> None:
@@ -195,11 +206,12 @@ async def test_apify_client_async_exposes_default_http_client_statistics(httpser
 
 
 async def test_apify_client_async_exposes_custom_http_client_statistics(httpserver: HTTPServer) -> None:
-    """Test that ApifyClientAsync.with_custom_http_client points client.stats to the custom HTTP client's stats."""
+    """Test that ApifyClientAsync.with_custom_http_client tracks rate limits on a custom HTTP client subclass."""
+    httpserver.expect_oneshot_request('/v2/logs/test-id').respond_with_response(Response(status=429))
     httpserver.expect_request('/v2/logs/test-id').respond_with_response(
         Response('ok', status=200, content_type='text/plain')
     )
-    custom_http_client = ImpitHttpClientAsync()
+    custom_http_client = _CustomHttpClientAsync(min_delay_between_retries=timedelta(milliseconds=1))
     client = ApifyClientAsync.with_custom_http_client(
         'test-token',
         api_url=httpserver.url_for('/'),
@@ -213,4 +225,5 @@ async def test_apify_client_async_exposes_custom_http_client_statistics(httpserv
     await client.log('test-id').get()
 
     assert client.stats.calls == 1
-    assert client.stats.requests == 1
+    assert client.stats.requests == 2
+    assert client.stats.rate_limit_errors == {0: 1}

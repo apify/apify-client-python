@@ -57,8 +57,8 @@
     uv add "apify-client[brotli]"
     ```
 
-    To opt in to `zstd`, pass `compression='zstd'`. Python 3.14 and newer have it in the standard library. On older
-    versions, also install the optional extra:
+    To opt in to `zstd`, pass `compression='zstd'`. Python 3.14 and newer have it in the standard library when the
+    Python build includes zstd. On older versions, also install the optional extra:
 
     ```bash
     pip install "apify-client[zstd]"

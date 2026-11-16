@@ -173,5 +173,5 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=IdentityCompressor())
 | **Best for**                  | Large payloads where bandwidth matters  | Minimal-dependency environments | Fast compression at a good ratio                      |
 
 :::tip
-For most workloads, the bandwidth savings from brotli outweigh the CPU costs. Install the `brotli` extra and pass `compression='brotli'` unless you can't install additional packages in your environment. On Python 3.14 and newer, `compression='zstd'` is an alternative that needs no extra package.
+For most workloads, the bandwidth savings from brotli outweigh the CPU costs. Install the `brotli` extra and pass `compression='brotli'` unless you can't install additional packages in your environment. On Python 3.14 and newer, when the Python build includes zstd, `compression='zstd'` is an alternative that needs no extra package.
 :::

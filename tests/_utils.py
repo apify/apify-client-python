@@ -2,17 +2,23 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 import secrets
 import string
 import time
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, AsyncIterator, Iterator
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
+from datetime import timedelta
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar, cast, overload
 
 import pytest
 
+from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._consts import DEFAULT_API_URL
+
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
+    from collections.abc import Awaitable, Callable, Generator
 
     from apify_client.http_clients import HttpClient, HttpClientAsync
 
@@ -22,6 +28,8 @@ TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'
 API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
 T = TypeVar('T')
+
+ClientType = Literal['sync', 'async']
 
 
 class _HasId(Protocol):
@@ -63,6 +71,69 @@ class HttpClientClasses:
 
     sync: type[HttpClient]
     async_: type[HttpClientAsync]
+
+
+def get_api_url() -> str:
+    """Return the API URL for integration tests, from `API_URL_ENV_VAR` or the default."""
+    return os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+
+
+@asynccontextmanager
+async def open_apify_client(
+    token: str, client_type: ClientType, http_client_classes: HttpClientClasses
+) -> AsyncGenerator[ApifyClient | ApifyClientAsync]:
+    """Build a sync or async client with the given token and HTTP client implementation, closing it on exit."""
+    api_url = get_api_url()
+    if client_type == 'sync':
+        http_client = http_client_classes.sync()
+        try:
+            yield ApifyClient.with_custom_http_client(
+                token,
+                api_url=api_url,
+                http_client=http_client,
+            )
+        finally:
+            http_client.close()
+        return
+
+    http_client_async = http_client_classes.async_()
+    try:
+        yield ApifyClientAsync.with_custom_http_client(
+            token,
+            api_url=api_url,
+            http_client=http_client_async,
+        )
+    finally:
+        await http_client_async.aclose()
+
+
+@contextmanager
+def create_built_actor(
+    client: ApifyClient, name: str, source_files: list[dict[str, Any]], **create_kwargs: Any
+) -> Generator[str]:
+    """Create an Actor from source files and build it, yield its ID, and delete it on exit."""
+    actor = client.actors().create(
+        name=name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': source_files,
+            }
+        ],
+        **create_kwargs,
+    )
+    actor_client = client.actor(actor.id)
+
+    try:
+        build = actor_client.build(version_number='0.0')
+        finished_build = client.build(build.id).wait_for_finish(wait_duration=timedelta(minutes=5))
+        assert finished_build is not None
+        assert finished_build.status == 'SUCCEEDED'
+        yield actor.id
+    finally:
+        actor_client.delete()
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:

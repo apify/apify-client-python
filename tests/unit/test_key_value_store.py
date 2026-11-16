@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import gzip
 import io
-import sys
 import zlib
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
@@ -12,15 +11,11 @@ import brotli
 import pytest
 from werkzeug import Request, Response
 
+from .._utils import zstd
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE, STREAMED_BODY_CHUNK_SIZE
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import StreamedRequestBody
-
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    import backports.zstd as zstd  # noqa: PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable, Iterator

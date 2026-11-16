@@ -4,12 +4,19 @@ import asyncio
 import inspect
 import secrets
 import string
+import sys
 import time
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
 import pytest
+
+# Re-exported for the tests that decompress zstd bodies.
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    import backports.zstd as zstd  # noqa: F401, PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable

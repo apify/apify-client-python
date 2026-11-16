@@ -4,7 +4,6 @@ import asyncio
 import gzip
 import json
 import logging
-import sys
 import threading
 import time
 from collections.abc import AsyncIterator, Iterator
@@ -18,6 +17,7 @@ import httpx2
 import impit
 import pytest
 
+from .._utils import zstd
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client._logging import logger_name
@@ -37,11 +37,6 @@ from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 from apify_client.http_compressors._zstd import ZstdHttpCompressor
-
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    import backports.zstd as zstd  # noqa: PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

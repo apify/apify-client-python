@@ -12,15 +12,11 @@ import brotli
 import pytest
 from werkzeug import Request, Response
 
+from .._utils import zstd
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor, ZstdHttpCompressor
 from apify_client.http_compressors._resolve import resolve_compressor
-
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    import backports.zstd as zstd  # noqa: PLR0402 - `ty` allows only `backports.zstd` to be unresolved on 3.14+
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator

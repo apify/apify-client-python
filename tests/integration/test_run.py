@@ -366,19 +366,24 @@ async def test_run_metamorph(
 ) -> None:
     """Test metamorphing a run into another Actor with the run's own token."""
     run = await maybe_await(
-        client.actor(metamorph_actor_id).start(memory_mbytes=256, run_timeout=timedelta(seconds=120))
+        client.actor(metamorph_actor_id).start(memory_mbytes=256, run_timeout=timedelta(seconds=300))
     )
     assert isinstance(run, Run)
     run_client = client.run(run.id)
 
     try:
         # A metamorph needs the run's own token, which the Actor stores in its key-value store.
-        async def get_token_record() -> dict | None:
-            return await maybe_await(client.key_value_store(run.default_key_value_store_id).get_record('TOKEN'))
+        async def get_run_token() -> str | None:
+            record = await maybe_await(client.key_value_store(run.default_key_value_store_id).get_record('TOKEN'))
+            if record is not None:
+                return record['value']
+            current_run = await maybe_await(run_client.get())
+            assert isinstance(current_run, Run)
+            assert current_run.status in ('READY', 'RUNNING'), f'The run ended as {current_run.status} without a token.'
+            return None
 
-        record = await poll_until_condition(get_token_record, timeout=120, backoff_factor=2)
-        assert record is not None
-        run_token = record['value']
+        # A fixed short interval, so the token is read well within the 60 seconds the Actor waits after storing it.
+        run_token = await poll_until_condition(get_run_token, timeout=120, poll_interval=2)
         assert isinstance(run_token, str)
         assert run_token
 

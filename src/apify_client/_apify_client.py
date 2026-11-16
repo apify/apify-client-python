@@ -72,7 +72,6 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
 )
-from apify_client._statistics import ClientStatistics
 from apify_client._utils.http import check_custom_headers, to_api_base_url
 from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_compressors._resolve import resolve_compressor
@@ -80,6 +79,7 @@ from apify_client.http_compressors._resolve import resolve_compressor
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._statistics import ClientStatistics
     from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import HttpCompressionAlgorithm
 
@@ -181,9 +181,6 @@ class ApifyClient:
 
         self._public_base_url = to_api_base_url(api_public_url)
         """Public base URL for CDN access."""
-
-        self._statistics = ClientStatistics()
-        """Collector for client request statistics."""
 
         self._http_client: HttpClient | None = None
         """HTTP client used to communicate with the Apify API. Lazily initialized on first access."""
@@ -309,7 +306,6 @@ class ApifyClient:
                 timeout_max=self._timeout_max,
                 max_retries=self._max_retries,
                 min_delay_between_retries=self._min_delay_between_retries,
-                statistics=self._statistics,
                 headers=self._headers,
                 user_agent_suffix=self._user_agent_suffix,
                 http_compressor=self._http_compressor,
@@ -574,9 +570,6 @@ class ApifyClientAsync:
         self._public_base_url = to_api_base_url(api_public_url)
         """Public base URL for CDN access."""
 
-        self._statistics = ClientStatistics()
-        """Collector for client request statistics."""
-
         self._http_client: HttpClientAsync | None = None
         """HTTP client used to communicate with the Apify API. Lazily initialized on first access."""
 
@@ -701,7 +694,6 @@ class ApifyClientAsync:
                 timeout_max=self._timeout_max,
                 max_retries=self._max_retries,
                 min_delay_between_retries=self._min_delay_between_retries,
-                statistics=self._statistics,
                 headers=self._headers,
                 user_agent_suffix=self._user_agent_suffix,
                 http_compressor=self._http_compressor,

@@ -227,6 +227,7 @@ def test_convert_enums_to_literals_preserves_docstring() -> None:
         pytest.param('Match \\d+ or a literal \\n.', id='backslashes'),
         pytest.param('Summary.\n\nMatch \\d+ or a literal \\n.', id='backslashes on multiple lines'),
         pytest.param('Summary.\nLine\u2028separator and form\x0cfeed', id='non-newline line boundaries'),
+        pytest.param('Null \x00 byte', id='null byte'),
     ],
 )
 def test_convert_enums_to_literals_round_trips_docstring(docstring: str) -> None:

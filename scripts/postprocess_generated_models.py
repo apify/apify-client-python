@@ -105,10 +105,10 @@ def _base_names(node: ast.ClassDef) -> set[str]:
 def _escape_docstring(docstring: str) -> str:
     """Escape `docstring` for use between triple double quotes.
 
-    Escapes every backslash, and every double quote that would close the literal: one followed by two more double
-    quotes, or the last character.
+    Escapes every backslash, every NUL byte (Python source cannot contain one), and every double quote that would
+    close the literal: one followed by two more double quotes, or the last character.
     """
-    escaped = docstring.replace('\\', '\\\\')
+    escaped = docstring.replace('\\', '\\\\').replace('\0', '\\x00')
     return re.sub(r'"(?=""|\Z)', r'\\"', escaped)
 
 

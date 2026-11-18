@@ -3,12 +3,18 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import random
+import time
 from collections.abc import Iterable
 from queue import Queue
 from typing import TYPE_CHECKING, Any, Literal
 
 from more_itertools import constrained_batches
 
+from apify_client._consts import (
+    DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES,
+    DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS,
+)
 from apify_client._docs import docs_group
 from apify_client._models import (
     AddedRequest,
@@ -48,6 +54,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
+    from apify_client._statistics import ClientStatistics
     from apify_client._typeddicts import (
         RequestResourceCamelDict,
         RequestResourceDict,
@@ -70,26 +77,51 @@ _SAFETY_BUFFER_PERCENT = 0.01 / 100
 
 def _serialize_requests(
     requests: list[RequestWithoutId] | list[RequestWithoutIdDict] | list[RequestWithoutIdCamelDict],
-) -> list[bytes]:
-    """Validate requests and serialize each one into the JSON bytes it will occupy in the batch request body.
+) -> list[tuple[str, bytes]]:
+    """Validate requests and serialize each one into `(unique_key, json_bytes)` for batch upload.
 
     Each request is serialized exactly once: the same bytes are measured when splitting requests into batches and
-    then assembled into the request body, so batch sizes are computed on exactly the bytes that get sent. Validation
-    and serialization happen in a single pass, so each intermediate dict stays transient instead of a whole dict list
-    being held in memory alongside the serialized requests. Uses the same `json.dumps` options as
+    then assembled into the request body, so batch sizes are computed on exactly the bytes that get sent. Pairing each
+    payload with its validated `unique_key` lets unprocessed-request retry rounds reassemble only the remaining items
+    without re-serializing or decoding payloads. Uses the same `json.dumps` options as
     `HttpClientBase._prepare_request_call` to keep the wire format consistent with other endpoints.
     """
-    return [
-        json.dumps(
-            (request if isinstance(request, RequestWithoutId) else RequestWithoutId.model_validate(request)).model_dump(
-                mode='json', by_alias=True, exclude_none=True, fallback=str
-            ),
+    serialized = list[tuple[str, bytes]]()
+    for request in requests:
+        validated = request if isinstance(request, RequestWithoutId) else RequestWithoutId.model_validate(request)
+        payload = json.dumps(
+            validated.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             ensure_ascii=False,
             allow_nan=False,
             default=str,
         ).encode('utf-8')
-        for request in requests
-    ]
+        serialized.append((validated.unique_key, payload))
+    return serialized
+
+
+def _compute_retry_delay_seconds(attempt: int, min_delay: timedelta) -> float:
+    """Compute exponential backoff delay with jitter for an unprocessed-requests retry round."""
+    return random.uniform(1.0, 2.0) * (2**attempt) * to_seconds(min_delay)
+
+
+def _record_batch_attempt_result(
+    *,
+    batch_items: list[tuple[str, bytes]],
+    batch_response: BatchAddResponse,
+    processed_unique_keys: set[str],
+    processed_requests: list[AddedRequest],
+    attempt: int,
+    statistics: ClientStatistics,
+) -> tuple[list[tuple[str, bytes]], list[UnprocessedRequest]]:
+    """Accumulate processed requests, record rate limits when needed, and return remaining items to retry."""
+    processed_requests.extend(batch_response.data.processed_requests)
+    unprocessed = batch_response.data.unprocessed_requests
+    if not unprocessed:
+        return [], unprocessed
+    statistics.add_rate_limit_error(attempt + 1)
+    processed_unique_keys.update(req.unique_key for req in batch_response.data.processed_requests)
+    remaining = [item for item in batch_items if item[0] not in processed_unique_keys]
+    return remaining, unprocessed
 
 
 @docs_group('Resource clients')
@@ -417,11 +449,16 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool = False,
         max_parallel: int = 1,
+        max_unprocessed_requests_retries: int = DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS,
+        min_delay_between_unprocessed_requests_retries: timedelta = (
+            DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES
+        ),
         timeout: Timeout = 'medium',
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
-        Requests are split into batches based on size and processed in parallel.
+        Requests are split into batches based on size and processed in parallel. Any requests reported as unprocessed
+        by the API are retried with exponential backoff.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
@@ -431,6 +468,9 @@ class RequestQueueClient(ResourceClient):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
+            max_unprocessed_requests_retries: Maximum number of retry attempts for requests returned as unprocessed
+                by the API.
+            min_delay_between_unprocessed_requests_retries: Minimum delay before retrying unprocessed requests.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -438,8 +478,12 @@ class RequestQueueClient(ResourceClient):
         """
         if max_parallel != 1:
             raise NotImplementedError('max_parallel is only supported in async client')
+        if max_unprocessed_requests_retries < 0:
+            raise ValueError(
+                f'max_unprocessed_requests_retries must be non-negative, got {max_unprocessed_requests_retries}'
+            )
 
-        # Validate the requests and serialize each of them into JSON bytes.
+        # Validate the requests and serialize each of them into `(unique_key, json_bytes)`.
         serialized_requests = _serialize_requests(requests)
 
         # Build the query parameters shared by all the batch API calls.
@@ -453,12 +497,12 @@ class RequestQueueClient(ResourceClient):
             serialized_requests,
             max_size=payload_size_limit_bytes - len(b'[]'),
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
-            get_len=lambda serialized: len(serialized) + len(b','),
+            get_len=lambda item: len(item[1]) + len(b','),
             strict=False,
         )
 
         # Put the batches into the queue for processing.
-        batch_queue = Queue[Iterable[bytes]]()
+        batch_queue = Queue[Iterable[tuple[str, bytes]]]()
 
         for batch in batches:
             batch_queue.put(batch)
@@ -468,22 +512,40 @@ class RequestQueueClient(ResourceClient):
 
         # Process all batches in the queue sequentially.
         while not batch_queue.empty():
-            request_batch = batch_queue.get()
+            batch_items = list(batch_queue.get())
+            remaining_items = batch_items
+            processed_unique_keys = set[str]()
+            batch_processed_requests = list[AddedRequest]()
+            batch_unprocessed_requests = list[UnprocessedRequest]()
 
-            # Send the batch to the API, assembling the body from the already serialized requests.
-            response = self._http_client.call(
-                url=self._build_url('requests/batch'),
-                method='POST',
-                headers={'content-type': 'application/json'},
-                params=request_params,
-                data=b'[' + b','.join(request_batch) + b']',
-                timeout=timeout,
-            )
+            for attempt in range(1 + max_unprocessed_requests_retries):
+                response = self._http_client.call(
+                    url=self._build_url('requests/batch'),
+                    method='POST',
+                    headers={'content-type': 'application/json'},
+                    params=request_params,
+                    data=b'[' + b','.join(payload for _, payload in remaining_items) + b']',
+                    timeout=timeout,
+                )
 
-            result = response_to_dict(response)
-            batch_response = BatchAddResponse.model_validate(result)
-            processed_requests.extend(batch_response.data.processed_requests)
-            unprocessed_requests.extend(batch_response.data.unprocessed_requests)
+                result = response_to_dict(response)
+                batch_response = BatchAddResponse.model_validate(result)
+                remaining_items, batch_unprocessed_requests = _record_batch_attempt_result(
+                    batch_items=batch_items,
+                    batch_response=batch_response,
+                    processed_unique_keys=processed_unique_keys,
+                    processed_requests=batch_processed_requests,
+                    attempt=attempt,
+                    statistics=self._http_client.stats,
+                )
+                if not remaining_items:
+                    break
+
+                if attempt < max_unprocessed_requests_retries:
+                    time.sleep(_compute_retry_delay_seconds(attempt, min_delay_between_unprocessed_requests_retries))
+
+            processed_requests.extend(batch_processed_requests)
+            unprocessed_requests.extend(batch_unprocessed_requests)
 
         return BatchAddResponse.model_construct(
             data=BatchAddResult.model_construct(
@@ -945,13 +1007,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
     async def _batch_add_requests_worker(
         self,
         *,
-        queue: asyncio.Queue[Iterable[bytes]],
+        queue: asyncio.Queue[Iterable[tuple[str, bytes]]],
         request_params: QueryParams,
+        max_unprocessed_requests_retries: int,
+        min_delay_between_unprocessed_requests_retries: timedelta,
         timeout: Timeout,
     ) -> BatchAddResponse:
         """Worker function to process a batch of requests.
 
-        This worker will process batches from the queue.
+        This worker will process batches from the queue, retrying any unprocessed requests with exponential backoff.
 
         Return result containing lists of processed and unprocessed requests by the worker.
         """
@@ -966,20 +1030,42 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 break
 
             try:
-                # Send the batch to the API, assembling the body from the already serialized requests.
-                response = await self._http_client.call(
-                    url=self._build_url('requests/batch'),
-                    method='POST',
-                    headers={'content-type': 'application/json'},
-                    params=request_params,
-                    data=b'[' + b','.join(request_batch) + b']',
-                    timeout=timeout,
-                )
+                batch_items = list(request_batch)
+                remaining_items = batch_items
+                processed_unique_keys = set[str]()
+                batch_processed_requests = list[AddedRequest]()
+                batch_unprocessed_requests = list[UnprocessedRequest]()
 
-                result = response_to_dict(response)
-                batch_response = BatchAddResponse.model_validate(result)
-                processed_requests.extend(batch_response.data.processed_requests)
-                unprocessed_requests.extend(batch_response.data.unprocessed_requests)
+                for attempt in range(1 + max_unprocessed_requests_retries):
+                    response = await self._http_client.call(
+                        url=self._build_url('requests/batch'),
+                        method='POST',
+                        headers={'content-type': 'application/json'},
+                        params=request_params,
+                        data=b'[' + b','.join(payload for _, payload in remaining_items) + b']',
+                        timeout=timeout,
+                    )
+
+                    result = response_to_dict(response)
+                    batch_response = BatchAddResponse.model_validate(result)
+                    remaining_items, batch_unprocessed_requests = _record_batch_attempt_result(
+                        batch_items=batch_items,
+                        batch_response=batch_response,
+                        processed_unique_keys=processed_unique_keys,
+                        processed_requests=batch_processed_requests,
+                        attempt=attempt,
+                        statistics=self._http_client.stats,
+                    )
+                    if not remaining_items:
+                        break
+
+                    if attempt < max_unprocessed_requests_retries:
+                        await asyncio.sleep(
+                            _compute_retry_delay_seconds(attempt, min_delay_between_unprocessed_requests_retries)
+                        )
+
+                processed_requests.extend(batch_processed_requests)
+                unprocessed_requests.extend(batch_unprocessed_requests)
 
             finally:
                 # Mark the batch as done whether it succeeded or failed.
@@ -998,11 +1084,16 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool = False,
         max_parallel: int = 5,
+        max_unprocessed_requests_retries: int = DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS,
+        min_delay_between_unprocessed_requests_retries: timedelta = (
+            DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES
+        ),
         timeout: Timeout = 'medium',
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
-        Requests are split into batches based on size and processed in parallel.
+        Requests are split into batches based on size and processed in parallel. Any requests reported as unprocessed
+        by the API are retried with exponential backoff.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
@@ -1012,11 +1103,19 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
+            max_unprocessed_requests_retries: Maximum number of retry attempts for requests returned as unprocessed
+                by the API.
+            min_delay_between_unprocessed_requests_retries: Minimum delay before retrying unprocessed requests.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
+        if max_unprocessed_requests_retries < 0:
+            raise ValueError(
+                f'max_unprocessed_requests_retries must be non-negative, got {max_unprocessed_requests_retries}'
+            )
+
         # Validate and serialize the requests in a worker thread, as it is CPU-bound and would block the event loop.
         serialized_requests = await asyncio.to_thread(_serialize_requests, requests)
 
@@ -1031,12 +1130,12 @@ class RequestQueueClientAsync(ResourceClientAsync):
             serialized_requests,
             max_size=payload_size_limit_bytes - len(b'[]'),
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
-            get_len=lambda serialized: len(serialized) + len(b','),
+            get_len=lambda item: len(item[1]) + len(b','),
             strict=False,
         )
 
         # Create a queue with all the batches, from which the worker tasks will consume them.
-        batch_queue: asyncio.Queue[Iterable[bytes]] = asyncio.Queue()
+        batch_queue: asyncio.Queue[Iterable[tuple[str, bytes]]] = asyncio.Queue()
 
         for batch in batches:
             await batch_queue.put(batch)
@@ -1047,7 +1146,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 workers = [
                     tg.create_task(
                         self._batch_add_requests_worker(
-                            queue=batch_queue, request_params=request_params, timeout=timeout
+                            queue=batch_queue,
+                            request_params=request_params,
+                            max_unprocessed_requests_retries=max_unprocessed_requests_retries,
+                            min_delay_between_unprocessed_requests_retries=(
+                                min_delay_between_unprocessed_requests_retries
+                            ),
+                            timeout=timeout,
                         ),
                         name=f'batch_add_requests_worker_{i}',
                     )

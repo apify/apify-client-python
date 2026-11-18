@@ -3,6 +3,7 @@ from __future__ import annotations
 import gzip
 import json
 import re
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -76,19 +77,35 @@ async def test_batch_processed_partially_async(httpserver: HTTPServer) -> None:
         api_public_url=server_url,
     )
 
-    httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
-        status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
-    )
+    attempt = 0
+
+    def handler(_request: Request) -> Response:
+        nonlocal attempt
+        attempt += 1
+        if attempt == 1:
+            return Response(_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json')
+        return Response(
+            '{"data": {"processedRequests": [], "unprocessedRequests": '
+            '[{"uniqueKey": "http://example.com/2", "url": "http://example.com/2", "method": "GET"}]}}',
+            status=200,
+            content_type='application/json',
+        )
+
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(handler)
     requests: list[RequestWithoutIdDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    batch_response = await rq_client.batch_add_requests(requests=requests)
-    assert requests[0]['unique_key'] in {request.unique_key for request in batch_response.processed_requests}
+    batch_response = await rq_client.batch_add_requests(
+        requests=requests,
+        min_delay_between_unprocessed_requests_retries=timedelta(milliseconds=1),
+    )
+    assert [request.unique_key for request in batch_response.processed_requests] == [requests[0]['unique_key']]
     assert len(batch_response.unprocessed_requests) == 1
     assert batch_response.unprocessed_requests[0].unique_key == requests[1]['unique_key']
+    assert client.stats.rate_limit_errors == {0: 1, 1: 1, 2: 1, 3: 1}
 
 
 def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> None:
@@ -247,19 +264,136 @@ def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
         api_public_url=server_url,
     )
 
-    httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
-        status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
-    )
+    attempt = 0
+
+    def handler(_request: Request) -> Response:
+        nonlocal attempt
+        attempt += 1
+        if attempt == 1:
+            return Response(_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json')
+        return Response(
+            '{"data": {"processedRequests": [], "unprocessedRequests": '
+            '[{"uniqueKey": "http://example.com/2", "url": "http://example.com/2", "method": "GET"}]}}',
+            status=200,
+            content_type='application/json',
+        )
+
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(handler)
     requests: list[RequestWithoutIdDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    batch_response = rq_client.batch_add_requests(requests=requests)
-    assert requests[0]['unique_key'] in {request.unique_key for request in batch_response.processed_requests}
+    batch_response = rq_client.batch_add_requests(
+        requests=requests,
+        min_delay_between_unprocessed_requests_retries=timedelta(milliseconds=1),
+    )
+    assert [request.unique_key for request in batch_response.processed_requests] == [requests[0]['unique_key']]
     assert len(batch_response.unprocessed_requests) == 1
     assert batch_response.unprocessed_requests[0].unique_key == requests[1]['unique_key']
+    assert client.stats.rate_limit_errors == {0: 1, 1: 1, 2: 1, 3: 1}
+
+
+def _progressive_retry_handler(sent_keys: list[list[str]]) -> Callable[[Request], Response]:
+    """Respond to 3 rounds of batch-add calls, processing one request per round."""
+    round_num = 0
+
+    def handler(request: Request) -> Response:
+        nonlocal round_num
+        round_num += 1
+        body = request.get_data()
+        raw = gzip.decompress(body) if request.headers.get('Content-Encoding') == 'gzip' else body
+        items = json.loads(raw)
+        sent_keys.append([item['uniqueKey'] for item in items])
+
+        processed = [
+            {
+                'requestId': f'id_{round_num}',
+                'uniqueKey': f'http://example.com/{round_num}',
+                'wasAlreadyPresent': False,
+                'wasAlreadyHandled': False,
+            }
+        ]
+        unprocessed = [
+            {'uniqueKey': f'http://example.com/{k}', 'url': f'http://example.com/{k}', 'method': 'GET'}
+            for k in range(round_num + 1, 4)
+        ]
+        return Response(
+            json.dumps({'data': {'processedRequests': processed, 'unprocessedRequests': unprocessed}}),
+            status=200,
+            content_type='application/json',
+        )
+
+    return handler
+
+
+async def test_batch_add_requests_retries_unprocessed_requests_async(httpserver: HTTPServer) -> None:
+    """Unprocessed requests are retried by `unique_key` until processed and rate limits are tracked."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    sent_keys = list[list[str]]()
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(
+        _progressive_retry_handler(sent_keys)
+    )
+    requests: list[RequestWithoutIdDict] = [
+        {'unique_key': f'http://example.com/{i}', 'url': f'http://example.com/{i}', 'method': 'GET'}
+        for i in range(1, 4)
+    ]
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    result = await rq_client.batch_add_requests(
+        requests=requests,
+        min_delay_between_unprocessed_requests_retries=timedelta(milliseconds=1),
+    )
+
+    assert sent_keys == [
+        ['http://example.com/1', 'http://example.com/2', 'http://example.com/3'],
+        ['http://example.com/2', 'http://example.com/3'],
+        ['http://example.com/3'],
+    ]
+    assert [req.unique_key for req in result.processed_requests] == [
+        'http://example.com/1',
+        'http://example.com/2',
+        'http://example.com/3',
+    ]
+    assert result.unprocessed_requests == []
+    assert client.stats.rate_limit_errors == {0: 1, 1: 1}
+
+
+def test_batch_add_requests_retries_unprocessed_requests_sync(httpserver: HTTPServer) -> None:
+    """Unprocessed requests are retried by `unique_key` until processed and rate limits are tracked."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    sent_keys = list[list[str]]()
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(
+        _progressive_retry_handler(sent_keys)
+    )
+    requests: list[RequestWithoutIdDict] = [
+        {'unique_key': f'http://example.com/{i}', 'url': f'http://example.com/{i}', 'method': 'GET'}
+        for i in range(1, 4)
+    ]
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    result = rq_client.batch_add_requests(
+        requests=requests,
+        min_delay_between_unprocessed_requests_retries=timedelta(milliseconds=1),
+    )
+
+    assert sent_keys == [
+        ['http://example.com/1', 'http://example.com/2', 'http://example.com/3'],
+        ['http://example.com/2', 'http://example.com/3'],
+        ['http://example.com/3'],
+    ]
+    assert [req.unique_key for req in result.processed_requests] == [
+        'http://example.com/1',
+        'http://example.com/2',
+        'http://example.com/3',
+    ]
+    assert result.unprocessed_requests == []
+    assert client.stats.rate_limit_errors == {0: 1, 1: 1}
 
 
 _REQUEST_REGISTRATION_RESPONSE_CONTENT = (

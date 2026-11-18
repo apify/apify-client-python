@@ -633,6 +633,28 @@ def test_add_camel_case_typeddicts_creates_sibling_class() -> None:
     assert 'retryCount: NotRequired[int]' in result
 
 
+@pytest.mark.parametrize(
+    'alias',
+    [
+        pytest.param('x: int\n    import os\n    userId', id='code on new lines'),
+        pytest.param('user-id', id='hyphen'),
+        pytest.param('class', id='keyword'),
+        pytest.param('', id='empty'),
+    ],
+)
+def test_add_camel_case_typeddicts_rejects_alias_that_is_not_identifier(alias: str) -> None:
+    """An alias that is not a valid Python identifier raises instead of being written into the source."""
+    content = textwrap.dedent("""\
+        from typing import NotRequired, TypedDict
+
+        class FooDict(TypedDict):
+            user_id: NotRequired[str]
+    """)
+    alias_map = {'Foo': {'user_id': alias}}
+    with pytest.raises(ValueError, match='alias of field user_id'):
+        add_camel_case_typeddicts(content, alias_map)
+
+
 def test_add_camel_case_typeddicts_rewires_nested_refs() -> None:
     """References to other snake TypedDicts in a cloned annotation are renamed to their camel form."""
     content = textwrap.dedent("""\

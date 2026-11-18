@@ -25,6 +25,7 @@ Applied to `_typeddicts.py`:
 from __future__ import annotations
 
 import ast
+import keyword
 import re
 import subprocess
 from pathlib import Path
@@ -534,6 +535,10 @@ def _rename_fields_in_class_block(block: list[str], field_aliases: dict[str, str
     Matches lines of the form `<indent><snake_ident>:` and substitutes the identifier when an alias is present.
     Multi-line annotations and trailing default values are preserved verbatim because only the field name
     on the first line is replaced.
+
+    Raises:
+        ValueError: If an alias is not a valid Python identifier. Aliases come from the downloaded specification and
+            are written into the generated source as field names.
     """
     field_decl = re.compile(r'^(\s+)([a-z_][a-z0-9_]*)(\s*:)')
     out: list[str] = []
@@ -547,6 +552,8 @@ def _rename_fields_in_class_block(block: list[str], field_aliases: dict[str, str
         if api_name is None or api_name == name:
             out.append(line)
             continue
+        if not api_name.isidentifier() or keyword.iskeyword(api_name):
+            raise ValueError(f'Cannot emit the alias of field {name} as a field name: {api_name!r}')
         out.append(f'{indent}{api_name}{colon}{line[m.end() :]}')
     return out
 

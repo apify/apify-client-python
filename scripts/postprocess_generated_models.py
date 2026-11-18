@@ -173,8 +173,8 @@ def convert_enums_to_literals(content: str) -> str:
             else:
                 docstring_lines = [f'"""{escaped}"""']
                 expected = docstring
-            # The docstring text comes from the downloaded specification, so never emit a literal that reads back as
-            # anything else.
+            # The docstring text comes from the downloaded specification, so check that the emitted literal reads back
+            # as the docstring value.
             if ast.literal_eval('\n'.join(docstring_lines)) != expected:
                 raise ValueError(f'Cannot emit the docstring of {node.name} as a string literal: {docstring!r}')
             new_lines.extend(docstring_lines)

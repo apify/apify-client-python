@@ -239,7 +239,9 @@ def test_convert_enums_to_literals_round_trips_docstring(docstring: str) -> None
     assert [type(stmt) for stmt in tree.body] == [ast.ImportFrom, ast.Assign, ast.Expr]
     trailing_docstring = tree.body[2]
     assert isinstance(trailing_docstring, ast.Expr)
-    assert ast.literal_eval(trailing_docstring.value).strip('\n') == docstring
+    # A multi-line docstring is emitted with its delimiters on their own lines.
+    expected = f'\n{docstring}\n' if '\n' in docstring else docstring
+    assert ast.literal_eval(trailing_docstring.value) == expected
 
 
 def test_convert_enums_to_literals_rejects_docstring_it_cannot_round_trip() -> None:

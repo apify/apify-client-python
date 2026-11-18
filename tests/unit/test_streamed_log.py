@@ -55,12 +55,14 @@ def test_streamed_log_redirects_each_complete_line(chunks: list[bytes], expected
         pytest.param('WARNING warning', logging.WARNING, id='warning'),
         pytest.param('FATAL failed', logging.FATAL, id='fatal'),
         pytest.param('ERROR_PAGE saved', logging.INFO, id='unknown-token'),
-        pytest.param('Saved ERROR screenshot', logging.INFO, id='no-level'),
+        pytest.param('Saved ERROR screenshot', logging.ERROR, id='first-level-word'),
+        pytest.param('Saved screenshot', logging.INFO, id='no-level'),
+        pytest.param('\x1b[32mINFO\x1b[0m ready ERROR', logging.INFO, id='ansi-colors'),
         pytest.param('', logging.INFO, id='empty'),
     ],
 )
 def test_streamed_log_level_uses_token(content: str, level: int) -> None:
-    """Only the level token immediately after the timestamp determines severity."""
+    """The first whole-word level name, with ANSI colors removed, determines severity."""
     logger = Mock(spec=logging.Logger)
     stream = StreamedLogBase(logger)
     stream._process_whole_log(f'2026-11-15T13:00:00.000Z {content}'.encode())

@@ -19,6 +19,10 @@ if TYPE_CHECKING:
     from apify_client.types import Timeout
 
 
+_ANSI_CODE = re.compile(r'\x1b\[[0-9;]*m')
+_LEVEL_PATTERN = re.compile(r'\b(CRITICAL|FATAL|ERROR|WARNING|WARN|INFO|DEBUG)\b')
+
+
 class StreamedLogBase:
     """Base class for streaming and buffering chunked Actor run logs."""
 
@@ -97,12 +101,9 @@ class StreamedLogBase:
 
     @staticmethod
     def _guess_log_level_from_message(message: str) -> int:
-        """Read the level token after the platform timestamp and optional bracketed logger name."""
-        match = re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z[ \t]+(?:\[[^\]\n]*\][ \t]+)?(\S+)', message)
-        known_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
-        if match and match[1] in known_levels:
-            return logging.getLevelNamesMapping()[match[1]]
-        return logging.INFO
+        """Return the first whole-word level name found in the message, ignoring ANSI colors. Default to INFO."""
+        match = _LEVEL_PATTERN.search(_ANSI_CODE.sub('', message))
+        return logging.getLevelNamesMapping()[match[1]] if match else logging.INFO
 
 
 @docs_group('Other')
@@ -110,7 +111,7 @@ class StreamedLog(StreamedLogBase):
     """Streams Actor run log output to a Python logger in a background thread.
 
     The log stream is consumed in a background thread and each log message is forwarded to the provided logger with
-    the level token after the timestamp and optional bracketed logger name, defaulting to INFO for unknown levels.
+    the first level name found in the message, defaulting to INFO when there is none.
 
     Can be used as a context manager, which automatically starts and stops the streaming thread. Alternatively,
     call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
@@ -253,7 +254,7 @@ class StreamedLogAsync(StreamedLogBase):
     """Streams Actor run log output to a Python logger in an asyncio task.
 
     The log stream is consumed in a background asyncio task and each log message is forwarded to the provided logger
-    with the level token after the timestamp and optional bracketed logger name, defaulting to INFO for unknown levels.
+    with the first level name found in the message, defaulting to INFO when there is none.
 
     Can be used as an async context manager, which automatically starts and cancels the streaming task. Alternatively,
     call `start` and `stop` manually. Obtain an instance via `RunClientAsync.get_streamed_log`.
@@ -298,22 +299,14 @@ class StreamedLogAsync(StreamedLogBase):
 
         was_streaming = not self._streaming_task.done()
         try:
-            await asyncio.wait_for(asyncio.shield(self._streaming_task), timeout=self._stop_timeout_s)
+            await asyncio.wait_for(self._streaming_task, timeout=self._stop_timeout_s)
         except TimeoutError:
-            self._streaming_task.cancel()
-        except asyncio.CancelledError:
-            self._streaming_task.cancel()
-            try:
-                await self._streaming_task
-            except asyncio.CancelledError:
-                pass
-            finally:
-                self._streaming_task = None
-            raise
-        try:
-            await self._streaming_task
-        except asyncio.CancelledError:
             pass
+        except asyncio.CancelledError:
+            # Swallow the task's own cancellation, but let a cancellation of the caller propagate.
+            current = asyncio.current_task()
+            if current is not None and current.cancelling():
+                raise
         finally:
             self._streaming_task = None
         if not was_streaming or self._received_data:

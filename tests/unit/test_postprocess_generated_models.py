@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import ast
 import textwrap
+
+import pytest
 
 from scripts.postprocess_generated_models import (
     add_camel_case_typeddicts,
@@ -212,6 +215,38 @@ def test_convert_enums_to_literals_preserves_docstring() -> None:
     alias_idx = result.index('Status = Literal[')
     docstring_idx = result.index('"""Describes a status."""')
     assert alias_idx < docstring_idx
+
+
+@pytest.mark.parametrize(
+    'docstring',
+    [
+        pytest.param('Use """ here; import os', id='triple quote on single line'),
+        pytest.param('Summary.\n"""\nimport os\n"""', id='triple quotes on multiple lines'),
+        pytest.param('Four """" quotes', id='run of four quotes'),
+        pytest.param('Ends with a "quote"', id='trailing quote'),
+        pytest.param('Match \\d+ or a literal \\n.', id='backslashes'),
+        pytest.param('Summary.\n\nMatch \\d+ or a literal \\n.', id='backslashes on multiple lines'),
+        pytest.param('Summary.\nLine\u2028separator and form\x0cfeed', id='non-newline line boundaries'),
+    ],
+)
+def test_convert_enums_to_literals_round_trips_docstring(docstring: str) -> None:
+    """The trailing docstring keeps the exact value of the enum docstring and adds no statements."""
+    content = f"from typing import Literal\n\nclass Status(StrEnum):\n    {docstring!r}\n\n    READY = 'READY'\n"
+    result = convert_enums_to_literals(content)
+
+    tree = ast.parse(result)
+    assert [type(stmt) for stmt in tree.body] == [ast.ImportFrom, ast.Assign, ast.Expr]
+    trailing_docstring = tree.body[2]
+    assert isinstance(trailing_docstring, ast.Expr)
+    assert ast.literal_eval(trailing_docstring.value).strip('\n') == docstring
+
+
+def test_convert_enums_to_literals_rejects_docstring_it_cannot_round_trip() -> None:
+    """A docstring that would read back with a different value raises instead of being emitted."""
+    docstring = 'Summary.\nCarriage\rreturn'
+    content = f"from typing import Literal\n\nclass Status(StrEnum):\n    {docstring!r}\n\n    READY = 'READY'\n"
+    with pytest.raises(ValueError, match='docstring of Status'):
+        convert_enums_to_literals(content)
 
 
 def test_convert_enums_to_literals_preserves_hyphenated_values() -> None:

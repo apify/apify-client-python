@@ -102,6 +102,16 @@ def _base_names(node: ast.ClassDef) -> set[str]:
     return {b.id for b in node.bases if isinstance(b, ast.Name)}
 
 
+def _escape_docstring(docstring: str) -> str:
+    """Escape `docstring` for use between triple double quotes.
+
+    Escapes every backslash, and every double quote that would close the literal: one followed by two more double
+    quotes, or the last character.
+    """
+    escaped = docstring.replace('\\', '\\\\')
+    return re.sub(r'"(?=""|\Z)', r'\\"', escaped)
+
+
 def fix_discriminators(content: str) -> str:
     """Replace camelCase discriminator values with their snake_case equivalents."""
     for camel, snake in DISCRIMINATOR_FIXES.items():
@@ -156,12 +166,18 @@ def convert_enums_to_literals(content: str) -> str:
             new_lines.extend(f'    {v!r},' for v in values)
             new_lines.append('] | str')
         if docstring is not None:
+            escaped = _escape_docstring(docstring)
             if '\n' in docstring:
-                new_lines.append('"""')
-                new_lines.extend(docstring.splitlines())
-                new_lines.append('"""')
+                docstring_lines = ['"""', *escaped.split('\n'), '"""']
+                expected = f'\n{docstring}\n'
             else:
-                new_lines.append(f'"""{docstring}"""')
+                docstring_lines = [f'"""{escaped}"""']
+                expected = docstring
+            # The docstring text comes from the downloaded specification, so never emit a literal that reads back as
+            # anything else.
+            if ast.literal_eval('\n'.join(docstring_lines)) != expected:
+                raise ValueError(f'Cannot emit the docstring of {node.name} as a string literal: {docstring!r}')
+            new_lines.extend(docstring_lines)
 
         assert node.end_lineno is not None  # noqa: S101
         replacements.append((node.lineno - 1, node.end_lineno, new_lines))

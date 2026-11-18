@@ -39,7 +39,7 @@ from apify_client._models import (
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.errors import catch_not_found_or_throw
-from apify_client._utils.http import response_to_dict, to_path_segment
+from apify_client._utils.http import response_to_dict, to_path_segment, validate_response
 from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 
@@ -134,7 +134,7 @@ class RequestQueueClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return RequestQueueResponse.model_validate(result).data
+        return validate_response(RequestQueueResponse, result).data
 
     def update(
         self,
@@ -158,7 +158,7 @@ class RequestQueueClient(ResourceClient):
             The updated request queue.
         """
         result = self._update(timeout=timeout, name=name, title=title, generalAccess=general_access)
-        return RequestQueueResponse.model_validate(result).data
+        return validate_response(RequestQueueResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the request queue.
@@ -192,7 +192,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return RequestQueueHeadResponse.model_validate(result).data
+        return validate_response(RequestQueueHeadResponse, result).data
 
     def list_and_lock_head(
         self,
@@ -227,7 +227,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return LockedRequestQueueHeadResponse.model_validate(result).data
+        return validate_response(LockedRequestQueueHeadResponse, result).data
 
     def add_request(
         self,
@@ -262,7 +262,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return AddRequestResponse.model_validate(result).data
+        return validate_response(AddRequestResponse, result).data
 
     def get_request(self, request_id: str, *, timeout: Timeout = 'short') -> RequestResource | None:
         """Retrieve a request from the queue.
@@ -284,7 +284,7 @@ class RequestQueueClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return RequestResponse.model_validate(result).data
+            return validate_response(RequestResponse, result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -330,7 +330,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return AddRequestResponse.model_validate(result).data
+        return validate_response(AddRequestResponse, result).data
 
     def delete_request(self, request_id: str, *, timeout: Timeout = 'short') -> None:
         """Delete a request from the queue.
@@ -384,7 +384,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return ProlongRequestLockResponse.model_validate(result).data
+        return validate_response(ProlongRequestLockResponse, result).data
 
     def delete_request_lock(
         self,
@@ -481,7 +481,7 @@ class RequestQueueClient(ResourceClient):
             )
 
             result = response_to_dict(response)
-            batch_response = BatchAddResponse.model_validate(result)
+            batch_response = validate_response(BatchAddResponse, result)
             processed_requests.extend(batch_response.data.processed_requests)
             unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
@@ -528,7 +528,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return BatchDeleteResponse.model_validate(result).data
+        return validate_response(BatchDeleteResponse, result).data
 
     def list_requests(
         self,
@@ -563,7 +563,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return ListOfRequestsResponse.model_validate(result).data
+        return validate_response(ListOfRequestsResponse, result).data
 
     def iterate_requests(
         self,
@@ -624,7 +624,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return UnlockRequestsResponse.model_validate(result).data
+        return validate_response(UnlockRequestsResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -669,7 +669,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return RequestQueueResponse.model_validate(result).data
+        return validate_response(RequestQueueResponse, result).data
 
     async def update(
         self,
@@ -693,7 +693,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             The updated request queue.
         """
         result = await self._update(timeout=timeout, name=name, title=title, generalAccess=general_access)
-        return RequestQueueResponse.model_validate(result).data
+        return validate_response(RequestQueueResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the request queue.
@@ -727,7 +727,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return RequestQueueHeadResponse.model_validate(result).data
+        return validate_response(RequestQueueHeadResponse, result).data
 
     async def list_and_lock_head(
         self,
@@ -762,7 +762,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return LockedRequestQueueHeadResponse.model_validate(result).data
+        return validate_response(LockedRequestQueueHeadResponse, result).data
 
     async def add_request(
         self,
@@ -797,7 +797,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return AddRequestResponse.model_validate(result).data
+        return validate_response(AddRequestResponse, result).data
 
     async def get_request(self, request_id: str, *, timeout: Timeout = 'short') -> RequestResource | None:
         """Retrieve a request from the queue.
@@ -819,7 +819,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return RequestResponse.model_validate(result).data
+            return validate_response(RequestResponse, result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -863,7 +863,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return AddRequestResponse.model_validate(result).data
+        return validate_response(AddRequestResponse, result).data
 
     async def delete_request(self, request_id: str, *, timeout: Timeout = 'short') -> None:
         """Delete a request from the queue.
@@ -915,7 +915,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return ProlongRequestLockResponse.model_validate(result).data
+        return validate_response(ProlongRequestLockResponse, result).data
 
     async def delete_request_lock(
         self,
@@ -977,7 +977,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 )
 
                 result = response_to_dict(response)
-                batch_response = BatchAddResponse.model_validate(result)
+                batch_response = validate_response(BatchAddResponse, result)
                 processed_requests.extend(batch_response.data.processed_requests)
                 unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
@@ -1113,7 +1113,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return BatchDeleteResponse.model_validate(result).data
+        return validate_response(BatchDeleteResponse, result).data
 
     async def list_requests(
         self,
@@ -1148,7 +1148,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return ListOfRequestsResponse.model_validate(result).data
+        return validate_response(ListOfRequestsResponse, result).data
 
     def iterate_requests(
         self,
@@ -1213,4 +1213,4 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return UnlockRequestsResponse.model_validate(result).data
+        return validate_response(UnlockRequestsResponse, result).data

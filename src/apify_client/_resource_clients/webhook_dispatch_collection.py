@@ -6,6 +6,7 @@ from apify_client._docs import docs_group
 from apify_client._models import ListOfWebhookDispatches, ListOfWebhookDispatchesResponse
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -55,7 +56,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
             The retrieved webhook dispatches of a user.
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfWebhookDispatchesResponse.model_validate(result).data
+        return validate_response(ListOfWebhookDispatchesResponse, result).data
 
     def iterate(
         self,
@@ -131,7 +132,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
             The retrieved webhook dispatches of a user.
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfWebhookDispatchesResponse.model_validate(result).data
+        return validate_response(ListOfWebhookDispatchesResponse, result).data
 
     def iterate(
         self,

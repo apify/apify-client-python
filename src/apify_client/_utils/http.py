@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import quote, urlsplit
+
+from pydantic import BaseModel, ValidationError
 
 from apify_client._consts import (
     ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES,
@@ -12,10 +14,16 @@ from apify_client._consts import (
     COMPRESSIBLE_MEDIA_TYPES,
     OVERRIDABLE_DEFAULT_HEADERS,
 )
-from apify_client.errors import InvalidResponseBodyError
+from apify_client._logging import log_context
+from apify_client.errors import InvalidResponseBodyError, ResponseValidationError
 
 if TYPE_CHECKING:
+    from pydantic_core import InitErrorDetails
+
     from apify_client.http_clients import HttpResponse
+
+
+_ModelT = TypeVar('_ModelT', bound=BaseModel)
 
 
 def to_safe_id(id: str) -> str:
@@ -132,6 +140,37 @@ def response_to_dict(response: HttpResponse) -> dict:
         return data
 
     raise ValueError(f'The response is not a dictionary. Got: {type(data).__name__}')
+
+
+def validate_response(model: type[_ModelT], data: Any) -> _ModelT:
+    """Validate a parsed API response body against a model.
+
+    The HTTP method and URL reported on failure are those of the request the current thread or task sent last, which
+    is the request the validated body came from.
+
+    Args:
+        model: The model the response body is expected to match.
+        data: The parsed response body.
+
+    Returns:
+        The validated model instance.
+
+    Raises:
+        ResponseValidationError: If the response body does not match the model.
+    """
+    try:
+        return model.model_validate(data)
+    except ValidationError as exc:
+        # The details `errors()` returns are accepted as input details, only their declared types differ.
+        line_errors = cast('list[InitErrorDetails]', exc.errors(include_url=False))
+        error = ResponseValidationError.from_exception_data(exc.title, line_errors)
+
+        error.method = log_context.method.get()
+        url = log_context.url.get()
+        if url is not None:
+            error.url = urlsplit(url)._replace(query='', fragment='').geturl()
+
+        raise error from exc
 
 
 def response_to_list(response: HttpResponse) -> list:

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, validate_response
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -53,7 +53,7 @@ class BuildClient(ResourceClient):
         result = self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
-        return BuildResponse.model_validate(result).data
+        return validate_response(BuildResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the build.
@@ -83,7 +83,7 @@ class BuildClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return BuildResponse.model_validate(result).data
+        return validate_response(BuildResponse, result).data
 
     def get_open_api_definition(self, *, timeout: Timeout = 'medium') -> dict:
         """Return OpenAPI definition of the Actor's build.
@@ -122,7 +122,7 @@ class BuildClient(ResourceClient):
             wait_duration=wait_duration,
             timeout=timeout,
         )
-        return Build.model_validate(result) if result is not None else None
+        return validate_response(Build, result) if result is not None else None
 
     def log(self) -> LogClient:
         """Get the client for the log of the Actor build.
@@ -177,7 +177,7 @@ class BuildClientAsync(ResourceClientAsync):
         result = await self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
-        return BuildResponse.model_validate(result).data
+        return validate_response(BuildResponse, result).data
 
     async def abort(self, *, timeout: Timeout = 'short') -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
@@ -197,7 +197,7 @@ class BuildClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return BuildResponse.model_validate(result).data
+        return validate_response(BuildResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the build.
@@ -246,7 +246,7 @@ class BuildClientAsync(ResourceClientAsync):
             wait_duration=wait_duration,
             timeout=timeout,
         )
-        return Build.model_validate(result) if result is not None else None
+        return validate_response(Build, result) if result is not None else None
 
     def log(self) -> LogClientAsync:
         """Get the client for the log of the Actor build.

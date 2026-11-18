@@ -14,7 +14,7 @@ from apify_client._models import (
     WebhookResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, validate_response
 
 if TYPE_CHECKING:
     from apify_client._literals import WebhookEventType
@@ -57,7 +57,7 @@ class WebhookClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return WebhookResponse.model_validate(result).data
+        return validate_response(WebhookResponse, result).data
 
     def update(
         self,
@@ -117,7 +117,7 @@ class WebhookClient(ResourceClient):
             ),
         )
         result = self._update(timeout=timeout, **webhook_update.model_dump(by_alias=True, exclude_none=True))
-        return WebhookResponse.model_validate(result).data
+        return validate_response(WebhookResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the webhook.
@@ -153,7 +153,7 @@ class WebhookClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return WebhookDispatchResponse.model_validate(result).data
+        return validate_response(WebhookDispatchResponse, result).data
 
     def dispatches(self) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.
@@ -204,7 +204,7 @@ class WebhookClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return WebhookResponse.model_validate(result).data
+        return validate_response(WebhookResponse, result).data
 
     async def update(
         self,
@@ -264,7 +264,7 @@ class WebhookClientAsync(ResourceClientAsync):
             ),
         )
         result = await self._update(timeout=timeout, **webhook_update.model_dump(by_alias=True, exclude_none=True))
-        return WebhookResponse.model_validate(result).data
+        return validate_response(WebhookResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the webhook.
@@ -300,7 +300,7 @@ class WebhookClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return WebhookDispatchResponse.model_validate(result).data
+        return validate_response(WebhookDispatchResponse, result).data
 
     def dispatches(self) -> WebhookDispatchCollectionClientAsync:
         """Get dispatches of the webhook.

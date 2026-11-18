@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import ActorResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils.http import merge_headers, response_to_dict
+from apify_client._utils.http import merge_headers, response_to_dict, validate_response
 from apify_client.errors import ApifyClientError
 from apify_client.http_compressors._resolve import resolve_compressor
 
@@ -239,7 +239,7 @@ class ActorServerClient(ResourceClient):
             The Actor and the URL of its server.
         """
         response = self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
-        actor = ActorResponse.model_validate(response_to_dict(response)).data
+        actor = validate_response(ActorResponse, response_to_dict(response)).data
         url = actor.standby_url
         if url is None:
             raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
@@ -442,7 +442,7 @@ class ActorServerClientAsync(ResourceClientAsync):
             The Actor and the URL of its server.
         """
         response = await self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
-        actor = ActorResponse.model_validate(response_to_dict(response)).data
+        actor = validate_response(ActorResponse, response_to_dict(response)).data
         url = actor.standby_url
         if url is None:
             raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')

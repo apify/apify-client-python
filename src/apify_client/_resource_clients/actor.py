@@ -24,7 +24,7 @@ from apify_client._models import (
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, validate_response
 from apify_client._utils.server_args import build_actor_standby
 from apify_client._utils.time import to_seconds
 from apify_client._utils.wait_for_resources import (
@@ -104,7 +104,7 @@ class ActorClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return ActorResponse.model_validate(result).data
+        return validate_response(ActorResponse, result).data
 
     def update(
         self,
@@ -264,7 +264,7 @@ class ActorClient(ResourceClient):
             tagged_builds=tagged_builds,
         )
         result = self._update(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
-        return ActorResponse.model_validate(result).data
+        return validate_response(ActorResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor.
@@ -368,7 +368,7 @@ class ActorClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def call(
         self,
@@ -522,7 +522,7 @@ class ActorClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return BuildResponse.model_validate(result).data
+        return validate_response(BuildResponse, result).data
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -751,7 +751,7 @@ class ActorClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return ActorResponse.model_validate(result).data
+        return validate_response(ActorResponse, result).data
 
     async def update(
         self,
@@ -911,7 +911,7 @@ class ActorClientAsync(ResourceClientAsync):
             tagged_builds=tagged_builds,
         )
         result = await self._update(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
-        return ActorResponse.model_validate(result).data
+        return validate_response(ActorResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor.
@@ -1015,7 +1015,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def call(
         self,
@@ -1170,7 +1170,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return BuildResponse.model_validate(result).data
+        return validate_response(BuildResponse, result).data
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""

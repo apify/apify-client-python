@@ -14,6 +14,7 @@ from apify_client._models import (
     VersionResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from apify_client._literals import VersionSourceType
@@ -63,7 +64,7 @@ class ActorVersionClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return VersionResponse.model_validate(result).data
+        return validate_response(VersionResponse, result).data
 
     def update(
         self,
@@ -121,7 +122,7 @@ class ActorVersionClient(ResourceClient):
             actor_path=actor_path,
         )
         result = self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
-        return VersionResponse.model_validate(result).data
+        return validate_response(VersionResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor version.
@@ -187,7 +188,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return VersionResponse.model_validate(result).data
+        return validate_response(VersionResponse, result).data
 
     async def update(
         self,
@@ -245,7 +246,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             actor_path=actor_path,
         )
         result = await self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
-        return VersionResponse.model_validate(result).data
+        return validate_response(VersionResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor version.

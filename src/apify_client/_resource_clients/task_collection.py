@@ -15,6 +15,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 from apify_client._utils.server_args import build_actor_standby
 from apify_client._utils.time import to_seconds
 
@@ -69,7 +70,7 @@ class TaskCollectionClient(ResourceClient):
             The list of available tasks matching the specified filters.
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfTasksResponse.model_validate(result).data
+        return validate_response(ListOfTasksResponse, result).data
 
     def iterate(
         self,
@@ -227,7 +228,7 @@ class TaskCollectionClient(ResourceClient):
             ),
         )
         result = self._create(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
-        return TaskResponse.model_validate(result).data
+        return validate_response(TaskResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -271,7 +272,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             The list of available tasks matching the specified filters.
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfTasksResponse.model_validate(result).data
+        return validate_response(ListOfTasksResponse, result).data
 
     def iterate(
         self,
@@ -429,4 +430,4 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             ),
         )
         result = await self._create(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
-        return TaskResponse.model_validate(result).data
+        return validate_response(TaskResponse, result).data

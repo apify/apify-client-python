@@ -15,7 +15,7 @@ from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES, 
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
 from apify_client._utils.encoding import encode_key_value_store_record_value
-from apify_client._utils.http import response_to_dict, to_safe_id
+from apify_client._utils.http import response_to_dict, to_safe_id, validate_response
 from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ class RunClient(ResourceClient):
         result = self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def update(
         self,
@@ -106,7 +106,7 @@ class RunClient(ResourceClient):
             isStatusMessageTerminal=is_status_message_terminal,
             generalAccess=general_access,
         )
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the run.
@@ -139,7 +139,7 @@ class RunClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def wait_for_finish(
         self,
@@ -167,7 +167,7 @@ class RunClient(ResourceClient):
         if response is None:
             return None
 
-        return Run.model_validate(response)
+        return validate_response(Run, response)
 
     def metamorph(
         self,
@@ -213,7 +213,7 @@ class RunClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def resurrect(
         self,
@@ -268,7 +268,7 @@ class RunClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def reboot(self, *, timeout: Timeout = 'medium') -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -287,7 +287,7 @@ class RunClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -638,7 +638,7 @@ class RunClientAsync(ResourceClientAsync):
         result = await self._get(timeout=request_timeout, waitForFinish=wait_for_finish_secs)
         if result is None:
             return None
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def update(
         self,
@@ -667,7 +667,7 @@ class RunClientAsync(ResourceClientAsync):
             isStatusMessageTerminal=is_status_message_terminal,
             generalAccess=general_access,
         )
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'medium') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
@@ -690,7 +690,7 @@ class RunClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def wait_for_finish(
         self,
@@ -714,7 +714,7 @@ class RunClientAsync(ResourceClientAsync):
             wait_duration=wait_duration,
             timeout=timeout,
         )
-        return Run.model_validate(response) if response is not None else None
+        return validate_response(Run, response) if response is not None else None
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the run.
@@ -773,7 +773,7 @@ class RunClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def resurrect(
         self,
@@ -828,7 +828,7 @@ class RunClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def reboot(self, *, timeout: Timeout = 'medium') -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -847,7 +847,7 @@ class RunClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.

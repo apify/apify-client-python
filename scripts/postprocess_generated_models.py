@@ -25,6 +25,7 @@ Applied to `_typeddicts.py`:
 from __future__ import annotations
 
 import ast
+import keyword
 import re
 import subprocess
 from pathlib import Path
@@ -102,6 +103,16 @@ def _base_names(node: ast.ClassDef) -> set[str]:
     return {b.id for b in node.bases if isinstance(b, ast.Name)}
 
 
+def _escape_docstring(docstring: str) -> str:
+    """Escape `docstring` for use between triple double quotes.
+
+    Escapes every backslash, every NUL byte (Python source cannot contain one), and every double quote that would
+    close the literal: one followed by two more double quotes, or the last character.
+    """
+    escaped = docstring.replace('\\', '\\\\').replace('\0', '\\x00')
+    return re.sub(r'"(?=""|\Z)', r'\\"', escaped)
+
+
 def fix_discriminators(content: str) -> str:
     """Replace camelCase discriminator values with their snake_case equivalents."""
     for camel, snake in DISCRIMINATOR_FIXES.items():
@@ -156,12 +167,18 @@ def convert_enums_to_literals(content: str) -> str:
             new_lines.extend(f'    {v!r},' for v in values)
             new_lines.append('] | str')
         if docstring is not None:
+            escaped = _escape_docstring(docstring)
             if '\n' in docstring:
-                new_lines.append('"""')
-                new_lines.extend(docstring.splitlines())
-                new_lines.append('"""')
+                docstring_lines = ['"""', *escaped.split('\n'), '"""']
+                expected = f'\n{docstring}\n'
             else:
-                new_lines.append(f'"""{docstring}"""')
+                docstring_lines = [f'"""{escaped}"""']
+                expected = docstring
+            # The docstring text comes from the downloaded specification, so check that the emitted literal reads back
+            # as the docstring value.
+            if ast.literal_eval('\n'.join(docstring_lines)) != expected:
+                raise ValueError(f'Cannot emit the docstring of {node.name} as a string literal: {docstring!r}')
+            new_lines.extend(docstring_lines)
 
         assert node.end_lineno is not None  # noqa: S101
         replacements.append((node.lineno - 1, node.end_lineno, new_lines))
@@ -518,6 +535,10 @@ def _rename_fields_in_class_block(block: list[str], field_aliases: dict[str, str
     Matches lines of the form `<indent><snake_ident>:` and substitutes the identifier when an alias is present.
     Multi-line annotations and trailing default values are preserved verbatim because only the field name
     on the first line is replaced.
+
+    Raises:
+        ValueError: If an alias is not a valid Python identifier. Aliases come from the downloaded specification and
+            are written into the generated source as field names.
     """
     field_decl = re.compile(r'^(\s+)([a-z_][a-z0-9_]*)(\s*:)')
     out: list[str] = []
@@ -531,6 +552,8 @@ def _rename_fields_in_class_block(block: list[str], field_aliases: dict[str, str
         if api_name is None or api_name == name:
             out.append(line)
             continue
+        if not api_name.isidentifier() or keyword.iskeyword(api_name):
+            raise ValueError(f'Cannot emit the alias of field {name} as a field name: {api_name!r}')
         out.append(f'{indent}{api_name}{colon}{line[m.end() :]}')
     return out
 

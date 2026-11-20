@@ -9,7 +9,7 @@ from apify_client._models import DatasetResource, DatasetResponse, DatasetStatis
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.crypto import create_storage_content_signature
-from apify_client._utils.http import response_to_dict, response_to_list
+from apify_client._utils.http import response_to_dict, response_to_list, validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
@@ -84,7 +84,7 @@ class DatasetClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return DatasetResponse.model_validate(result).data
+        return validate_response(DatasetResponse, result).data
 
     def update(
         self,
@@ -113,7 +113,7 @@ class DatasetClient(ResourceClient):
             title=title,
             generalAccess=general_access,
         )
-        return DatasetResponse.model_validate(result).data
+        return validate_response(DatasetResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the dataset.
@@ -559,7 +559,7 @@ class DatasetClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return DatasetStatisticsResponse.model_validate(result).data
+        return validate_response(DatasetStatisticsResponse, result).data
 
     def create_items_public_url(
         self,
@@ -677,7 +677,7 @@ class DatasetClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return DatasetResponse.model_validate(result).data
+        return validate_response(DatasetResponse, result).data
 
     async def update(
         self,
@@ -706,7 +706,7 @@ class DatasetClientAsync(ResourceClientAsync):
             title=title,
             generalAccess=general_access,
         )
-        return DatasetResponse.model_validate(result).data
+        return validate_response(DatasetResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the dataset.
@@ -1154,7 +1154,7 @@ class DatasetClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return DatasetStatisticsResponse.model_validate(result).data
+        return validate_response(DatasetStatisticsResponse, result).data
 
     async def create_items_public_url(
         self,

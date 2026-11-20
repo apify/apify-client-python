@@ -16,6 +16,7 @@ from apify_client._models import (
     VersionResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -58,7 +59,7 @@ class ActorVersionCollectionClient(ResourceClient):
             The list of available Actor versions.
         """
         result = self._list(timeout=timeout)
-        return ListOfVersionsResponse.model_validate(result).data
+        return validate_response(ListOfVersionsResponse, result).data
 
     def iterate(self, *, timeout: Timeout = 'short') -> Iterator[Version]:
         """Iterate over the available Actor versions.
@@ -135,7 +136,7 @@ class ActorVersionCollectionClient(ResourceClient):
             actor_path=actor_path,
         )
         result = self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
-        return VersionResponse.model_validate(result).data
+        return validate_response(VersionResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -169,7 +170,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             The list of available Actor versions.
         """
         result = await self._list(timeout=timeout)
-        return ListOfVersionsResponse.model_validate(result).data
+        return validate_response(ListOfVersionsResponse, result).data
 
     async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[Version]:
         """Iterate over the available Actor versions.
@@ -247,4 +248,4 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             actor_path=actor_path,
         )
         result = await self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
-        return VersionResponse.model_validate(result).data
+        return validate_response(VersionResponse, result).data

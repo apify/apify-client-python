@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -43,7 +44,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             The list of available Actor environment variables.
         """
         result = self._list(timeout=timeout)
-        return ListOfEnvVarsResponse.model_validate(result).data
+        return validate_response(ListOfEnvVarsResponse, result).data
 
     def iterate(self, *, timeout: Timeout = 'short') -> Iterator[EnvVar]:
         """Iterate over the available Actor environment variables.
@@ -88,7 +89,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             timeout=timeout,
             **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True),
         )
-        return EnvVarResponse.model_validate(result).data
+        return validate_response(EnvVarResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -122,7 +123,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             The list of available Actor environment variables.
         """
         result = await self._list(timeout=timeout)
-        return ListOfEnvVarsResponse.model_validate(result).data
+        return validate_response(ListOfEnvVarsResponse, result).data
 
     async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[EnvVar]:
         """Iterate over the available Actor environment variables.
@@ -168,4 +169,4 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             timeout=timeout,
             **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True),
         )
-        return EnvVarResponse.model_validate(result).data
+        return validate_response(EnvVarResponse, result).data

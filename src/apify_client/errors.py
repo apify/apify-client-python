@@ -4,6 +4,8 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
+from pydantic import ValidationError
+
 from apify_client._docs import docs_group
 
 if TYPE_CHECKING:
@@ -161,6 +163,34 @@ class InvalidResponseBodyError(ApifyClientError, ValueError):
         self.response = response
 
 
+@docs_group('Errors')
+class ResponseValidationError(ApifyClientError, ValidationError):
+    """Error raised when an API response does not match the expected model.
+
+    This usually means the API returned a shape the client does not know yet, for example after the API changed ahead
+    of the client. It subclasses `pydantic.ValidationError`, so `errors()` lists the individual mismatches and an
+    `except pydantic.ValidationError` or `except ValueError` handler catches it too. The original validation error is
+    available as `__cause__`.
+
+    Attributes:
+        http_method: The HTTP method of the request whose response failed validation (if available).
+        url: The URL of that request, without query parameters (if available).
+    """
+
+    http_method: str | None = None
+    url: str | None = None
+
+    def __str__(self) -> str:
+        """Describe the failed request and list the validation errors."""
+        request = ' '.join(part for part in (self.http_method, self.url) if part)
+        of_request = f' of {request}' if request else ''
+        return (
+            f'The API response{of_request} did not match the expected schema. This is likely a mismatch between the '
+            'client and the API; please report it at https://github.com/apify/apify-client-python/issues.\n\n'
+            f'{super().__str__()}'
+        )
+
+
 _STATUS_TO_CLASS: dict[int, type[ApifyApiError]] = {
     400: InvalidRequestError,
     401: UnauthorizedError,
@@ -180,6 +210,7 @@ __all__ = [
     'InvalidResponseBodyError',
     'NotFoundError',
     'RateLimitError',
+    'ResponseValidationError',
     'ServerError',
     'UnauthorizedError',
 ]

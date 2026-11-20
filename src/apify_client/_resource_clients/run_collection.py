@@ -6,6 +6,7 @@ from apify_client._docs import docs_group
 from apify_client._models import ListOfRuns, ListOfRunsResponse
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -77,7 +78,7 @@ class RunCollectionClient(ResourceClient):
             startedBefore=started_before,
             startedAfter=started_after,
         )
-        return ListOfRunsResponse.model_validate(result).data
+        return validate_response(ListOfRunsResponse, result).data
 
     def iterate(
         self,
@@ -188,7 +189,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
             startedBefore=started_before,
             startedAfter=started_after,
         )
-        return ListOfRunsResponse.model_validate(result).data
+        return validate_response(ListOfRunsResponse, result).data
 
     def iterate(
         self,

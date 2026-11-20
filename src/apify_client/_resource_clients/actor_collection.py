@@ -14,6 +14,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 from apify_client._utils.server_args import build_actor_standby
 from apify_client._utils.time import to_seconds
 
@@ -71,7 +72,7 @@ class ActorCollectionClient(ResourceClient):
             The list of available Actors matching the specified filters.
         """
         result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
-        return ListOfActorsResponse.model_validate(result).data
+        return validate_response(ListOfActorsResponse, result).data
 
     def iterate(
         self,
@@ -259,7 +260,7 @@ class ActorCollectionClient(ResourceClient):
             ),
         )
         result = self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
-        return ActorResponse.model_validate(result).data
+        return validate_response(ActorResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -307,7 +308,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             The list of available Actors matching the specified filters.
         """
         result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
-        return ListOfActorsResponse.model_validate(result).data
+        return validate_response(ListOfActorsResponse, result).data
 
     def iterate(
         self,
@@ -495,4 +496,4 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             ),
         )
         result = await self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
-        return ActorResponse.model_validate(result).data
+        return validate_response(ActorResponse, result).data

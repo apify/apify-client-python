@@ -16,7 +16,7 @@ from apify_client._models import (
     UserPublicInfoResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, validate_response
 
 if TYPE_CHECKING:
     from apify_client.types import Timeout
@@ -59,10 +59,11 @@ class UserClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
+        # A response that does not fit the private model falls back to the public one, so a failure here is expected.
         try:
             return UserPrivateInfoResponse.model_validate(result).data
         except ValidationError:
-            return UserPublicInfoResponse.model_validate(result).data
+            return validate_response(UserPublicInfoResponse, result).data
 
     def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage:
         """Return monthly usage of the user account.
@@ -89,7 +90,7 @@ class UserClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return MonthlyUsageResponse.model_validate(result).data
+        return validate_response(MonthlyUsageResponse, result).data
 
     def limits(self, *, timeout: Timeout = 'short') -> AccountLimits:
         """Return a complete summary of the user account's limits.
@@ -115,7 +116,7 @@ class UserClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return AccountLimitsResponse.model_validate(result).data
+        return validate_response(AccountLimitsResponse, result).data
 
     def update_limits(
         self,
@@ -182,10 +183,11 @@ class UserClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
+        # A response that does not fit the private model falls back to the public one, so a failure here is expected.
         try:
             return UserPrivateInfoResponse.model_validate(result).data
         except ValidationError:
-            return UserPublicInfoResponse.model_validate(result).data
+            return validate_response(UserPublicInfoResponse, result).data
 
     async def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage:
         """Return monthly usage of the user account.
@@ -212,7 +214,7 @@ class UserClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return MonthlyUsageResponse.model_validate(result).data
+        return validate_response(MonthlyUsageResponse, result).data
 
     async def limits(self, *, timeout: Timeout = 'short') -> AccountLimits:
         """Return a complete summary of the user account's limits.
@@ -238,7 +240,7 @@ class UserClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return AccountLimitsResponse.model_validate(result).data
+        return validate_response(AccountLimitsResponse, result).data
 
     async def update_limits(
         self,

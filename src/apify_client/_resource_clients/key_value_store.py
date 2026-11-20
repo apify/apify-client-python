@@ -18,7 +18,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 from apify_client._utils.encoding import encode_key_value_store_record_value
 from apify_client._utils.errors import catch_not_found_or_throw
-from apify_client._utils.http import response_to_dict, to_path_segment
+from apify_client._utils.http import response_to_dict, to_path_segment, validate_response
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -103,7 +103,7 @@ class KeyValueStoreClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return KeyValueStoreResponse.model_validate(result).data
+        return validate_response(KeyValueStoreResponse, result).data
 
     def update(
         self,
@@ -127,7 +127,7 @@ class KeyValueStoreClient(ResourceClient):
             The updated key-value store.
         """
         result = self._update(timeout=timeout, name=name, title=title, generalAccess=general_access)
-        return KeyValueStoreResponse.model_validate(result).data
+        return validate_response(KeyValueStoreResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the key-value store.
@@ -180,7 +180,7 @@ class KeyValueStoreClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return ListOfKeysResponse.model_validate(result).data
+        return validate_response(ListOfKeysResponse, result).data
 
     def iterate_keys(
         self,
@@ -545,7 +545,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return KeyValueStoreResponse.model_validate(result).data
+        return validate_response(KeyValueStoreResponse, result).data
 
     async def update(
         self,
@@ -569,7 +569,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The updated key-value store.
         """
         result = await self._update(timeout=timeout, name=name, title=title, generalAccess=general_access)
-        return KeyValueStoreResponse.model_validate(result).data
+        return validate_response(KeyValueStoreResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the key-value store.
@@ -622,7 +622,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return ListOfKeysResponse.model_validate(result).data
+        return validate_response(ListOfKeysResponse, result).data
 
     def iterate_keys(
         self,

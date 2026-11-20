@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import WebhookDispatch, WebhookDispatchResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from apify_client.types import Timeout
@@ -45,7 +46,7 @@ class WebhookDispatchClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return WebhookDispatchResponse.model_validate(result).data
+        return validate_response(WebhookDispatchResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -83,4 +84,4 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return WebhookDispatchResponse.model_validate(result).data
+        return validate_response(WebhookDispatchResponse, result).data

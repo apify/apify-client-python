@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from apify_client.types import Timeout
@@ -45,7 +46,7 @@ class ActorEnvVarClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return EnvVarResponse.model_validate(result).data
+        return validate_response(EnvVarResponse, result).data
 
     def update(
         self,
@@ -72,7 +73,7 @@ class ActorEnvVarClient(ResourceClient):
             timeout=timeout,
             **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True),
         )
-        return EnvVarResponse.model_validate(result).data
+        return validate_response(EnvVarResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor environment variable.
@@ -120,7 +121,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return EnvVarResponse.model_validate(result).data
+        return validate_response(EnvVarResponse, result).data
 
     async def update(
         self,
@@ -147,7 +148,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             timeout=timeout,
             **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True),
         )
-        return EnvVarResponse.model_validate(result).data
+        return validate_response(EnvVarResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor environment variable.

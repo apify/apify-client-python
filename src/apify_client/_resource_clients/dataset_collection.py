@@ -11,6 +11,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -73,7 +74,7 @@ class DatasetCollectionClient(ResourceClient):
             desc=desc,
             ownership=ownership,
         )
-        return ListOfDatasetsResponse.model_validate(result).data
+        return validate_response(ListOfDatasetsResponse, result).data
 
     def iterate(
         self,
@@ -134,7 +135,7 @@ class DatasetCollectionClient(ResourceClient):
             The retrieved or newly-created dataset.
         """
         result = self._get_or_create(timeout=timeout, name=name, resource_fields={'schema': schema})
-        return DatasetResponse.model_validate(result).data
+        return validate_response(DatasetResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -190,7 +191,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             desc=desc,
             ownership=ownership,
         )
-        return ListOfDatasetsResponse.model_validate(result).data
+        return validate_response(ListOfDatasetsResponse, result).data
 
     def iterate(
         self,
@@ -251,4 +252,4 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             The retrieved or newly-created dataset.
         """
         result = await self._get_or_create(timeout=timeout, name=name, resource_fields={'schema': schema})
-        return DatasetResponse.model_validate(result).data
+        return validate_response(DatasetResponse, result).data

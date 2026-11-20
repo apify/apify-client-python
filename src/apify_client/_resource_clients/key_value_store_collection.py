@@ -12,6 +12,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -73,7 +74,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
             desc=desc,
             ownership=ownership,
         )
-        return ListOfKeyValueStoresResponse.model_validate(result).data
+        return validate_response(ListOfKeyValueStoresResponse, result).data
 
     def iterate(
         self,
@@ -134,7 +135,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
             The retrieved or newly-created key-value store.
         """
         result = self._get_or_create(timeout=timeout, name=name, resource_fields={'schema': schema})
-        return KeyValueStoreResponse.model_validate(result).data
+        return validate_response(KeyValueStoreResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -190,7 +191,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             desc=desc,
             ownership=ownership,
         )
-        return ListOfKeyValueStoresResponse.model_validate(result).data
+        return validate_response(ListOfKeyValueStoresResponse, result).data
 
     def iterate(
         self,
@@ -251,4 +252,4 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             The retrieved or newly-created key-value store.
         """
         result = await self._get_or_create(timeout=timeout, name=name, resource_fields={'schema': schema})
-        return KeyValueStoreResponse.model_validate(result).data
+        return validate_response(KeyValueStoreResponse, result).data

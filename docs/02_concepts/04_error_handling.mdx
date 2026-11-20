@@ -43,4 +43,8 @@ All subclasses inherit from <ApiLink to="class/ApifyApiError">`ApifyApiError`</A
     </TabItem>
 </Tabs>
 
+## Response validation errors
+
+The client validates every API response against its model. When a response does not match, for example because the API changed ahead of the client, it raises a <ApiLink to="class/ResponseValidationError">`ResponseValidationError`</ApiLink> instead of a bare `pydantic.ValidationError`. It inherits from <ApiLink to="class/ApifyClientError">`ApifyClientError`</ApiLink>, so a handler for client errors catches it. It also inherits from `pydantic.ValidationError`, so `errors()` lists the individual mismatches and an existing `except pydantic.ValidationError` or `except ValueError` handler keeps working. The `http_method` and `url` attributes name the request whose response failed, and `__cause__` holds the original validation error.
+
 For a complete list of error classes, see the <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> reference.

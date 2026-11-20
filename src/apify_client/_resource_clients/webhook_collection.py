@@ -12,6 +12,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -62,7 +63,7 @@ class WebhookCollectionClient(ResourceClient):
             The list of available webhooks matching the specified filters.
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfWebhooksResponse.model_validate(result).data
+        return validate_response(ListOfWebhooksResponse, result).data
 
     def iterate(
         self,
@@ -160,7 +161,7 @@ class WebhookCollectionClient(ResourceClient):
             ),
         )
         result = self._create(timeout=timeout, **webhook_create.model_dump(by_alias=True, exclude_none=True))
-        return WebhookResponse.model_validate(result).data
+        return validate_response(WebhookResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -204,7 +205,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             The list of available webhooks matching the specified filters.
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfWebhooksResponse.model_validate(result).data
+        return validate_response(ListOfWebhooksResponse, result).data
 
     def iterate(
         self,
@@ -302,4 +303,4 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             ),
         )
         result = await self._create(timeout=timeout, **webhook_create.model_dump(by_alias=True, exclude_none=True))
-        return WebhookResponse.model_validate(result).data
+        return validate_response(WebhookResponse, result).data

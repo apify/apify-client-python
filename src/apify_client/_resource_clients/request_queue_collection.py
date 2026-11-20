@@ -11,6 +11,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -73,7 +74,7 @@ class RequestQueueCollectionClient(ResourceClient):
             desc=desc,
             ownership=ownership,
         )
-        return ListOfRequestQueuesResponse.model_validate(result).data
+        return validate_response(ListOfRequestQueuesResponse, result).data
 
     def iterate(
         self,
@@ -132,7 +133,7 @@ class RequestQueueCollectionClient(ResourceClient):
             The retrieved or newly-created request queue.
         """
         result = self._get_or_create(timeout=timeout, name=name)
-        return RequestQueueResponse.model_validate(result).data
+        return validate_response(RequestQueueResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -188,7 +189,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             desc=desc,
             ownership=ownership,
         )
-        return ListOfRequestQueuesResponse.model_validate(result).data
+        return validate_response(ListOfRequestQueuesResponse, result).data
 
     def iterate(
         self,
@@ -247,4 +248,4 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             The retrieved or newly-created request queue.
         """
         result = await self._get_or_create(timeout=timeout, name=name)
-        return RequestQueueResponse.model_validate(result).data
+        return validate_response(RequestQueueResponse, result).data

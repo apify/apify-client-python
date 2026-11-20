@@ -12,7 +12,7 @@ from apify_client._models import (
     ScheduleResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, validate_response
 
 if TYPE_CHECKING:
     from apify_client.types import Timeout
@@ -53,7 +53,7 @@ class ScheduleClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return ScheduleResponse.model_validate(result).data
+        return validate_response(ScheduleResponse, result).data
 
     def update(
         self,
@@ -102,7 +102,7 @@ class ScheduleClient(ResourceClient):
             notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
         result = self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
-        return ScheduleResponse.model_validate(result).data
+        return validate_response(ScheduleResponse, result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the schedule.
@@ -135,7 +135,7 @@ class ScheduleClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return ScheduleLogResponse.model_validate(result).data
+        return validate_response(ScheduleLogResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -173,7 +173,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return ScheduleResponse.model_validate(result).data
+        return validate_response(ScheduleResponse, result).data
 
     async def update(
         self,
@@ -222,7 +222,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
         result = await self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
-        return ScheduleResponse.model_validate(result).data
+        return validate_response(ScheduleResponse, result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the schedule.
@@ -255,4 +255,4 @@ class ScheduleClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return ScheduleLogResponse.model_validate(result).data
+        return validate_response(ScheduleLogResponse, result).data

@@ -15,7 +15,7 @@ from apify_client._models import (
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.encoding import encode_webhooks_to_base64
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, validate_response
 from apify_client._utils.server_args import build_actor_standby
 from apify_client._utils.time import to_seconds
 from apify_client._utils.wait_for_resources import start_waiting_for_resources, start_waiting_for_resources_async
@@ -68,7 +68,7 @@ class TaskClient(ResourceClient):
         result = self._get(timeout=timeout)
         if result is None:
             return None
-        return TaskResponse.model_validate(result).data
+        return validate_response(TaskResponse, result).data
 
     def update(
         self,
@@ -193,7 +193,7 @@ class TaskClient(ResourceClient):
             ),
         )
         result = self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
-        return TaskResponse.model_validate(result).data
+        return validate_response(TaskResponse, result).data
 
     def publish(self, *, timeout: Timeout = 'short') -> Task:
         """Publish the task on its public landing page.
@@ -321,7 +321,7 @@ class TaskClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     def call(
         self,
@@ -507,7 +507,7 @@ class TaskClientAsync(ResourceClientAsync):
         result = await self._get(timeout=timeout)
         if result is None:
             return None
-        return TaskResponse.model_validate(result).data
+        return validate_response(TaskResponse, result).data
 
     async def update(
         self,
@@ -632,7 +632,7 @@ class TaskClientAsync(ResourceClientAsync):
             ),
         )
         result = await self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
-        return TaskResponse.model_validate(result).data
+        return validate_response(TaskResponse, result).data
 
     async def publish(self, *, timeout: Timeout = 'short') -> Task:
         """Publish the task on its public landing page.
@@ -760,7 +760,7 @@ class TaskClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return RunResponse.model_validate(result).data
+        return validate_response(RunResponse, result).data
 
     async def call(
         self,

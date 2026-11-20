@@ -13,6 +13,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -62,7 +63,7 @@ class ScheduleCollectionClient(ResourceClient):
             The list of available schedules matching the specified filters.
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfSchedulesResponse.model_validate(result).data
+        return validate_response(ListOfSchedulesResponse, result).data
 
     def iterate(
         self,
@@ -146,7 +147,7 @@ class ScheduleCollectionClient(ResourceClient):
             notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
         result = self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
-        return ScheduleResponse.model_validate(result).data
+        return validate_response(ScheduleResponse, result).data
 
 
 @docs_group('Resource clients')
@@ -190,7 +191,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             The list of available schedules matching the specified filters.
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfSchedulesResponse.model_validate(result).data
+        return validate_response(ListOfSchedulesResponse, result).data
 
     def iterate(
         self,
@@ -274,4 +275,4 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
         result = await self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
-        return ScheduleResponse.model_validate(result).data
+        return validate_response(ScheduleResponse, result).data

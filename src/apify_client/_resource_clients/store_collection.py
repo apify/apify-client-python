@@ -6,6 +6,7 @@ from apify_client._docs import docs_group
 from apify_client._models import ListOfStoreActors, ListOfStoreActorsResponse
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils.http import validate_response
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -78,7 +79,7 @@ class StoreCollectionClient(ResourceClient):
             pricingModel=pricing_model,
             includeUnrunnableActors=include_unrunnable_actors,
         )
-        return ListOfStoreActorsResponse.model_validate(result).data
+        return validate_response(ListOfStoreActorsResponse, result).data
 
     def iterate(
         self,
@@ -200,7 +201,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             pricingModel=pricing_model,
             includeUnrunnableActors=include_unrunnable_actors,
         )
-        return ListOfStoreActorsResponse.model_validate(result).data
+        return validate_response(ListOfStoreActorsResponse, result).data
 
     def iterate(
         self,

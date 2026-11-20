@@ -165,7 +165,7 @@ def validate_response(model: type[_ModelT], data: Any) -> _ModelT:
         line_errors = cast('list[InitErrorDetails]', exc.errors(include_url=False))
         error = ResponseValidationError.from_exception_data(exc.title, line_errors)
 
-        error.method = log_context.method.get()
+        error.http_method = log_context.method.get()
         url = log_context.url.get()
         if url is not None:
             error.url = urlsplit(url)._replace(query='', fragment='').geturl()

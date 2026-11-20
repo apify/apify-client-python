@@ -42,7 +42,7 @@ def _assert_response_validation_error(error: ResponseValidationError, *, path: s
     assert isinstance(error, ApifyClientError)
     assert isinstance(error, ValidationError)
     assert isinstance(error, ValueError)
-    assert error.method == method
+    assert error.http_method == method
     assert error.url is not None
     assert error.url.endswith(path)
     assert error.error_count() > 0

@@ -173,16 +173,16 @@ class ResponseValidationError(ApifyClientError, ValidationError):
     available as `__cause__`.
 
     Attributes:
-        method: The HTTP method of the request whose response failed validation (if available).
+        http_method: The HTTP method of the request whose response failed validation (if available).
         url: The URL of that request, without query parameters (if available).
     """
 
-    method: str | None = None
+    http_method: str | None = None
     url: str | None = None
 
     def __str__(self) -> str:
         """Describe the failed request and list the validation errors."""
-        request = ' '.join(part for part in (self.method, self.url) if part)
+        request = ' '.join(part for part in (self.http_method, self.url) if part)
         of_request = f' of {request}' if request else ''
         return (
             f'The API response{of_request} did not match the expected schema. This is likely a mismatch between the '

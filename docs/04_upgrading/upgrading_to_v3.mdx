@@ -135,8 +135,11 @@ Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralA
 ## Removed deprecated APIs
 
 - `DatasetClient.download_items()` → use <ApiLink to="class/DatasetClient#get_items_as_bytes">`DatasetClient.get_items_as_bytes()`</ApiLink> (identical signature).
-- `max_unprocessed_requests_retries` and `min_delay_between_unprocessed_requests_retries` on <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests()`</ApiLink> — were no-ops; drop them.
 - `exclusive_start_id` on <ApiLink to="class/RequestQueueClient#list_requests">`RequestQueueClient.list_requests()`</ApiLink> → use `cursor` with `next_cursor` from the previous response, or <ApiLink to="class/RequestQueueClient#iterate_requests">`iterate_requests()`</ApiLink>.
+
+## Retrying unprocessed requests in batch_add_requests
+
+`max_unprocessed_requests_retries` and `min_delay_between_unprocessed_requests_retries` on <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests()`</ApiLink> now actively retry requests returned as unprocessed with exponential backoff (defaulting to 3 retries and a 500 ms `timedelta` minimum delay). Pass `max_unprocessed_requests_retries=0` to disable retries.
 
 ## Pluggable HTTP client
 

@@ -26,6 +26,12 @@ DEFAULT_MAX_RETRIES = 4
 DEFAULT_MIN_DELAY_BETWEEN_RETRIES = timedelta(milliseconds=500)
 """Default minimum delay between retries."""
 
+DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS = 3
+"""Default maximum number of retries for unprocessed requests in `batch_add_requests`."""
+
+DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES = timedelta(milliseconds=500)
+"""Default minimum delay between retries for unprocessed requests in `batch_add_requests`."""
+
 DEFAULT_WAIT_FOR_FINISH = timedelta(seconds=999999)
 """Default maximum wait time for job completion (effectively infinite)."""
 

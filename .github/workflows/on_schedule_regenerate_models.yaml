@@ -36,6 +36,9 @@ jobs:
   regenerate-models:
     name: Regenerate models
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      deployment: false
 
     steps:
       - name: Checkout master

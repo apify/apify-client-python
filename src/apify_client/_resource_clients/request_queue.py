@@ -8,9 +8,10 @@ import time
 from collections.abc import Iterable
 from datetime import timedelta
 from queue import Queue
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal
 
 from more_itertools import constrained_batches
+from pydantic import ValidationError
 
 from apify_client._consts import (
     DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES,
@@ -121,39 +122,15 @@ def _compute_retry_delay_seconds(attempt: int, min_delay: timedelta) -> float:
     return random.uniform(1.0, 2.0) * (2**attempt) * to_seconds(min_delay)
 
 
-class _BatchAttemptResult(NamedTuple):
-    """Result of evaluating a single `batch_add_requests` attempt."""
-
-    processed_requests: list[AddedRequest]
-    unprocessed_requests: list[UnprocessedRequest]
-    remaining_items: list[tuple[str, bytes]]
-    processed_unique_keys: frozenset[str]
-
-
-def _extract_batch_attempt_result(
-    *,
-    batch_items: list[tuple[str, bytes]],
+def _remaining_batch_items(
+    remaining_items: list[tuple[str, bytes]],
     batch_response: BatchAddResponse,
-    already_processed_keys: frozenset[str],
-) -> _BatchAttemptResult:
-    """Compute newly processed requests, unprocessed requests, and remaining items to retry."""
-    new_processed = batch_response.data.processed_requests
-    unprocessed = batch_response.data.unprocessed_requests
-    if not unprocessed:
-        return _BatchAttemptResult(
-            processed_requests=new_processed,
-            unprocessed_requests=unprocessed,
-            remaining_items=[],
-            processed_unique_keys=already_processed_keys,
-        )
-    updated_keys = already_processed_keys | {req.unique_key for req in new_processed}
-    remaining = [item for item in batch_items if item[0] not in updated_keys]
-    return _BatchAttemptResult(
-        processed_requests=new_processed,
-        unprocessed_requests=unprocessed,
-        remaining_items=remaining,
-        processed_unique_keys=updated_keys,
-    )
+) -> list[tuple[str, bytes]]:
+    """Return the items of a batch round that the API did not process and that need another round."""
+    if not batch_response.data.unprocessed_requests:
+        return []
+    processed_keys = {request.unique_key for request in batch_response.data.processed_requests}
+    return [item for item in remaining_items if item[0] not in processed_keys]
 
 
 @docs_group('Resource clients')
@@ -489,8 +466,10 @@ class RequestQueueClient(ResourceClient):
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
-        Requests are split into batches based on size and processed in parallel. Any requests reported as unprocessed
-        by the API are retried with exponential backoff.
+        Requests are split into batches based on size and processed in parallel. Requests that the API reports as
+        unprocessed are retried with exponential backoff. If the first call for a batch fails, the error is raised. If
+        a retry call fails, the error is logged and the requests not added yet are returned as unprocessed. A response
+        that does not match the expected model is always raised.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
@@ -544,10 +523,7 @@ class RequestQueueClient(ResourceClient):
 
         # Process all batches in the queue sequentially.
         while not batch_queue.empty():
-            batch_items = list(batch_queue.get())
-            remaining_items = batch_items
-            processed_unique_keys = frozenset[str]()
-            batch_processed_requests = list[AddedRequest]()
+            remaining_items = list(batch_queue.get())
             batch_unprocessed_requests = list[UnprocessedRequest]()
 
             for attempt in range(1 + max_unprocessed_requests_retries):
@@ -562,6 +538,9 @@ class RequestQueueClient(ResourceClient):
                     )
                     result = response_to_dict(response)
                     batch_response = BatchAddResponse.model_validate(result)
+                except ValidationError:
+                    # The API may have added the batch, so its requests can't be reported as unprocessed.
+                    raise
                 except Exception:
                     if attempt == 0:
                         raise
@@ -570,24 +549,17 @@ class RequestQueueClient(ResourceClient):
                     )
                     break
 
-                attempt_result = _extract_batch_attempt_result(
-                    batch_items=batch_items,
-                    batch_response=batch_response,
-                    already_processed_keys=processed_unique_keys,
-                )
-                batch_processed_requests.extend(attempt_result.processed_requests)
-                batch_unprocessed_requests = attempt_result.unprocessed_requests
-                remaining_items = attempt_result.remaining_items
-                processed_unique_keys = attempt_result.processed_unique_keys
+                processed_requests.extend(batch_response.data.processed_requests)
+                batch_unprocessed_requests = batch_response.data.unprocessed_requests
                 if batch_unprocessed_requests:
                     self._http_client.stats.add_rate_limit_error(attempt + 1)
+                remaining_items = _remaining_batch_items(remaining_items, batch_response)
                 if not remaining_items:
                     break
 
                 if attempt < max_unprocessed_requests_retries:
                     time.sleep(_compute_retry_delay_seconds(attempt, min_delay_between_unprocessed_requests_retries))
 
-            processed_requests.extend(batch_processed_requests)
             unprocessed_requests.extend(batch_unprocessed_requests)
 
         return BatchAddResponse.model_construct(
@@ -1073,10 +1045,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 break
 
             try:
-                batch_items = list(request_batch)
-                remaining_items = batch_items
-                processed_unique_keys = frozenset[str]()
-                batch_processed_requests = list[AddedRequest]()
+                remaining_items = list(request_batch)
                 batch_unprocessed_requests = list[UnprocessedRequest]()
 
                 for attempt in range(1 + max_unprocessed_requests_retries):
@@ -1091,6 +1060,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
                         )
                         result = response_to_dict(response)
                         batch_response = BatchAddResponse.model_validate(result)
+                    except ValidationError:
+                        # The API may have added the batch, so its requests can't be reported as unprocessed.
+                        raise
                     except Exception:
                         if attempt == 0:
                             raise
@@ -1099,17 +1071,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
                         )
                         break
 
-                    attempt_result = _extract_batch_attempt_result(
-                        batch_items=batch_items,
-                        batch_response=batch_response,
-                        already_processed_keys=processed_unique_keys,
-                    )
-                    batch_processed_requests.extend(attempt_result.processed_requests)
-                    batch_unprocessed_requests = attempt_result.unprocessed_requests
-                    remaining_items = attempt_result.remaining_items
-                    processed_unique_keys = attempt_result.processed_unique_keys
+                    processed_requests.extend(batch_response.data.processed_requests)
+                    batch_unprocessed_requests = batch_response.data.unprocessed_requests
                     if batch_unprocessed_requests:
                         self._http_client.stats.add_rate_limit_error(attempt + 1)
+                    remaining_items = _remaining_batch_items(remaining_items, batch_response)
                     if not remaining_items:
                         break
 
@@ -1118,7 +1084,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
                             _compute_retry_delay_seconds(attempt, min_delay_between_unprocessed_requests_retries)
                         )
 
-                processed_requests.extend(batch_processed_requests)
                 unprocessed_requests.extend(batch_unprocessed_requests)
 
             finally:
@@ -1146,8 +1111,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
-        Requests are split into batches based on size and processed in parallel. Any requests reported as unprocessed
-        by the API are retried with exponential backoff.
+        Requests are split into batches based on size and processed in parallel. Requests that the API reports as
+        unprocessed are retried with exponential backoff. If the first call for a batch fails, the error is raised. If
+        a retry call fails, the error is logged and the requests not added yet are returned as unprocessed. A response
+        that does not match the expected model is always raised.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 

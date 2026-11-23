@@ -3,6 +3,7 @@ from __future__ import annotations
 import gzip
 import json
 import logging
+import random
 import re
 from datetime import timedelta
 from typing import TYPE_CHECKING
@@ -14,6 +15,7 @@ from werkzeug.wrappers import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._models import RequestToDelete
+from apify_client._resource_clients.request_queue import _compute_retry_delay_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -576,6 +578,86 @@ def test_batch_add_requests_retry_round_error_returns_partial_result_sync(
     assert [req.unique_key for req in result.processed_requests] == ['http://example.com/1']
     assert [req.unique_key for req in result.unprocessed_requests] == ['http://example.com/2']
     assert any('Failed to retry unprocessed requests' in record.message for record in caplog.records)
+
+
+_INVALID_BATCH_RESPONSE_CONTENT = '{"data": {"processedRequests": "invalid", "unprocessedRequests": []}}'
+
+
+async def test_batch_add_requests_retry_round_invalid_response_raises_async(httpserver: HTTPServer) -> None:
+    """A retry round response that does not match the model raises `ValidationError` in the async client."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    handler = Mock(
+        side_effect=[
+            Response(_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json'),
+            Response(_INVALID_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json'),
+        ]
+    )
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(handler)
+    requests: list[RequestWithoutIdDict] = [
+        {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
+        {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
+    ]
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    with pytest.raises(ValidationError):
+        await rq_client.batch_add_requests(
+            requests=requests,
+            min_delay_between_unprocessed_requests_retries=timedelta(milliseconds=1),
+        )
+
+    assert handler.call_count == 2
+
+
+def test_batch_add_requests_retry_round_invalid_response_raises_sync(httpserver: HTTPServer) -> None:
+    """A retry round response that does not match the model raises `ValidationError` in the sync client."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    handler = Mock(
+        side_effect=[
+            Response(_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json'),
+            Response(_INVALID_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json'),
+        ]
+    )
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(handler)
+    requests: list[RequestWithoutIdDict] = [
+        {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
+        {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
+    ]
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    with pytest.raises(ValidationError):
+        rq_client.batch_add_requests(
+            requests=requests,
+            min_delay_between_unprocessed_requests_retries=timedelta(milliseconds=1),
+        )
+
+    assert handler.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ('attempt', 'expected_seconds'),
+    [
+        pytest.param(0, 0.75, id='first retry'),
+        pytest.param(1, 1.5, id='second retry'),
+        pytest.param(2, 3.0, id='third retry'),
+    ],
+)
+def test_compute_retry_delay_seconds_doubles_per_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+    attempt: int,
+    expected_seconds: float,
+) -> None:
+    """The unprocessed-requests retry delay is the jittered minimum delay doubled for each attempt."""
+    uniform = Mock(return_value=1.5)
+    monkeypatch.setattr(random, 'uniform', uniform)
+
+    delay = _compute_retry_delay_seconds(attempt, timedelta(milliseconds=500))
+
+    assert delay == pytest.approx(expected_seconds)
+    uniform.assert_called_once_with(1.0, 2.0)
 
 
 _REQUEST_REGISTRATION_RESPONSE_CONTENT = (

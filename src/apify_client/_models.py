@@ -2724,6 +2724,16 @@ class PayPerEventActorPricingInfo(CommonActorPricingInfo):
 
 
 @docs_group('Models')
+class Plan(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    available_proxy_groups: dict[str, int]
+
+
+@docs_group('Models')
 class PricePerDatasetItemActorPricingInfo(CommonActorPricingInfo):
     model_config = ConfigDict(
         extra='allow',
@@ -4051,7 +4061,7 @@ class ScheduleResponse(BaseModel):
 
 @docs_group('Models')
 class ScheduleUiState(BaseModel):
-    """State of the schedule editor in Apify Console. It's removed when an API update changes `cronExpression` or `timezone`."""
+    """State of the schedule editor in Apify Console. It's removed when an API update changes `cronExpression` or `timezone`, after which it is `null`."""
 
     model_config = ConfigDict(
         extra='allow',
@@ -4946,6 +4956,30 @@ class UserProfile(BaseModel):
     github_username: Annotated[str | None, Field(examples=['torvalds.'])] = None
     website_url: Annotated[AnyUrl | None, Field(examples=['http://www.example.com'])] = None
     twitter_username: Annotated[str | None, Field(examples=['@BillGates'])] = None
+
+
+@docs_group('Models')
+class UserProxyInfo(BaseModel):
+    """Reduced user data with only the fields Apify Proxy reads."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    plan: Annotated[Plan, Field(title='UserProxyPlan')]
+    effective_platform_features: EffectivePlatformFeatures
+    is_paying: Annotated[bool, Field(examples=[True])]
+
+
+@docs_group('Models')
+class UserProxyInfoResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: UserProxyInfo
 
 
 @docs_group('Models')

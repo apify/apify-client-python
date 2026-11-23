@@ -36,6 +36,9 @@ jobs:
   regenerate-models:
     name: Regenerate models
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      deployment: false
 
     steps:
       - name: Checkout master
@@ -144,7 +147,7 @@ jobs:
       - name: Commit the regenerated models
         id: commit
         if: steps.changes.outputs.has-changes == 'true' && steps.review.outputs.is-new == 'true'
-        uses: apify/actions/signed-commit@v1.6.2
+        uses: apify/actions/signed-commit@48ab27d3d0de7744c20dd783b83245dfae2cddfd # v1.7.0
         with:
           message: ${{ env.PR_TITLE }}
           add: >-

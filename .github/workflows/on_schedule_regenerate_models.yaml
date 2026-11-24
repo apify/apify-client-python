@@ -42,14 +42,14 @@ jobs:
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           ref: master
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Set up uv package manager
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -147,7 +147,7 @@ jobs:
       - name: Commit the regenerated models
         id: commit
         if: steps.changes.outputs.has-changes == 'true' && steps.review.outputs.is-new == 'true'
-        uses: apify/actions/signed-commit@48ab27d3d0de7744c20dd783b83245dfae2cddfd # v1.7.0
+        uses: apify/actions/signed-commit@v1.7.0
         with:
           message: ${{ env.PR_TITLE }}
           add: >-
@@ -238,7 +238,7 @@ jobs:
             }' > slack-payload.json
 
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@v4.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

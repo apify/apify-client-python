@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -23,6 +23,7 @@ from apify_client._utils.wait_for_resources import start_waiting_for_resources, 
 if TYPE_CHECKING:
     from datetime import timedelta
     from decimal import Decimal
+    from logging import Logger
 
     from apify_client._literals import ActorJobStatus, RunOrigin
     from apify_client._resource_clients import (
@@ -336,6 +337,7 @@ class TaskClient(ResourceClient):
         webhooks: WebhooksList | None = None,
         wait_duration: timedelta | None = None,
         wait_for_resources: bool | timedelta = False,
+        logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
@@ -370,6 +372,10 @@ class TaskClient(ResourceClient):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. The time spent retrying doesn't count toward
                 `wait_duration`.
+            logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
+                default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
+                will redirect logs to the provided logger. The logger is also used to capture status and status message
+                of the other Actor run.
             timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
                 up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
                 call fails if the retries run out first.
@@ -397,7 +403,21 @@ class TaskClient(ResourceClient):
             http_client=self._http_client,
             client_registry=self._client_registry,
         )
-        return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        if not logger:
+            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        if logger == 'default':
+            logger = None
+
+        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
+        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher thread is already
+        # writing into.
+        status_redirector = run_client.get_status_message_watcher(to_logger=logger)
+        streamed_log = run_client.get_streamed_log(to_logger=logger)
+
+        with status_redirector, streamed_log:
+            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.
@@ -775,6 +795,7 @@ class TaskClientAsync(ResourceClientAsync):
         webhooks: WebhooksList | None = None,
         wait_duration: timedelta | None = None,
         wait_for_resources: bool | timedelta = False,
+        logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
@@ -809,6 +830,10 @@ class TaskClientAsync(ResourceClientAsync):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. The time spent retrying doesn't count toward
                 `wait_duration`.
+            logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
+                default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
+                will redirect logs to the provided logger. The logger is also used to capture status and status message
+                of the other Actor run.
             timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
                 up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
                 call fails if the retries run out first.
@@ -835,7 +860,21 @@ class TaskClientAsync(ResourceClientAsync):
             http_client=self._http_client,
             client_registry=self._client_registry,
         )
-        return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        if not logger:
+            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        if logger == 'default':
+            logger = None
+
+        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
+        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher task is already
+        # writing into.
+        status_redirector = await run_client.get_status_message_watcher(to_logger=logger)
+        streamed_log = await run_client.get_streamed_log(to_logger=logger)
+
+        async with status_redirector, streamed_log:
+            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
     async def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.

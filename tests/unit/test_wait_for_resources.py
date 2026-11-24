@@ -65,7 +65,9 @@ STARTERS = [
         lambda c, **kw: c.actor('actor-id').call(logger=None, **kw), '/v2/actors/actor-id/runs', id='actor call'
     ),
     pytest.param(lambda c, **kw: c.task('task-id').start(**kw), '/v2/actor-tasks/task-id/runs', id='task start'),
-    pytest.param(lambda c, **kw: c.task('task-id').call(**kw), '/v2/actor-tasks/task-id/runs', id='task call'),
+    pytest.param(
+        lambda c, **kw: c.task('task-id').call(logger=None, **kw), '/v2/actor-tasks/task-id/runs', id='task call'
+    ),
 ]
 
 

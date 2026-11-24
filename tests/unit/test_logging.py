@@ -36,6 +36,7 @@ pytestmark = pytest.mark.usefixtures('http_client_classes')
 _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'
 _MOCKED_ACTOR_ID = 'mocked_actor_id'
+_MOCKED_TASK_ID = 'mocked_task_id'
 _MOCKED_ACTOR_LOGS = (
     # Several logs merged into one chunk
     (
@@ -220,6 +221,13 @@ def mock_api(httpserver: HTTPServer) -> None:
 
     # Add actor run creation endpoint
     httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
+        {
+            'data': status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False),
+        }
+    )
+
+    # Add task run creation endpoint
+    httpserver.expect_request(f'/v2/actor-tasks/{_MOCKED_TASK_ID}/runs', method='POST').respond_with_json(
         {
             'data': status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False),
         }
@@ -510,6 +518,46 @@ def test_actor_call_redirect_logs_to_custom_logger_sync(
         actor_client.call(logger=logger)
 
     # Ensure logs are propagated
+    assert {(record.message, record.levelno) for record in caplog.records} == set(
+        _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
+    )
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
+async def test_task_call_redirect_logs_to_custom_logger_async(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """Test that task call logs are redirected correctly to the custom logger."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = 'custom_logger'
+    logger = logging.getLogger(logger_name)
+    task_client = ApifyClientAsync(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        await task_client.call(logger=logger)
+
+    assert {(record.message, record.levelno) for record in caplog.records} == set(
+        _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
+    )
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
+def test_task_call_redirect_logs_to_custom_logger_sync(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """Test that task call logs are redirected correctly to the custom logger."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = 'custom_logger'
+    logger = logging.getLogger(logger_name)
+    task_client = ApifyClient(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        task_client.call(logger=logger)
+
     assert {(record.message, record.levelno) for record in caplog.records} == set(
         _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
     )

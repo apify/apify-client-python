@@ -19,8 +19,7 @@ def test_call_passes_timeout_to_poll_sync(monkeypatch: pytest.MonkeyPatch, resou
     monkeypatch.setattr(sub_client._client_registry, 'run_client', Mock(return_value=Mock(wait_for_finish=poll)))
 
     timeout = timedelta(seconds=90)
-    kwargs = {'logger': None} if resource == 'actor' else {}
-    sub_client.call(timeout=timeout, wait_duration=timedelta(seconds=120), **kwargs)
+    sub_client.call(timeout=timeout, wait_duration=timedelta(seconds=120), logger=None)
 
     assert start.call_args.kwargs['timeout'] == timeout
     poll.assert_called_once_with(wait_duration=timedelta(seconds=120), timeout=timeout)
@@ -37,8 +36,7 @@ async def test_call_passes_timeout_to_poll_async(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(sub_client._client_registry, 'run_client', Mock(return_value=Mock(wait_for_finish=poll)))
 
     timeout = timedelta(seconds=90)
-    kwargs = {'logger': None} if resource == 'actor' else {}
-    await sub_client.call(timeout=timeout, wait_duration=timedelta(seconds=120), **kwargs)
+    await sub_client.call(timeout=timeout, wait_duration=timedelta(seconds=120), logger=None)
 
     assert start.call_args.kwargs['timeout'] == timeout
     poll.assert_awaited_once_with(wait_duration=timedelta(seconds=120), timeout=timeout)

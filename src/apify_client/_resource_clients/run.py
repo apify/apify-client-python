@@ -4,7 +4,7 @@ import json
 import random
 import string
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
@@ -14,7 +14,7 @@ from apify_client._models import Run, RunResponse
 from apify_client._pagination import DEFAULT_CHUNK_SIZE
 from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES, ResourceClient, ResourceClientAsync
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
-from apify_client._streamed_log import StreamedLog, StreamedLogAsync
+from apify_client._streamed_log import StreamedLog, StreamedLogAsync, resolve_since
 from apify_client._utils.encoding import encode_key_value_store_record_value
 from apify_client._utils.http import response_to_dict, to_safe_id
 from apify_client._utils.time import to_seconds
@@ -350,23 +350,30 @@ class RunClient(ResourceClient):
         self,
         to_logger: logging.Logger | None = None,
         *,
-        from_start: bool = True,
+        since: datetime | None = None,
+        from_start: bool | None = None,
         timeout: Timeout = 'long',
     ) -> StreamedLog:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
-         `StreamedLog` can be explicitly started and stopped or used as a context manager.
+         `StreamedLog` can be explicitly started and stopped or used as a context manager. When the platform closes
+         the log stream while the run is still going, for example after the run has logged nothing for several
+         minutes, the stream is reopened and the redirection resumes after the last redirected message.
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
-            from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
-                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
-                logs for long-running Actors in stand-by.
+            since: Redirect only the log messages logged at this time or later. A naive datetime is treated as UTC.
+                If `None`, the whole log is redirected. Redirecting only the recent messages can be useful for
+                long-running Actors, such as Server Actors.
+            from_start: Deprecated, use `since` instead. `True` is the same as `since=None`, and `False` the same as
+                `since=datetime.now(tz=UTC)`. Will be removed in v4.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             `StreamedLog` instance for redirected logs.
         """
+        # Skips `resolve_since`, this method, and the `WithLogDetailsClient` wrapper around it.
+        since = resolve_since(since=since, from_start=from_start, stacklevel=3)
         run_data = self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
@@ -387,7 +394,7 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StreamedLog(log_client=self.log(), to_logger=to_logger, from_start=from_start)
+        return StreamedLog(log_client=self.log(), to_logger=to_logger, since=since, run_client=self)
 
     def charge(
         self,
@@ -943,23 +950,30 @@ class RunClientAsync(ResourceClientAsync):
         self,
         to_logger: logging.Logger | None = None,
         *,
-        from_start: bool = True,
+        since: datetime | None = None,
+        from_start: bool | None = None,
         timeout: Timeout = 'long',
     ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
-         `StreamedLog` can be explicitly started and stopped or used as a context manager.
+         `StreamedLog` can be explicitly started and stopped or used as a context manager. When the platform closes
+         the log stream while the run is still going, for example after the run has logged nothing for several
+         minutes, the stream is reopened and the redirection resumes after the last redirected message.
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
-            from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
-                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
-                logs for long-running Actors in stand-by.
+            since: Redirect only the log messages logged at this time or later. A naive datetime is treated as UTC.
+                If `None`, the whole log is redirected. Redirecting only the recent messages can be useful for
+                long-running Actors, such as Server Actors.
+            from_start: Deprecated, use `since` instead. `True` is the same as `since=None`, and `False` the same as
+                `since=datetime.now(tz=UTC)`. Will be removed in v4.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             `StreamedLog` instance for redirected logs.
         """
+        # Skips `resolve_since`, this method, and the `WithLogDetailsClient` wrapper around it.
+        since = resolve_since(since=since, from_start=from_start, stacklevel=3)
         run_data = await self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
@@ -980,7 +994,7 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
+        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, since=since, run_client=self)
 
     async def charge(
         self,

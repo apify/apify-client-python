@@ -10,7 +10,7 @@ import time
 from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from werkzeug import Request, Response
@@ -60,6 +60,8 @@ _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR:...\n',
 )
 _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH = 3
+_REDIRECT_ATTACH_TIME = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
+"""Later than the first `_EXISTING_LOGS_BEFORE_REDIRECT_ATTACH` messages of `_MOCKED_ACTOR_LOGS`."""
 
 # Large enough that a real sleep is clearly detectable against `_FAST_EXIT_THRESHOLD_S`.
 _PATCHED_FINAL_SLEEP_S = 5
@@ -261,17 +263,21 @@ def reduce_final_timeout_for_status_message_redirector() -> None:
 
 
 @pytest.mark.parametrize(
-    ('log_from_start', 'expected_log_count'),
+    ('since', 'expected_log_count'),
     [
-        (True, len(_EXPECTED_MESSAGES_AND_LEVELS)),
-        (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH),
+        pytest.param(None, len(_EXPECTED_MESSAGES_AND_LEVELS), id='whole-log'),
+        pytest.param(
+            _REDIRECT_ATTACH_TIME,
+            len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH,
+            id='since-attach-time',
+        ),
     ],
 )
 @pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
 async def test_redirected_logs_async(
     *,
     caplog: LogCaptureFixture,
-    log_from_start: bool,
+    since: datetime | None,
     expected_log_count: int,
     httpserver: HTTPServer,
 ) -> None:
@@ -281,10 +287,7 @@ async def test_redirected_logs_async(
 
     run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client._streamed_log.datetime') as mocked_datetime:
-        # Mock `now()` so that it has timestamp bigger than the first 3 logs
-        mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
-        streamed_log = await run_client.get_streamed_log(from_start=log_from_start)
+    streamed_log = await run_client.get_streamed_log(since=since)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
@@ -301,17 +304,21 @@ async def test_redirected_logs_async(
 
 
 @pytest.mark.parametrize(
-    ('log_from_start', 'expected_log_count'),
+    ('since', 'expected_log_count'),
     [
-        (True, len(_EXPECTED_MESSAGES_AND_LEVELS)),
-        (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH),
+        pytest.param(None, len(_EXPECTED_MESSAGES_AND_LEVELS), id='whole-log'),
+        pytest.param(
+            _REDIRECT_ATTACH_TIME,
+            len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH,
+            id='since-attach-time',
+        ),
     ],
 )
 @pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
 def test_redirected_logs_sync(
     *,
     caplog: LogCaptureFixture,
-    log_from_start: bool,
+    since: datetime | None,
     expected_log_count: int,
     httpserver: HTTPServer,
 ) -> None:
@@ -321,10 +328,7 @@ def test_redirected_logs_sync(
 
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client._streamed_log.datetime') as mocked_datetime:
-        # Mock `now()` so that it has timestamp bigger than the first 3 logs
-        mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
-        streamed_log = run_client.get_streamed_log(from_start=log_from_start)
+    streamed_log = run_client.get_streamed_log(since=since)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
@@ -1048,8 +1052,8 @@ _TAIL_FIRST_MESSAGE = '2025-05-13T07:24:12.588Z tail_test first complete line'
 _TAIL_SECOND_MESSAGE = '2025-05-13T07:24:13.132Z tail_test trailing partial line'
 
 
-def _register_run_and_actor_endpoints(httpserver: HTTPServer) -> None:
-    """Register the minimal run and actor endpoints required by `get_streamed_log`."""
+def _register_run_and_actor_endpoints(httpserver: HTTPServer, *, status: ActorJobStatus = 'RUNNING') -> None:
+    """Register the minimal run and actor endpoints required by `get_streamed_log`, with the run in `status`."""
     httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}', method='GET').respond_with_json(
         {
             'data': {
@@ -1058,7 +1062,7 @@ def _register_run_and_actor_endpoints(httpserver: HTTPServer) -> None:
                 'userId': 'test_user_id',
                 'startedAt': '2019-11-30T07:34:24.202Z',
                 'finishedAt': '2019-12-12T09:30:12.202Z',
-                'status': 'RUNNING',
+                'status': status,
                 'statusMessage': 'Running',
                 'isStatusMessageTerminal': False,
                 'meta': {'origin': 'WEB'},
@@ -1199,19 +1203,19 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
         release_server.set()
 
 
-@pytest.mark.usefixtures('propagate_stream_logs')
-def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
-    caplog: LogCaptureFixture,
-    httpserver: HTTPServer,
-    http_client_class: type[HttpClient],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The streaming thread ends quietly when either transport times out while reading the log stream."""
-    monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
+def _register_timing_out_log_stream(httpserver: HTTPServer, release_server: threading.Event) -> None:
+    """Serve a log stream that stalls past the client-side stream timeout, and the whole log to any reopened stream."""
+    stream_requests: list[Request] = []
 
-    release_server = threading.Event()
+    def handler(request: Request) -> Response:
+        stream_requests.append(request)
+        if len(stream_requests) > 1:
+            return Response(
+                b'2025-05-13T07:24:12.588Z ACTOR: still running\n2025-05-13T07:24:13.588Z ACTOR: finished\n',
+                status=200,
+                mimetype='application/octet-stream',
+            )
 
-    def _slow_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
             # Emit one complete line, then keep the connection open (as a running Actor would) past the
             # client-side stream timeout without sending anything more.
@@ -1222,8 +1226,27 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
 
     httpserver.expect_request(
         f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
-    ).respond_with_handler(_slow_handler)
-    _register_run_and_actor_endpoints(httpserver)
+    ).respond_with_handler(handler)
+
+
+def _redirected_log_lines(caplog: LogCaptureFixture) -> list[str]:
+    """Return the redirected log lines `caplog` captured, without their timestamps."""
+    return [record.message.split(' ', 1)[1] for record in caplog.records if record.message.startswith('2025-')]
+
+
+@pytest.mark.usefixtures('propagate_stream_logs')
+def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    http_client_class: type[HttpClient],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stream timeout neither leaks nor logs an error, and the reopened stream catches up with the finished run."""
+    monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
+
+    release_server = threading.Event()
+    _register_timing_out_log_stream(httpserver, release_server)
+    _register_run_and_actor_endpoints(httpserver, status='SUCCEEDED')
 
     api_url = httpserver.url_for('/').removesuffix('/')
     http_client = http_client_class()
@@ -1252,8 +1275,8 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     # The timeout is expected, so it must be swallowed quietly, not funnelled through the generic error handler.
     error_records = [r for r in caplog.records if r.levelno >= logging.ERROR and 'Log redirection stopped' in r.message]
     assert not error_records, f'sync thread logged an error on stream timeout: {[r.message for r in error_records]}'
-    # The line received before the timeout must still have been redirected.
-    assert any('ACTOR: still running' in record.message for record in caplog.records)
+    # The line received before the timeout is redirected once, and the reopened stream adds the rest of the log.
+    assert _redirected_log_lines(caplog) == ['ACTOR: still running', 'ACTOR: finished']
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')
@@ -1265,7 +1288,7 @@ def test_streamed_log_sync_requests_stream_with_no_timeout(
     httpserver.expect_request(
         f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
     ).respond_with_data(b'2025-05-13T07:24:12.588Z ACTOR: done\n', content_type='application/octet-stream')
-    _register_run_and_actor_endpoints(httpserver)
+    _register_run_and_actor_endpoints(httpserver, status='SUCCEEDED')
 
     api_url = httpserver.url_for('/').removesuffix('/')
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
@@ -1299,23 +1322,12 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     http_client_async_class: type[HttpClientAsync],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The async streaming task treats either transport's stream timeout as an expected terminal condition."""
+    """A stream timeout neither raises nor logs an error, and the reopened stream catches up with the finished run."""
     monkeypatch.setattr(StreamedLogAsync, '_stream_timeout', timedelta(seconds=1))
 
     release_server = threading.Event()
-
-    def _slow_handler(_request: Request) -> Response:
-        def generate_logs() -> Iterator[bytes]:
-            # Emit one complete line, then keep the connection open past the client-side stream timeout.
-            yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
-            release_server.wait(timeout=30)
-
-        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
-
-    httpserver.expect_request(
-        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
-    ).respond_with_handler(_slow_handler)
-    _register_run_and_actor_endpoints(httpserver)
+    _register_timing_out_log_stream(httpserver, release_server)
+    _register_run_and_actor_endpoints(httpserver, status='SUCCEEDED')
 
     api_url = httpserver.url_for('/').removesuffix('/')
     http_client = http_client_async_class()
@@ -1340,8 +1352,8 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     assert task.exception() is None, f'async streaming task raised on stream timeout: {task.exception()!r}'
     error_records = [r for r in caplog.records if r.levelno >= logging.ERROR and 'Log redirection stopped' in r.message]
     assert not error_records, f'async task logged an error on stream timeout: {[r.message for r in error_records]}'
-    # The line received before the timeout must still have been redirected.
-    assert any('ACTOR: still running' in record.message for record in caplog.records)
+    # The line received before the timeout is redirected once, and the reopened stream adds the rest of the log.
+    assert _redirected_log_lines(caplog) == ['ACTOR: still running', 'ACTOR: finished']
 
 
 _POLL_FAILURE_FINAL_SLEEP_S = 2
@@ -1503,7 +1515,8 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
     httpserver.expect_request(
         f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
     ).respond_with_handler(_silent_handler)
-    _register_run_and_actor_endpoints(httpserver)
+    # A finished run, so the stream that ends once the server is released is not reopened.
+    _register_run_and_actor_endpoints(httpserver, status='SUCCEEDED')
 
     api_url = httpserver.url_for('/').removesuffix('/')
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
@@ -2012,6 +2025,264 @@ async def test_streamed_log_async_missing_log_is_neither_reopened_nor_read() -> 
 
     log_client.stream.assert_called_once()
     log_client.get_as_bytes.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ('from_start', 'expected_since'),
+    [
+        pytest.param(True, None, id='from-start'),
+        pytest.param(False, _REDIRECT_ATTACH_TIME, id='from-now'),
+    ],
+)
+def test_streamed_log_from_start_is_deprecated_alias_of_since(
+    *, from_start: bool, expected_since: datetime | None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`from_start` warns that it is deprecated, and maps to the whole log or to the log from now on."""
+    mocked_datetime = Mock(wraps=datetime)
+    mocked_datetime.now.return_value = _REDIRECT_ATTACH_TIME
+    monkeypatch.setattr('apify_client._streamed_log.datetime', mocked_datetime)
+
+    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated') as warning_records:
+        streamed_log = StreamedLog(log_client=Mock(), to_logger=logging.getLogger('test'), from_start=from_start)
+
+    assert streamed_log._since == expected_since
+    # The warning points at the code that passed the argument.
+    assert warning_records[0].filename == __file__
+
+
+def test_streamed_log_rejects_both_since_and_from_start() -> None:
+    """Passing both `since` and the deprecated `from_start` is an error."""
+    with (
+        pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated'),
+        pytest.raises(ValueError, match='Pass only one of'),
+    ):
+        StreamedLog(
+            log_client=Mock(), to_logger=logging.getLogger('test'), since=_REDIRECT_ATTACH_TIME, from_start=False
+        )
+
+
+def test_streamed_log_treats_naive_since_as_utc() -> None:
+    """A naive `since` is read as UTC, like the log timestamps."""
+    naive_since = _REDIRECT_ATTACH_TIME.replace(tzinfo=None)
+
+    streamed_log = StreamedLog(log_client=Mock(), to_logger=logging.getLogger('test'), since=naive_since)
+
+    assert streamed_log._since == _REDIRECT_ATTACH_TIME
+
+
+def test_get_streamed_log_from_start_warning_points_at_caller(httpserver: HTTPServer) -> None:
+    """The deprecation warning of `get_streamed_log(from_start=...)` points at the code that called it."""
+    _register_run_and_actor_endpoints(httpserver)
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+
+    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated') as warning_records:
+        run_client.get_streamed_log(from_start=False)
+
+    assert warning_records[0].filename == __file__
+
+
+_LOG_BEFORE_DROP = (
+    b'2025-05-13T07:24:12.588Z ACTOR: line 1\n'
+    b'2025-05-13T07:24:12.588Z ACTOR: line 2\n'
+    b'2025-05-13T07:24:13.000Z ACTOR: cut o'
+)
+"""What a log stream delivers before the platform closes it: two messages with the same timestamp, then a cut-off
+message."""
+
+_LOG_AFTER_DROP = (
+    b'2025-05-13T07:24:12.588Z ACTOR: line 1\n'
+    b'2025-05-13T07:24:12.588Z ACTOR: line 2\n'
+    b'2025-05-13T07:24:12.588Z ACTOR: line 3 at the same millisecond\n'
+    b'2025-05-13T07:24:13.000Z ACTOR: cut off before\n'
+    b'2025-05-13T07:34:13.000Z ACTOR: logged after a long silence\n'
+)
+"""What the reopened stream delivers: the whole log from its start, with the messages logged meanwhile."""
+
+_LINES_AFTER_RESUME = [
+    'ACTOR: line 1',
+    'ACTOR: line 2',
+    'ACTOR: line 3 at the same millisecond',
+    'ACTOR: cut off before',
+    'ACTOR: logged after a long silence',
+]
+
+
+def _run_with_status(status: ActorJobStatus) -> Mock:
+    return Mock(status=status)
+
+
+def _sync_streams(*chunk_lists: list[bytes] | Exception) -> list[nullcontext]:
+    """Return the log streams a mocked `LogClient.stream` opens, one per argument.
+
+    An exception argument makes that stream deliver `_LOG_BEFORE_DROP` and then raise it.
+    """
+    streams = []
+    for chunk_list in chunk_lists:
+        log_stream = Mock()
+        if isinstance(chunk_list, Exception):
+            error = chunk_list
+
+            def failing_iter(error: Exception = error) -> Iterator[bytes]:
+                yield _LOG_BEFORE_DROP
+                raise error
+
+            log_stream.iter_bytes.side_effect = failing_iter
+        else:
+            log_stream.iter_bytes.return_value = chunk_list
+        streams.append(nullcontext(log_stream))
+    return streams
+
+
+def _async_streams(*chunk_lists: list[bytes] | Exception) -> list[nullcontext]:
+    """Return the log streams a mocked `LogClientAsync.stream` opens, one per argument.
+
+    An exception argument makes that stream deliver `_LOG_BEFORE_DROP` and then raise it.
+    """
+    streams = []
+    for chunk_list in chunk_lists:
+        log_stream = Mock()
+        if isinstance(chunk_list, Exception):
+            error = chunk_list
+
+            async def failing_aiter(error: Exception = error) -> AsyncIterator[bytes]:
+                yield _LOG_BEFORE_DROP
+                raise error
+
+            log_stream.aiter_bytes.side_effect = failing_aiter
+        else:
+            log_stream.aiter_bytes.side_effect = lambda chunk_list=chunk_list: chunks(*chunk_list)
+        streams.append(nullcontext(log_stream))
+    return streams
+
+
+def test_streamed_log_sync_resumes_after_stream_closed_while_run_goes_on(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stream that ends while the run is running is reopened, and only the messages not redirected yet are logged."""
+    monkeypatch.setattr(StreamedLog, '_reconnect_retry_s', 0)
+    log_client = Mock()
+    log_client.stream.side_effect = _sync_streams([_LOG_BEFORE_DROP], [_LOG_AFTER_DROP])
+    run_client = Mock()
+    run_client.get.side_effect = [_run_with_status('RUNNING'), _run_with_status('SUCCEEDED')]
+    logger = logging.getLogger('apify_client.tests.resume_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger, run_client=run_client)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert log_client.stream.call_count == 2
+
+
+async def test_streamed_log_async_resumes_after_stream_closed_while_run_goes_on(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stream that ends while the run is running is reopened, and only the messages not redirected yet are logged."""
+    monkeypatch.setattr(StreamedLogAsync, '_reconnect_retry_s', 0)
+    log_client = Mock()
+    log_client.stream.side_effect = _async_streams([_LOG_BEFORE_DROP], [_LOG_AFTER_DROP])
+    run_client = Mock()
+    run_client.get = AsyncMock(side_effect=[_run_with_status('RUNNING'), _run_with_status('SUCCEEDED')])
+    logger = logging.getLogger('apify_client.tests.resume_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger, run_client=run_client)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert log_client.stream.call_count == 2
+
+
+def test_streamed_log_sync_catches_up_once_after_stream_broke_off_and_run_finished(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stream that broke off is reopened once to catch up with a run that has finished meanwhile."""
+    monkeypatch.setattr(StreamedLog, '_reconnect_retry_s', 0)
+    log_client = Mock()
+    log_client.stream.side_effect = _sync_streams(ConnectionResetError('Simulated drop'), [_LOG_AFTER_DROP])
+    run_client = Mock()
+    run_client.get.return_value = _run_with_status('SUCCEEDED')
+    logger = logging.getLogger('apify_client.tests.catch_up_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger, run_client=run_client)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert log_client.stream.call_count == 2
+
+
+async def test_streamed_log_async_catches_up_once_after_stream_broke_off_and_run_finished(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stream that broke off is reopened once to catch up with a run that has finished meanwhile."""
+    monkeypatch.setattr(StreamedLogAsync, '_reconnect_retry_s', 0)
+    log_client = Mock()
+    log_client.stream.side_effect = _async_streams(ConnectionResetError('Simulated drop'), [_LOG_AFTER_DROP])
+    run_client = Mock()
+    run_client.get = AsyncMock(return_value=_run_with_status('SUCCEEDED'))
+    logger = logging.getLogger('apify_client.tests.catch_up_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger, run_client=run_client)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert log_client.stream.call_count == 2
+
+
+def test_streamed_log_sync_does_not_reopen_stream_of_finished_run(caplog: LogCaptureFixture) -> None:
+    """A stream that ends on its own after the run finished is not reopened, and its last line is redirected."""
+    log_client = Mock()
+    log_client.stream.side_effect = _sync_streams([_LOG_BEFORE_DROP])
+    run_client = Mock()
+    run_client.get.return_value = _run_with_status('SUCCEEDED')
+    logger = logging.getLogger('apify_client.tests.finished_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger, run_client=run_client)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: line 1', 'ACTOR: line 2', 'ACTOR: cut o']
+    log_client.stream.assert_called_once()
+
+
+async def test_streamed_log_async_does_not_reopen_stream_of_finished_run(caplog: LogCaptureFixture) -> None:
+    """A stream that ends on its own after the run finished is not reopened, and its last line is redirected."""
+    log_client = Mock()
+    log_client.stream.side_effect = _async_streams([_LOG_BEFORE_DROP])
+    run_client = Mock()
+    run_client.get = AsyncMock(return_value=_run_with_status('SUCCEEDED'))
+    logger = logging.getLogger('apify_client.tests.finished_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger, run_client=run_client)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: line 1', 'ACTOR: line 2', 'ACTOR: cut o']
+    log_client.stream.assert_called_once()
+
+
+def test_streamed_log_sync_backs_off_between_failing_reopens(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The pause before reopening a stream doubles while reopened streams fail before delivering anything."""
+    log_client = Mock()
+    log_client.stream.side_effect = [
+        *_sync_streams([_LOG_BEFORE_DROP]),
+        *[ConnectionRefusedError('Simulated failure')] * 6,
+        *_sync_streams([_LOG_AFTER_DROP]),
+    ]
+    run_client = Mock()
+    run_client.get.side_effect = [_run_with_status('RUNNING')] * 7 + [_run_with_status('SUCCEEDED')]
+    streamed_log = StreamedLog(
+        log_client=log_client, to_logger=logging.getLogger('apify_client.tests.reopen_backoff'), run_client=run_client
+    )
+    wait = Mock(return_value=False)
+    monkeypatch.setattr(streamed_log._stop_event, 'wait', wait)
+
+    streamed_log._stream_log()
+
+    assert [call.args[0] for call in wait.call_args_list] == [1, 2, 4, 8, 16, 30, 30]
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

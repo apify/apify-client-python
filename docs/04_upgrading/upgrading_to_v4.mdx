@@ -1,0 +1,27 @@
+---
+id: upgrading-to-v4
+title: Upgrading to v4
+description: Breaking changes and migration guide from v3 to v4.
+---
+
+import ApiLink from '@theme/ApiLink';
+
+This guide lists the breaking changes between Apify Python API Client v3.x and v4.0.
+
+## `from_start` removed from log redirection
+
+The `from_start` argument of <ApiLink to="class/RunClient#get_streamed_log">`RunClient.get_streamed_log()`</ApiLink>, <ApiLink to="class/StreamedLog">`StreamedLog`</ApiLink>, and their async counterparts has been removed. Use `since`, which takes a `datetime` and redirects only the log lines logged at that time or later:
+
+```python
+from datetime import UTC, datetime
+
+# Before
+streamed_log = run_client.get_streamed_log(from_start=True)
+streamed_log = run_client.get_streamed_log(from_start=False)
+
+# After
+streamed_log = run_client.get_streamed_log()  # or since=None
+streamed_log = run_client.get_streamed_log(since=datetime.now(tz=UTC))
+```
+
+`since` can also start the redirection from any other point in the run's log, for example `since=datetime.now(tz=UTC) - timedelta(minutes=5)` for the last five minutes. A naive `datetime` is treated as UTC.

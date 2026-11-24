@@ -4,23 +4,53 @@ import asyncio
 import logging
 import re
 import threading
+import warnings
 from asyncio import Task
 from datetime import UTC, datetime
 from threading import Thread
 from typing import TYPE_CHECKING, ClassVar, Self
 
 from apify_client._docs import docs_group
+from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES
 
 if TYPE_CHECKING:
     from types import TracebackType
 
-    from apify_client._resource_clients import LogClient, LogClientAsync
+    from apify_client._resource_clients import LogClient, LogClientAsync, RunClient, RunClientAsync
     from apify_client.http_clients import HttpResponse
     from apify_client.types import Timeout
 
 
 _ANSI_CODE = re.compile(r'\x1b\[[0-9;]*m')
 _LEVEL_PATTERN = re.compile(r'\b(CRITICAL|FATAL|ERROR|WARNING|WARN|INFO|DEBUG)\b')
+
+
+def _as_utc(value: datetime | None) -> datetime | None:
+    """Return `value` as an aware datetime, treating a naive one as UTC like the rest of the client does."""
+    if value is None or value.tzinfo is not None:
+        return value
+    return value.replace(tzinfo=UTC)
+
+
+def resolve_since(*, since: datetime | None, from_start: bool | None, stacklevel: int) -> datetime | None:
+    """Return the time to redirect the log from, given `since` and the deprecated `from_start` argument.
+
+    A set `from_start` emits a `DeprecationWarning` pointing `stacklevel` frames above the caller of this function.
+    `from_start=True` means the whole log, `from_start=False` the log from now on.
+
+    Raises:
+        ValueError: If both `since` and `from_start` are set.
+    """
+    if from_start is None:
+        return since
+    warnings.warn(
+        'The `from_start` argument is deprecated and will be removed in v4. Use `since` instead.',
+        DeprecationWarning,
+        stacklevel=stacklevel + 1,
+    )
+    if since is not None:
+        raise ValueError('Pass only one of `since` and `from_start`.')
+    return None if from_start else datetime.now(tz=UTC)
 
 
 class StreamedLogBase:
@@ -47,18 +77,38 @@ class StreamedLogBase:
     _empty_stream_max_retry_s: ClassVar[float] = 5
     """Upper bound on the pause between reopens of an empty log stream."""
 
-    def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
+    _reconnect_retry_s: ClassVar[float] = 1
+    """Pause before reopening a log stream that ended while the run was still going.
+
+    The platform closes a log stream that has carried no data for several minutes, even though the run goes on. Each
+    reopen that fails before delivering anything doubles the pause up to `_reconnect_max_retry_s`.
+    """
+
+    _reconnect_max_retry_s: ClassVar[float] = 30
+    """Upper bound on the pause between reopens of a log stream that ended while the run was still going."""
+
+    def __init__(self, to_logger: logging.Logger, *, since: datetime | None = None) -> None:
         if self._force_propagate:
             to_logger.propagate = True
         self._to_logger = to_logger
         self._stream_buffer = list[bytes]()
         self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
-        self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=UTC)
+        self._since = _as_utc(since)
         self._received_data = False
+        self._stream_delivered_data = False
+        # The timestamp of the last redirected message and how many redirected messages carry it. A reopened stream
+        # replays the log from its start, and these tell where the redirection left off.
+        self._last_redirected_at: datetime | None = None
+        self._redirected_at_last_timestamp = 0
+        # Where a reopened stream catches up with the redirection: messages before `_resume_after`, and the first
+        # `_resume_skip_count` messages at it, were already redirected.
+        self._resume_after: datetime | None = None
+        self._resume_skip_count = 0
 
     def _process_new_data(self, data: bytes) -> None:
         if data:
             self._received_data = True
+            self._stream_delivered_data = True
         self._stream_buffer.append(data)
         if b'\n' in data:
             self._log_buffer_content(include_last_part=False)
@@ -85,13 +135,55 @@ class StreamedLogBase:
         for marker, content in zip(message_markers, message_contents, strict=True):
             decoded_marker = marker.decode('utf-8')
             decoded_content = content.decode('utf-8')
-            if self._relevancy_time_limit:
-                log_time = datetime.fromisoformat(decoded_marker)
-                if log_time < self._relevancy_time_limit:
-                    # Skip irrelevant logs
-                    continue
+            log_time = datetime.fromisoformat(decoded_marker)
+            if self._is_already_redirected(log_time):
+                continue
+            if self._since is not None and log_time < self._since:
+                continue
             message = decoded_marker + decoded_content
             self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
+            self._remember_redirected(log_time)
+
+    def _is_already_redirected(self, log_time: datetime) -> bool:
+        """Return whether a message of a reopened stream was redirected before the stream was reopened.
+
+        The position in the log decides, not the timestamp alone: once the reopened stream gets past the last
+        redirected message, every later message is new, even one with an older timestamp, which a run that migrated
+        to a host with a clock running behind can log.
+        """
+        if self._resume_after is None:
+            return False
+        if log_time < self._resume_after:
+            return True
+        if log_time == self._resume_after and self._resume_skip_count > 0:
+            self._resume_skip_count -= 1
+            return True
+        self._resume_after = None
+        return False
+
+    def _remember_redirected(self, log_time: datetime) -> None:
+        if log_time == self._last_redirected_at:
+            self._redirected_at_last_timestamp += 1
+        else:
+            self._last_redirected_at = log_time
+            self._redirected_at_last_timestamp = 1
+
+    def _prepare_reopen(self) -> None:
+        """Set up skipping the messages a reopened stream replays, and drop the unterminated line of the ended one.
+
+        The reopened stream delivers that line again in full, so redirecting the cut-off part would log it twice.
+        """
+        self._stream_buffer = []
+        self._resume_after = self._last_redirected_at
+        self._resume_skip_count = self._redirected_at_last_timestamp
+
+    def _flush_tail(self) -> None:
+        """Redirect the unterminated last line, logging a failure instead of raising it."""
+        try:
+            self._log_buffer_content(include_last_part=True)
+        except Exception:
+            # A truncated stream leaves an undecodable tail.
+            self._to_logger.exception('Log redirection stopped due to unexpected error:')
 
     def _process_whole_log(self, log: bytes | None) -> None:
         """Redirect a whole log read in one request, including its last part."""
@@ -124,18 +216,32 @@ class StreamedLog(StreamedLogBase):
     without a bound `stop` would wait for the next chunk, which on a quiet run may be hours away.
     """
 
-    def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+    def __init__(
+        self,
+        log_client: LogClient,
+        *,
+        to_logger: logging.Logger,
+        since: datetime | None = None,
+        from_start: bool | None = None,
+        run_client: RunClient | None = None,
+    ) -> None:
         """Initialize `StreamedLog`.
 
         Args:
             log_client: The log client used to stream raw log data from the Actor run.
             to_logger: The logger to which the log messages will be forwarded.
-            from_start: If `True`, all logs from the start of the Actor run will be streamed. If `False`, only newly
-                arrived logs will be streamed. This can be useful for long-running Actors in stand-by mode where only
-                recent logs are relevant.
+            since: Redirect only the log messages logged at this time or later. A naive datetime is treated as UTC.
+                If `None`, the whole log is redirected.
+            from_start: Deprecated, use `since` instead. `True` is the same as `since=None`, and `False` the same as
+                `since=datetime.now(tz=UTC)`. Will be removed in v4.
+            run_client: The client of the run whose log is streamed. With it, a log stream that ends while the run is
+                still going is reopened, and the redirection resumes after the last redirected message.
         """
-        super().__init__(to_logger=to_logger, from_start=from_start)
+        # Skips `resolve_since` and this method, so the warning points at the caller.
+        since = resolve_since(since=since, from_start=from_start, stacklevel=2)
+        super().__init__(to_logger=to_logger, since=since)
         self._log_client = log_client
+        self._run_client = run_client
         self._streaming_thread: Thread | None = None
         self._log_stream: HttpResponse | None = None
         self._stop_event = threading.Event()
@@ -195,11 +301,43 @@ class StreamedLog(StreamedLogBase):
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
             retry_s = self._empty_stream_retry_s
+            reconnect_s = self._reconnect_retry_s
+            reopened_after_finish = False
             while not self._stop_event.is_set():
-                if not self._stream_log_once() or self._received_data:
+                self._stream_delivered_data = False
+                broke_off = False
+                try:
+                    if not self._stream_log_once():
+                        return
+                except Exception as exc:
+                    if not self._may_reopen():
+                        raise
+                    broke_off = True
+                    self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
+                if not self._received_data:
+                    self._stop_event.wait(retry_s)
+                    retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
+                    continue
+                if not self._may_reopen():
+                    # `stop` may have landed after the ended stream kept its unterminated last line.
+                    self._flush_tail()
                     return
-                self._stop_event.wait(retry_s)
-                retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
+                try:
+                    run_finished = self._is_run_finished()
+                except Exception:
+                    self._flush_tail()
+                    raise
+                # A stream that broke off can miss the last messages of a run that finished meanwhile, so it is
+                # reopened once more to catch up. A stream that ended on its own carried the whole log.
+                if run_finished and (not broke_off or reopened_after_finish):
+                    self._flush_tail()
+                    return
+                reopened_after_finish = run_finished
+                self._prepare_reopen()
+                if self._stream_delivered_data:
+                    reconnect_s = self._reconnect_retry_s
+                self._stop_event.wait(reconnect_s)
+                reconnect_s = min(reconnect_s * 2, self._reconnect_max_retry_s)
         except Exception as exc:
             if self._stop_event.is_set():
                 # `stop` closed the stream out from under the read, so the failure is expected.
@@ -228,9 +366,9 @@ class StreamedLog(StreamedLogBase):
             # Published so `stop` can close the response.
             self._log_stream = log_stream
             try:
-                # `stop` may have run before the response existed for it to close. No earlier stream delivered
-                # anything, and one opened this late would end after its first chunk, so read the whole log in one
-                # request.
+                # `stop` may have run before the response existed for it to close. A stream opened this late would
+                # end after its first chunk, so leave the log to the one-shot read of a session that has not received
+                # anything yet, or to the streams before this one.
                 if self._stop_event.is_set():
                     return True
                 for data in log_stream.iter_bytes():
@@ -240,13 +378,24 @@ class StreamedLog(StreamedLogBase):
             finally:
                 self._log_stream = None
                 try:
-                    # Flush the last buffered part even if the read timed out or was stopped.
-                    self._log_buffer_content(include_last_part=True)
+                    # Flush the last buffered part even if the read timed out or was stopped. A stream that may be
+                    # reopened keeps it until that is decided, since the reopened stream delivers it in full.
+                    self._log_buffer_content(include_last_part=not self._may_reopen())
                 except Exception:
                     # A truncated stream leaves an undecodable tail, which is worth a traceback even while a stop is
                     # in progress.
                     self._to_logger.exception('Log redirection stopped due to unexpected error:')
         return True
+
+    def _may_reopen(self) -> bool:
+        """Return whether an ended stream may be reopened to resume the redirection."""
+        return self._run_client is not None and self._received_data and not self._stop_event.is_set()
+
+    def _is_run_finished(self) -> bool:
+        if self._run_client is None:
+            return True
+        run = self._run_client.get()
+        return run is None or run.status in _TERMINAL_STATUSES
 
 
 @docs_group('Other')
@@ -263,18 +412,32 @@ class StreamedLogAsync(StreamedLogBase):
     _stop_timeout_s: ClassVar[float] = 1
     """Grace period for in-flight log data before the streaming task is cancelled."""
 
-    def __init__(self, log_client: LogClientAsync, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+    def __init__(
+        self,
+        log_client: LogClientAsync,
+        *,
+        to_logger: logging.Logger,
+        since: datetime | None = None,
+        from_start: bool | None = None,
+        run_client: RunClientAsync | None = None,
+    ) -> None:
         """Initialize `StreamedLogAsync`.
 
         Args:
             log_client: The async log client used to stream raw log data from the Actor run.
             to_logger: The logger to which the log messages will be forwarded.
-            from_start: If `True`, all logs from the start of the Actor run will be streamed. If `False`, only newly
-                arrived logs will be streamed. This can be useful for long-running Actors in stand-by mode where only
-                recent logs are relevant.
+            since: Redirect only the log messages logged at this time or later. A naive datetime is treated as UTC.
+                If `None`, the whole log is redirected.
+            from_start: Deprecated, use `since` instead. `True` is the same as `since=None`, and `False` the same as
+                `since=datetime.now(tz=UTC)`. Will be removed in v4.
+            run_client: The client of the run whose log is streamed. With it, a log stream that ends while the run is
+                still going is reopened, and the redirection resumes after the last redirected message.
         """
-        super().__init__(to_logger=to_logger, from_start=from_start)
+        # Skips `resolve_since` and this method, so the warning points at the caller.
+        since = resolve_since(since=since, from_start=from_start, stacklevel=2)
+        super().__init__(to_logger=to_logger, since=since)
         self._log_client = log_client
+        self._run_client = run_client
         self._streaming_task: Task | None = None
 
     def start(self) -> Task:
@@ -332,25 +495,45 @@ class StreamedLogAsync(StreamedLogBase):
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
             retry_s = self._empty_stream_retry_s
+            reconnect_s = self._reconnect_retry_s
+            reopened_after_finish = False
             while True:
-                async with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
-                    if not log_stream:
+                self._stream_delivered_data = False
+                broke_off = False
+                try:
+                    if not await self._stream_log_once():
                         return
-                    try:
-                        async for data in log_stream.aiter_bytes():
-                            self._process_new_data(data)
-                    finally:
-                        try:
-                            # Flush the last buffered part even if the task is cancelled by `stop()`.
-                            self._log_buffer_content(include_last_part=True)
-                        except Exception:
-                            # A truncated stream leaves an undecodable tail. Keeping the failure here also keeps the
-                            # cancellation `stop` raised propagating, so the task ends up cancelled as asyncio expects.
-                            self._to_logger.exception('Log redirection stopped due to unexpected error:')
-                if self._received_data:
+                except Exception as exc:
+                    if not self._may_reopen():
+                        raise
+                    broke_off = True
+                    self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
+                if not self._received_data:
+                    await asyncio.sleep(retry_s)
+                    retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
+                    continue
+                if not self._may_reopen():
                     return
-                await asyncio.sleep(retry_s)
-                retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
+                try:
+                    run_finished = await self._is_run_finished()
+                except Exception:
+                    self._flush_tail()
+                    raise
+                # A stream that broke off can miss the last messages of a run that finished meanwhile, so it is
+                # reopened once more to catch up. A stream that ended on its own carried the whole log.
+                if run_finished and (not broke_off or reopened_after_finish):
+                    self._flush_tail()
+                    return
+                reopened_after_finish = run_finished
+                self._prepare_reopen()
+                if self._stream_delivered_data:
+                    reconnect_s = self._reconnect_retry_s
+                await asyncio.sleep(reconnect_s)
+                reconnect_s = min(reconnect_s * 2, self._reconnect_max_retry_s)
+        except asyncio.CancelledError:
+            # `stop` cancelled the task, possibly while an ended stream kept its unterminated last line.
+            self._flush_tail()
+            raise
         except Exception as exc:
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # A timeout on the long-lived stream is an expected terminal condition, not an error.
@@ -358,3 +541,32 @@ class StreamedLogAsync(StreamedLogBase):
             else:
                 # Exception in log redirection should not propagate further.
                 self._to_logger.exception('Log redirection stopped due to unexpected error:')
+
+    async def _stream_log_once(self) -> bool:
+        """Redirect one log stream until it ends. Return `False` when the log does not exist."""
+        async with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
+            if not log_stream:
+                return False
+            try:
+                async for data in log_stream.aiter_bytes():
+                    self._process_new_data(data)
+            finally:
+                try:
+                    # Flush the last buffered part even if the task is cancelled by `stop()`. A stream that may be
+                    # reopened keeps it until that is decided, since the reopened stream delivers it in full.
+                    self._log_buffer_content(include_last_part=not self._may_reopen())
+                except Exception:
+                    # A truncated stream leaves an undecodable tail. Keeping the failure here also keeps the
+                    # cancellation `stop` raised propagating, so the task ends up cancelled as asyncio expects.
+                    self._to_logger.exception('Log redirection stopped due to unexpected error:')
+        return True
+
+    def _may_reopen(self) -> bool:
+        """Return whether an ended stream may be reopened to resume the redirection."""
+        return self._run_client is not None and self._received_data
+
+    async def _is_run_finished(self) -> bool:
+        if self._run_client is None:
+            return True
+        run = await self._run_client.get()
+        return run is None or run.status in _TERMINAL_STATUSES

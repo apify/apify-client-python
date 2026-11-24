@@ -74,3 +74,7 @@ For a run started with <ApiLink to="class/ActorClient#start">`ActorClient.start`
         </CodeBlock>
     </TabItem>
 </Tabs>
+
+By default, the whole log of the run is redirected. To redirect only part of it, pass a `datetime` as `since`, and only the lines logged at that time or later are redirected. A naive `datetime` is treated as UTC. The deprecated `from_start` argument still works: `from_start=False` is the same as `since=datetime.now(tz=UTC)`.
+
+The platform closes a log stream that has carried no data for several minutes, even when the run is still going. When that happens, the client checks the run status, reopens the stream if the run hasn't finished, and continues after the last redirected line, so a run that stays quiet for a long time keeps its log redirected. The reopened stream delivers the log from its start, and the client skips the lines it has already redirected.

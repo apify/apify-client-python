@@ -404,20 +404,7 @@ class TaskClient(ResourceClient):
             client_registry=self._client_registry,
         )
 
-        if not logger:
-            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
-
-        if logger == 'default':
-            logger = None
-
-        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
-        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher thread is already
-        # writing into.
-        status_redirector = run_client.get_status_message_watcher(to_logger=logger)
-        streamed_log = run_client.get_streamed_log(to_logger=logger)
-
-        with status_redirector, streamed_log:
-            return run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+        return run_client._wait_with_logs(logger=logger, wait_duration=wait_duration, timeout=timeout)  # noqa: SLF001
 
     def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.
@@ -861,20 +848,7 @@ class TaskClientAsync(ResourceClientAsync):
             client_registry=self._client_registry,
         )
 
-        if not logger:
-            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
-
-        if logger == 'default':
-            logger = None
-
-        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
-        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher task is already
-        # writing into.
-        status_redirector = await run_client.get_status_message_watcher(to_logger=logger)
-        streamed_log = await run_client.get_streamed_log(to_logger=logger)
-
-        async with status_redirector, streamed_log:
-            return await run_client.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+        return await run_client._wait_with_logs(logger=logger, wait_duration=wait_duration, timeout=timeout)  # noqa: SLF001
 
     async def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.

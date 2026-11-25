@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 import pytest
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._resource_clients import RunClient, RunClientAsync
 
 
 @pytest.mark.parametrize('resource', [pytest.param('actor', id='actor'), pytest.param('task', id='task')])
@@ -16,7 +17,7 @@ def test_call_passes_timeout_to_poll_sync(monkeypatch: pytest.MonkeyPatch, resou
     start = Mock(return_value=Mock(id='run-id'))
     poll = Mock(return_value=Mock(id='run-id'))
     monkeypatch.setattr(sub_client, 'start', start)
-    monkeypatch.setattr(sub_client._client_registry, 'run_client', Mock(return_value=Mock(wait_for_finish=poll)))
+    monkeypatch.setattr(RunClient, 'wait_for_finish', poll)
 
     timeout = timedelta(seconds=90)
     sub_client.call(timeout=timeout, wait_duration=timedelta(seconds=120), logger=None)
@@ -33,7 +34,7 @@ async def test_call_passes_timeout_to_poll_async(monkeypatch: pytest.MonkeyPatch
     start = AsyncMock(return_value=Mock(id='run-id'))
     poll = AsyncMock(return_value=Mock(id='run-id'))
     monkeypatch.setattr(sub_client, 'start', start)
-    monkeypatch.setattr(sub_client._client_registry, 'run_client', Mock(return_value=Mock(wait_for_finish=poll)))
+    monkeypatch.setattr(RunClientAsync, 'wait_for_finish', poll)
 
     timeout = timedelta(seconds=90)
     await sub_client.call(timeout=timeout, wait_duration=timedelta(seconds=120), logger=None)
@@ -47,10 +48,9 @@ def test_actor_call_passes_timeout_to_poll_with_log_redirect(monkeypatch: pytest
     actor = ApifyClient(token='test_token').actor('actor-id')
     monkeypatch.setattr(actor, 'start', Mock(return_value=Mock(id='run-id')))
     poll = Mock()
-    run_client = Mock(wait_for_finish=poll)
-    run_client.get_status_message_watcher.return_value = MagicMock()
-    run_client.get_streamed_log.return_value = MagicMock()
-    monkeypatch.setattr(actor._client_registry, 'run_client', Mock(return_value=run_client))
+    monkeypatch.setattr(RunClient, 'wait_for_finish', poll)
+    monkeypatch.setattr(RunClient, 'get_status_message_watcher', Mock(return_value=MagicMock()))
+    monkeypatch.setattr(RunClient, 'get_streamed_log', Mock(return_value=MagicMock()))
 
     timeout = timedelta(seconds=90)
     actor.call(timeout=timeout)
@@ -63,10 +63,9 @@ async def test_actor_call_passes_timeout_to_poll_with_log_redirect_async(monkeyp
     actor = ApifyClientAsync(token='test_token').actor('actor-id')
     monkeypatch.setattr(actor, 'start', AsyncMock(return_value=Mock(id='run-id')))
     poll = AsyncMock()
-    run_client = Mock(wait_for_finish=poll)
-    run_client.get_status_message_watcher = AsyncMock(return_value=MagicMock())
-    run_client.get_streamed_log = AsyncMock(return_value=MagicMock())
-    monkeypatch.setattr(actor._client_registry, 'run_client', Mock(return_value=run_client))
+    monkeypatch.setattr(RunClientAsync, 'wait_for_finish', poll)
+    monkeypatch.setattr(RunClientAsync, 'get_status_message_watcher', AsyncMock(return_value=MagicMock()))
+    monkeypatch.setattr(RunClientAsync, 'get_streamed_log', AsyncMock(return_value=MagicMock()))
 
     timeout = timedelta(seconds=90)
     await actor.call(timeout=timeout)

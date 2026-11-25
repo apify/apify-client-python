@@ -276,28 +276,35 @@ class StreamedLog(StreamedLogBase):
                 try:
                     if not self._stream_log_once():
                         return
+
                 except Exception as exc:
                     if not self._may_reopen():
                         raise
+
                     self._to_logger.debug('Log stream broke off: %r', exc)
                 if not self._received_data:
                     self._stop_event.wait(retry_s)
                     retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
                     continue
+
                 if not self._may_reopen():
                     # `stop` may have landed after the ended stream kept its unterminated last line.
                     self._flush_tail()
                     return
+
                 try:
                     run_finished = self._is_run_finished()
                 except Exception:
                     self._flush_tail()
                     raise
+
                 if run_finished:
                     self._flush_tail()
                     return
+
                 self._prepare_reopen()
                 self._stop_event.wait(self._reopen_pause_s)
+
         except Exception as exc:
             if self._stop_event.is_set():
                 # `stop` closed the stream out from under the read, so the failure is expected.
@@ -306,12 +313,15 @@ class StreamedLog(StreamedLogBase):
                 # The stream cannot continue, so warn and let the thread end instead of leaking a traceback.
                 self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
                 return
+
             else:
                 # Any other failure in log redirection must not escape the background thread; log it instead.
                 self._to_logger.exception('Log redirection stopped due to unexpected error:')
                 return
+
         if self._received_data:
             return
+
         # Stopped before any stream delivered a byte, which a run that finishes quickly can cause.
         try:
             self._process_whole_log(self._log_client.get_as_bytes(raw=True))
@@ -326,15 +336,17 @@ class StreamedLog(StreamedLogBase):
             # Published so `stop` can close the response.
             self._log_stream = log_stream
             try:
-                # `stop` may have run before the response existed for it to close. A stream opened this late would
-                # end after its first chunk, so leave the log to the one-shot read of a session that has not received
-                # anything yet, or to the streams before this one.
+                # `stop` may have run before the response existed for it to close. No earlier stream delivered
+                # anything, and one opened this late would end after its first chunk, so read the whole log in one
+                # request.
                 if self._stop_event.is_set():
                     return True
+
                 for data in log_stream.iter_bytes():
                     self._process_new_data(data)
                     if self._stop_event.is_set():
                         break
+
             finally:
                 self._log_stream = None
                 try:
@@ -467,30 +479,38 @@ class StreamedLogAsync(StreamedLogBase):
                 try:
                     if not await self._stream_log_once():
                         return
+
                 except Exception as exc:
                     if not self._may_reopen():
                         raise
                     self._to_logger.debug('Log stream broke off: %r', exc)
+
                 if not self._received_data:
                     await asyncio.sleep(retry_s)
                     retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
                     continue
+
                 if not self._may_reopen():
                     return
+
                 try:
                     run_finished = await self._is_run_finished()
                 except Exception:
                     self._flush_tail()
                     raise
+
                 if run_finished:
                     self._flush_tail()
                     return
+
                 self._prepare_reopen()
                 await asyncio.sleep(self._reopen_pause_s)
+
         except asyncio.CancelledError:
             # `stop` cancelled the task, possibly while an ended stream kept its unterminated last line.
             self._flush_tail()
             raise
+
         except Exception as exc:
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # A timeout on the long-lived stream is an expected terminal condition, not an error.
@@ -504,6 +524,7 @@ class StreamedLogAsync(StreamedLogBase):
         async with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
             if not log_stream:
                 return False
+
             try:
                 async for data in log_stream.aiter_bytes():
                     self._process_new_data(data)

@@ -68,17 +68,14 @@ async def test_store_list_filter_by_username(client: ApifyClient | ApifyClientAs
         assert actor.username == 'apify'
 
 
-async def test_store_list_sort_by_popularity(client: ApifyClient | ApifyClientAsync) -> None:
-    """Test listing store actors sorted by popularity (a known API-supported sort field)."""
+async def test_store_list_accepts_sort_by(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that the store listing accepts the deprecated `sort_by`.
+
+    The API accepts `sortBy` for compatibility but ignores it, so the order is not asserted.
+    """
     page = await maybe_await(client.store().list(limit=10, sort_by='popularity'))
     assert isinstance(page, ListOfStoreActors)
     assert len(page.items) > 0
-    # `popularity` is a composite ranking, not a strict sort on any single field, so we only
-    # check the directional invariant: the top-ranked item has at least as many total users as
-    # the bottom-ranked one on the page.
-    total_users = [a.stats.total_users for a in page.items if a.stats.total_users is not None]
-    assert total_users, 'expected at least one item with populated stats.total_users'
-    assert total_users[0] >= total_users[-1]
 
 
 async def test_store_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:

@@ -77,15 +77,11 @@ class StreamedLogBase:
     _empty_stream_max_retry_s: ClassVar[float] = 5
     """Upper bound on the pause between reopens of an empty log stream."""
 
-    _reconnect_retry_s: ClassVar[float] = 1
+    _reopen_pause_s: ClassVar[float] = 1
     """Pause before reopening a log stream that ended while the run was still going.
 
-    The platform closes a log stream that has carried no data for several minutes, even though the run goes on. Each
-    reopen that fails before delivering anything doubles the pause up to `_reconnect_max_retry_s`.
+    The platform closes a log stream that has carried no data for several minutes, even though the run goes on.
     """
-
-    _reconnect_max_retry_s: ClassVar[float] = 30
-    """Upper bound on the pause between reopens of a log stream that ended while the run was still going."""
 
     def __init__(self, to_logger: logging.Logger, *, since: datetime | None = None) -> None:
         if self._force_propagate:
@@ -95,13 +91,11 @@ class StreamedLogBase:
         self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
         self._since = _as_utc(since)
         self._received_data = False
-        self._stream_delivered_data = False
         self._last_redirected_at: datetime | None = None
 
     def _process_new_data(self, data: bytes) -> None:
         if data:
             self._received_data = True
-            self._stream_delivered_data = True
         self._stream_buffer.append(data)
         if b'\n' in data:
             self._log_buffer_content(include_last_part=False)
@@ -278,10 +272,8 @@ class StreamedLog(StreamedLogBase):
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
             retry_s = self._empty_stream_retry_s
-            reconnect_s = self._reconnect_retry_s
             reopened_after_finish = False
             while not self._stop_event.is_set():
-                self._stream_delivered_data = False
                 broke_off = False
                 try:
                     if not self._stream_log_once():
@@ -311,10 +303,7 @@ class StreamedLog(StreamedLogBase):
                     return
                 reopened_after_finish = run_finished
                 self._prepare_reopen()
-                if self._stream_delivered_data:
-                    reconnect_s = self._reconnect_retry_s
-                self._stop_event.wait(reconnect_s)
-                reconnect_s = min(reconnect_s * 2, self._reconnect_max_retry_s)
+                self._stop_event.wait(self._reopen_pause_s)
         except Exception as exc:
             if self._stop_event.is_set():
                 # `stop` closed the stream out from under the read, so the failure is expected.
@@ -480,10 +469,8 @@ class StreamedLogAsync(StreamedLogBase):
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
             retry_s = self._empty_stream_retry_s
-            reconnect_s = self._reconnect_retry_s
             reopened_after_finish = False
             while True:
-                self._stream_delivered_data = False
                 broke_off = False
                 try:
                     if not await self._stream_log_once():
@@ -511,10 +498,7 @@ class StreamedLogAsync(StreamedLogBase):
                     return
                 reopened_after_finish = run_finished
                 self._prepare_reopen()
-                if self._stream_delivered_data:
-                    reconnect_s = self._reconnect_retry_s
-                await asyncio.sleep(reconnect_s)
-                reconnect_s = min(reconnect_s * 2, self._reconnect_max_retry_s)
+                await asyncio.sleep(self._reopen_pause_s)
         except asyncio.CancelledError:
             # `stop` cancelled the task, possibly while an ended stream kept its unterminated last line.
             self._flush_tail()

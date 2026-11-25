@@ -2007,7 +2007,7 @@ def test_streamed_log_sync_resumes_after_stream_closed_while_run_goes_on(
     caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A stream that ends while the run is running is reopened, and only the messages not redirected yet are logged."""
-    monkeypatch.setattr(StreamedLog, '_reconnect_retry_s', 0)
+    monkeypatch.setattr(StreamedLog, '_reopen_pause_s', 0)
     log_client = Mock()
     log_client.stream.side_effect = _sync_streams([_LOG_BEFORE_DROP], [_LOG_AFTER_DROP])
     run_client = Mock()
@@ -2027,7 +2027,7 @@ async def test_streamed_log_async_resumes_after_stream_closed_while_run_goes_on(
     caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A stream that ends while the run is running is reopened, and only the messages not redirected yet are logged."""
-    monkeypatch.setattr(StreamedLogAsync, '_reconnect_retry_s', 0)
+    monkeypatch.setattr(StreamedLogAsync, '_reopen_pause_s', 0)
     log_client = Mock()
     log_client.stream.side_effect = _async_streams([_LOG_BEFORE_DROP], [_LOG_AFTER_DROP])
     run_client = Mock()
@@ -2047,7 +2047,7 @@ def test_streamed_log_sync_catches_up_once_after_stream_broke_off_and_run_finish
     caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A stream that broke off is reopened once to catch up with a run that has finished meanwhile."""
-    monkeypatch.setattr(StreamedLog, '_reconnect_retry_s', 0)
+    monkeypatch.setattr(StreamedLog, '_reopen_pause_s', 0)
     log_client = Mock()
     log_client.stream.side_effect = _sync_streams(ConnectionResetError('Simulated drop'), [_LOG_AFTER_DROP])
     run_client = Mock()
@@ -2067,7 +2067,7 @@ async def test_streamed_log_async_catches_up_once_after_stream_broke_off_and_run
     caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A stream that broke off is reopened once to catch up with a run that has finished meanwhile."""
-    monkeypatch.setattr(StreamedLogAsync, '_reconnect_retry_s', 0)
+    monkeypatch.setattr(StreamedLogAsync, '_reopen_pause_s', 0)
     log_client = Mock()
     log_client.stream.side_effect = _async_streams(ConnectionResetError('Simulated drop'), [_LOG_AFTER_DROP])
     run_client = Mock()
@@ -2151,27 +2151,6 @@ def test_streamed_log_resumes_from_saved_last_redirected_at(caplog: LogCaptureFi
         streamed_log._stream_log()
 
     assert _redirected_log_lines(caplog) == ['ACTOR: cut off before', 'ACTOR: logged after a long silence']
-
-
-def test_streamed_log_sync_backs_off_between_failing_reopens(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The pause before reopening a stream doubles while reopened streams fail before delivering anything."""
-    log_client = Mock()
-    log_client.stream.side_effect = [
-        *_sync_streams([_LOG_BEFORE_DROP]),
-        *[ConnectionRefusedError('Simulated failure')] * 6,
-        *_sync_streams([_LOG_AFTER_DROP]),
-    ]
-    run_client = Mock()
-    run_client.get.side_effect = [_run_with_status('RUNNING')] * 7 + [_run_with_status('SUCCEEDED')]
-    streamed_log = StreamedLog(
-        log_client=log_client, to_logger=logging.getLogger('apify_client.tests.reopen_backoff'), run_client=run_client
-    )
-    wait = Mock(return_value=False)
-    monkeypatch.setattr(streamed_log._stop_event, 'wait', wait)
-
-    streamed_log._stream_log()
-
-    assert [call.args[0] for call in wait.call_args_list] == [1, 2, 4, 8, 16, 30, 30]
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

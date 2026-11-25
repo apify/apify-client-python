@@ -98,7 +98,7 @@ jobs:
           check-latest: true
 
       - name: Install pnpm and website dependencies
-        uses: apify/actions/pnpm-install@v1.7.0
+        uses: apify/actions/pnpm-install@v1.9.0
         with:
           working-directory: website
 
@@ -120,7 +120,7 @@ jobs:
           check-latest: true
 
       - name: Install pnpm and website dependencies
-        uses: apify/actions/pnpm-install@v1.7.0
+        uses: apify/actions/pnpm-install@v1.9.0
         with:
           working-directory: website
 
@@ -261,7 +261,7 @@ jobs:
         run: uv run poe build
 
       - name: Verify built package
-        uses: apify/actions/python-package-check@v1.7.0
+        uses: apify/actions/python-package-check@v1.9.0
         with:
           package_name: apify_client
           dist_dir: dist

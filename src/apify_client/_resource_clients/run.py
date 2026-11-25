@@ -393,7 +393,7 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StreamedLog(log_client=self.log(), to_logger=to_logger, since=since, run_client=self)
+        return StreamedLog(log_client=self.log(), to_logger=to_logger, since=since)
 
     def charge(
         self,
@@ -992,7 +992,7 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, since=since, run_client=self)
+        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, since=since)
 
     async def charge(
         self,

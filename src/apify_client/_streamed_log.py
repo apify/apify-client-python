@@ -272,17 +272,14 @@ class StreamedLog(StreamedLogBase):
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
             retry_s = self._empty_stream_retry_s
-            reopened_after_finish = False
             while not self._stop_event.is_set():
-                broke_off = False
                 try:
                     if not self._stream_log_once():
                         return
                 except Exception as exc:
                     if not self._may_reopen():
                         raise
-                    broke_off = True
-                    self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
+                    self._to_logger.debug('Log stream broke off: %r', exc)
                 if not self._received_data:
                     self._stop_event.wait(retry_s)
                     retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
@@ -296,12 +293,9 @@ class StreamedLog(StreamedLogBase):
                 except Exception:
                     self._flush_tail()
                     raise
-                # A stream that broke off can miss the last messages of a run that finished meanwhile, so it is
-                # reopened once more to catch up. A stream that ended on its own carried the whole log.
-                if run_finished and (not broke_off or reopened_after_finish):
+                if run_finished:
                     self._flush_tail()
                     return
-                reopened_after_finish = run_finished
                 self._prepare_reopen()
                 self._stop_event.wait(self._reopen_pause_s)
         except Exception as exc:
@@ -469,17 +463,14 @@ class StreamedLogAsync(StreamedLogBase):
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
             retry_s = self._empty_stream_retry_s
-            reopened_after_finish = False
             while True:
-                broke_off = False
                 try:
                     if not await self._stream_log_once():
                         return
                 except Exception as exc:
                     if not self._may_reopen():
                         raise
-                    broke_off = True
-                    self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
+                    self._to_logger.debug('Log stream broke off: %r', exc)
                 if not self._received_data:
                     await asyncio.sleep(retry_s)
                     retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
@@ -491,12 +482,9 @@ class StreamedLogAsync(StreamedLogBase):
                 except Exception:
                     self._flush_tail()
                     raise
-                # A stream that broke off can miss the last messages of a run that finished meanwhile, so it is
-                # reopened once more to catch up. A stream that ended on its own carried the whole log.
-                if run_finished and (not broke_off or reopened_after_finish):
+                if run_finished:
                     self._flush_tail()
                     return
-                reopened_after_finish = run_finished
                 self._prepare_reopen()
                 await asyncio.sleep(self._reopen_pause_s)
         except asyncio.CancelledError:

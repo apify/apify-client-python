@@ -320,8 +320,7 @@ class StreamedLog(StreamedLogBase):
                     except StopIteration:
                         break
                     except Exception as exc:
-                        is_timeout = self._log_client._http_client.is_timeout_error(exc)  # noqa: SLF001
-                        if not self._received_data or is_timeout or self._stop_event.is_set():
+                        if not self._received_data or not self._is_broken_read(exc) or self._stop_event.is_set():
                             raise
                         self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
                         self._prepare_reopen()
@@ -338,6 +337,11 @@ class StreamedLog(StreamedLogBase):
                     # in progress.
                     self._to_logger.exception('Log redirection stopped due to unexpected error:')
         return broke_off or not self._received_data
+
+    def _is_broken_read(self, exc: Exception) -> bool:
+        """Return whether `exc`, raised while reading the stream, means the transport cut the stream off."""
+        http_client = self._log_client._http_client  # noqa: SLF001
+        return http_client.is_retryable_transport_error(exc) and not http_client.is_timeout_error(exc)
 
 
 @docs_group('Other')
@@ -475,8 +479,7 @@ class StreamedLogAsync(StreamedLogBase):
                     except StopAsyncIteration:
                         break
                     except Exception as exc:
-                        is_timeout = self._log_client._http_client.is_timeout_error(exc)  # noqa: SLF001
-                        if not self._received_data or is_timeout:
+                        if not self._received_data or not self._is_broken_read(exc):
                             raise
                         self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
                         self._prepare_reopen()
@@ -492,3 +495,8 @@ class StreamedLogAsync(StreamedLogBase):
                     # cancellation `stop` raised propagating, so the task ends up cancelled as asyncio expects.
                     self._to_logger.exception('Log redirection stopped due to unexpected error:')
         return broke_off or not self._received_data
+
+    def _is_broken_read(self, exc: Exception) -> bool:
+        """Return whether `exc`, raised while reading the stream, means the transport cut the stream off."""
+        http_client = self._log_client._http_client  # noqa: SLF001
+        return http_client.is_retryable_transport_error(exc) and not http_client.is_timeout_error(exc)

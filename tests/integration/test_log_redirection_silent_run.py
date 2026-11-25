@@ -43,6 +43,7 @@ until `SILENT_UNTIL_S`, and then logs the count again until `COUNT_UNTIL_S`."""
 
 REDIRECTOR_MAIN = """
 import os
+from datetime import timedelta
 from unittest.mock import create_autospec
 
 from apify_client import ApifyClient
@@ -57,7 +58,7 @@ store = client.key_value_store(os.environ['ACTOR_DEFAULT_KEY_VALUE_STORE_ID'])
 target_actor_id = store.get_record('INPUT')['value']['targetActorId']
 
 # The default logger redirects the target run's log into this run's log.
-run = client.actor(target_actor_id).call(memory_mbytes=256)
+run = client.actor(target_actor_id).call(memory_mbytes=256, run_timeout=timedelta(minutes=15))
 
 print(f'REDIRECTOR: target run finished as {run.status}', flush=True)
 print(f'REDIRECTOR: log stream opened {stream.call_count} times', flush=True)
@@ -112,7 +113,7 @@ def test_actor_redirects_log_of_actor_silent_for_six_minutes(api_token: str, tmp
         redirector_run = client.actor(redirector_actor_id).call(
             run_input={'targetActorId': target_actor_id},
             memory_mbytes=256,
-            run_timeout=timedelta(minutes=15),
+            run_timeout=timedelta(minutes=20),
             logger=None,
         )
         assert isinstance(redirector_run, Run)

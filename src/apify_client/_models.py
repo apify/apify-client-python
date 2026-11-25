@@ -4124,6 +4124,45 @@ class SourceCodeFolder(BaseModel):
 
 
 @docs_group('Models')
+class Stats(BaseModel):
+    """Actor usage statistics and Apify Store metrics returned by the Store endpoint."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    total_users: Annotated[int, Field(examples=[6])]
+    """
+    The total number of Actor users, including its owner.
+    """
+    total_runs: Annotated[int | None, Field(examples=[16])] = None
+    """
+    The total number of runs of the Actor.
+    """
+    total_users7_days: Annotated[int | None, Field(examples=[2])] = None
+    """
+    The number of active users of the Actor in the last 7 days.
+    """
+    total_users30_days: Annotated[int | None, Field(examples=[6])] = None
+    """
+    The number of active users of the Actor in the last 30 days.
+    """
+    total_users90_days: Annotated[int | None, Field(examples=[6])] = None
+    """
+    The number of active users of the Actor in the last 90 days.
+    """
+    actor_review_rating: Annotated[float, Field(examples=[4.7])]
+    """
+    The average rating of the Actor in Apify Store.
+    """
+    actor_review_count: Annotated[int, Field(examples=[69])]
+    """
+    The number of reviews the Actor has received in Apify Store.
+    """
+
+
+@docs_group('Models')
 class StorageIds(BaseModel):
     """A map of aliased storage IDs associated with this run, grouped by storage type."""
 
@@ -4180,20 +4219,24 @@ class StoreActor(BaseModel):
     username: Annotated[str, Field(examples=['jane35'])]
     user_full_name: Annotated[str | None, Field(examples=['Jane H. Doe'])] = None
     description: Annotated[str | None, Field(examples=['My public actor!'])] = None
-    categories: Annotated[list[str] | None, Field(examples=[['MARKETING', 'LEAD_GENERATION']])] = None
+    categories: Annotated[list[str] | None, Field(examples=[['AI_AND_ML', 'GENERATE_LEADS']])] = None
     notice: ActorNotice | None = None
     picture_url: Annotated[str | None, Field(examples=['https://...'])] = None
     user_picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
-    stats: ActorStats
+    stats: Annotated[Stats, Field(title='StoreActorStats')]
+    """
+    Actor usage statistics and Apify Store metrics returned by the Store endpoint.
+    """
     current_pricing_info: CurrentPricingInfo | None = None
     is_white_listed_for_agentic_payments: bool | None = None
     """
     Whether the Actor is whitelisted for agentic payment processing.
     """
-    actor_review_count: Annotated[int | None, Field(examples=[69])] = None
-    actor_review_rating: Annotated[float | None, Field(examples=[4.7])] = None
-    bookmark_count: Annotated[int | None, Field(examples=[1269])] = None
+    is_verified: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the Actor's developer has a verified identity.
+    """
     badge: Annotated[str | None, Field(examples=[None])] = None
     readme_summary: str | None = None
     """

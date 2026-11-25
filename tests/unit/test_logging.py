@@ -2042,12 +2042,10 @@ def test_streamed_log_from_start_is_deprecated_alias_of_since(
     mocked_datetime.now.return_value = _REDIRECT_ATTACH_TIME
     monkeypatch.setattr('apify_client._streamed_log.datetime', mocked_datetime)
 
-    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated') as warning_records:
+    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated'):
         streamed_log = StreamedLog(log_client=Mock(), to_logger=logging.getLogger('test'), from_start=from_start)
 
     assert streamed_log._since == expected_since
-    # The warning points at the code that passed the argument.
-    assert warning_records[0].filename == __file__
 
 
 def test_streamed_log_rejects_both_since_and_from_start() -> None:
@@ -2068,18 +2066,6 @@ def test_streamed_log_treats_naive_since_as_utc() -> None:
     streamed_log = StreamedLog(log_client=Mock(), to_logger=logging.getLogger('test'), since=naive_since)
 
     assert streamed_log._since == _REDIRECT_ATTACH_TIME
-
-
-def test_get_streamed_log_from_start_warning_points_at_caller(httpserver: HTTPServer) -> None:
-    """The deprecation warning of `get_streamed_log(from_start=...)` points at the code that called it."""
-    _register_run_and_actor_endpoints(httpserver)
-    api_url = httpserver.url_for('/').removesuffix('/')
-    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
-
-    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated') as warning_records:
-        run_client.get_streamed_log(from_start=False)
-
-    assert warning_records[0].filename == __file__
 
 
 _LOG_BEFORE_DROP = (

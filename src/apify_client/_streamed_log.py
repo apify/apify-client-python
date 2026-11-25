@@ -32,11 +32,11 @@ def _as_utc(value: datetime | None) -> datetime | None:
     return value.replace(tzinfo=UTC)
 
 
-def resolve_since(*, since: datetime | None, from_start: bool | None, stacklevel: int) -> datetime | None:
+def resolve_since(*, since: datetime | None, from_start: bool | None) -> datetime | None:
     """Return the time to redirect the log from, given `since` and the deprecated `from_start` argument.
 
-    A set `from_start` emits a `DeprecationWarning` pointing `stacklevel` frames above the caller of this function.
-    `from_start=True` means the whole log, `from_start=False` the log from now on.
+    A set `from_start` emits a `DeprecationWarning`. `from_start=True` means the whole log, `from_start=False` the log
+    from now on.
 
     Raises:
         ValueError: If both `since` and `from_start` are set.
@@ -46,7 +46,7 @@ def resolve_since(*, since: datetime | None, from_start: bool | None, stacklevel
     warnings.warn(
         'The `from_start` argument is deprecated and will be removed in v4. Use `since` instead.',
         DeprecationWarning,
-        stacklevel=stacklevel + 1,
+        stacklevel=2,
     )
     if since is not None:
         raise ValueError('Pass only one of `since` and `from_start`.')
@@ -237,8 +237,7 @@ class StreamedLog(StreamedLogBase):
             run_client: The client of the run whose log is streamed. With it, a log stream that ends while the run is
                 still going is reopened, and the redirection resumes after the last redirected message.
         """
-        # Skips `resolve_since` and this method, so the warning points at the caller.
-        since = resolve_since(since=since, from_start=from_start, stacklevel=2)
+        since = resolve_since(since=since, from_start=from_start)
         super().__init__(to_logger=to_logger, since=since)
         self._log_client = log_client
         self._run_client = run_client
@@ -433,8 +432,7 @@ class StreamedLogAsync(StreamedLogBase):
             run_client: The client of the run whose log is streamed. With it, a log stream that ends while the run is
                 still going is reopened, and the redirection resumes after the last redirected message.
         """
-        # Skips `resolve_since` and this method, so the warning points at the caller.
-        since = resolve_since(since=since, from_start=from_start, stacklevel=2)
+        since = resolve_since(since=since, from_start=from_start)
         super().__init__(to_logger=to_logger, since=since)
         self._log_client = log_client
         self._run_client = run_client

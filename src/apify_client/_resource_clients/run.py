@@ -372,8 +372,7 @@ class RunClient(ResourceClient):
         Returns:
             `StreamedLog` instance for redirected logs.
         """
-        # Skips `resolve_since`, this method, and the `WithLogDetailsClient` wrapper around it.
-        since = resolve_since(since=since, from_start=from_start, stacklevel=3)
+        since = resolve_since(since=since, from_start=from_start)
         run_data = self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
@@ -972,8 +971,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             `StreamedLog` instance for redirected logs.
         """
-        # Skips `resolve_since`, this method, and the `WithLogDetailsClient` wrapper around it.
-        since = resolve_since(since=since, from_start=from_start, stacklevel=3)
+        since = resolve_since(since=since, from_start=from_start)
         run_data = await self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 

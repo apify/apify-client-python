@@ -311,17 +311,23 @@ class StreamedLog(StreamedLogBase):
                 # request.
                 if self._stop_event.is_set():
                     return True
-                for data in log_stream.iter_bytes():
-                    self._process_new_data(data)
-                    if self._stop_event.is_set():
+                chunks = iter(log_stream.iter_bytes())
+                while not self._stop_event.is_set():
+                    # Only a failed read means the stream broke off. A failure to process the data would repeat on
+                    # every replay, so it ends the redirection.
+                    try:
+                        data = next(chunks)
+                    except StopIteration:
                         break
-            except Exception as exc:
-                is_timeout = self._log_client._http_client.is_timeout_error(exc)  # noqa: SLF001
-                if not self._received_data or is_timeout or self._stop_event.is_set():
-                    raise
-                self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
-                self._prepare_reopen()
-                broke_off = True
+                    except Exception as exc:
+                        is_timeout = self._log_client._http_client.is_timeout_error(exc)  # noqa: SLF001
+                        if not self._received_data or is_timeout or self._stop_event.is_set():
+                            raise
+                        self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
+                        self._prepare_reopen()
+                        broke_off = True
+                        break
+                    self._process_new_data(data)
             finally:
                 self._log_stream = None
                 try:
@@ -460,14 +466,23 @@ class StreamedLogAsync(StreamedLogBase):
                 return False
             broke_off = False
             try:
-                async for data in log_stream.aiter_bytes():
+                chunks = aiter(log_stream.aiter_bytes())
+                while True:
+                    # Only a failed read means the stream broke off. A failure to process the data would repeat on
+                    # every replay, so it ends the redirection.
+                    try:
+                        data = await anext(chunks)
+                    except StopAsyncIteration:
+                        break
+                    except Exception as exc:
+                        is_timeout = self._log_client._http_client.is_timeout_error(exc)  # noqa: SLF001
+                        if not self._received_data or is_timeout:
+                            raise
+                        self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
+                        self._prepare_reopen()
+                        broke_off = True
+                        break
                     self._process_new_data(data)
-            except Exception as exc:
-                if not self._received_data or self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
-                    raise
-                self._to_logger.debug('Log stream broke off, reopening it: %r', exc)
-                self._prepare_reopen()
-                broke_off = True
             finally:
                 try:
                     # Flush the last buffered part even if the task is cancelled by `stop()`.

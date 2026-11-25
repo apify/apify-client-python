@@ -6,7 +6,7 @@ import re
 import threading
 import warnings
 from asyncio import Task
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from threading import Thread
 from typing import TYPE_CHECKING, ClassVar, Self
 
@@ -96,14 +96,7 @@ class StreamedLogBase:
         self._since = _as_utc(since)
         self._received_data = False
         self._stream_delivered_data = False
-        # The timestamp of the last redirected message and how many redirected messages carry it. A reopened stream
-        # replays the log from its start, and these tell where the redirection left off.
         self._last_redirected_at: datetime | None = None
-        self._redirected_at_last_timestamp = 0
-        # Where a reopened stream catches up with the redirection: messages before `_resume_after`, and the first
-        # `_resume_skip_count` messages at it, were already redirected.
-        self._resume_after: datetime | None = None
-        self._resume_skip_count = 0
 
     def _process_new_data(self, data: bytes) -> None:
         if data:
@@ -136,46 +129,22 @@ class StreamedLogBase:
             decoded_marker = marker.decode('utf-8')
             decoded_content = content.decode('utf-8')
             log_time = datetime.fromisoformat(decoded_marker)
-            if self._is_already_redirected(log_time):
-                continue
             if self._since is not None and log_time < self._since:
                 continue
             message = decoded_marker + decoded_content
             self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
-            self._remember_redirected(log_time)
-
-    def _is_already_redirected(self, log_time: datetime) -> bool:
-        """Return whether a message of a reopened stream was redirected before the stream was reopened.
-
-        The position in the log decides, not the timestamp alone: once the reopened stream gets past the last
-        redirected message, every later message is new, even one with an older timestamp, which a run that migrated
-        to a host with a clock running behind can log.
-        """
-        if self._resume_after is None:
-            return False
-        if log_time < self._resume_after:
-            return True
-        if log_time == self._resume_after and self._resume_skip_count > 0:
-            self._resume_skip_count -= 1
-            return True
-        self._resume_after = None
-        return False
-
-    def _remember_redirected(self, log_time: datetime) -> None:
-        if log_time == self._last_redirected_at:
-            self._redirected_at_last_timestamp += 1
-        else:
             self._last_redirected_at = log_time
-            self._redirected_at_last_timestamp = 1
 
     def _prepare_reopen(self) -> None:
-        """Set up skipping the messages a reopened stream replays, and drop the unterminated line of the ended one.
+        """Make the reopened stream redirect only the messages after the last redirected one.
 
-        The reopened stream delivers that line again in full, so redirecting the cut-off part would log it twice.
+        The reopened stream replays the log from its start. Log timestamps have millisecond precision, so new messages
+        start one millisecond after `_last_redirected_at`. The unterminated line of the ended stream is dropped, since
+        the reopened stream delivers it in full.
         """
         self._stream_buffer = []
-        self._resume_after = self._last_redirected_at
-        self._resume_skip_count = self._redirected_at_last_timestamp
+        if self._last_redirected_at is not None:
+            self._since = self._last_redirected_at + timedelta(milliseconds=1)
 
     def _flush_tail(self) -> None:
         """Redirect the unterminated last line, logging a failure instead of raising it."""
@@ -244,6 +213,15 @@ class StreamedLog(StreamedLogBase):
         self._streaming_thread: Thread | None = None
         self._log_stream: HttpResponse | None = None
         self._stop_event = threading.Event()
+
+    @property
+    def last_redirected_at(self) -> datetime | None:
+        """The timestamp of the last redirected log message, or `None` if nothing has been redirected yet.
+
+        To continue the redirection later, for example after the Actor that redirects the log reboots, save it and
+        pass it plus one millisecond as `since` to `RunClient.get_streamed_log`.
+        """
+        return self._last_redirected_at
 
     def start(self) -> Thread:
         """Start the streaming thread.
@@ -437,6 +415,15 @@ class StreamedLogAsync(StreamedLogBase):
         self._log_client = log_client
         self._run_client = run_client
         self._streaming_task: Task | None = None
+
+    @property
+    def last_redirected_at(self) -> datetime | None:
+        """The timestamp of the last redirected log message, or `None` if nothing has been redirected yet.
+
+        To continue the redirection later, for example after the Actor that redirects the log reboots, save it and
+        pass it plus one millisecond as `since` to `RunClient.get_streamed_log`.
+        """
+        return self._last_redirected_at
 
     def start(self) -> Task:
         """Start the streaming task.

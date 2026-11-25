@@ -2079,7 +2079,6 @@ message."""
 _LOG_AFTER_DROP = (
     b'2025-05-13T07:24:12.588Z ACTOR: line 1\n'
     b'2025-05-13T07:24:12.588Z ACTOR: line 2\n'
-    b'2025-05-13T07:24:12.588Z ACTOR: line 3 at the same millisecond\n'
     b'2025-05-13T07:24:13.000Z ACTOR: cut off before\n'
     b'2025-05-13T07:34:13.000Z ACTOR: logged after a long silence\n'
 )
@@ -2088,10 +2087,11 @@ _LOG_AFTER_DROP = (
 _LINES_AFTER_RESUME = [
     'ACTOR: line 1',
     'ACTOR: line 2',
-    'ACTOR: line 3 at the same millisecond',
     'ACTOR: cut off before',
     'ACTOR: logged after a long silence',
 ]
+
+_LAST_LINE_TIME = datetime.fromisoformat('2025-05-13T07:34:13.000+00:00')
 
 
 def _run_with_status(status: ActorJobStatus) -> Mock:
@@ -2158,6 +2158,7 @@ def test_streamed_log_sync_resumes_after_stream_closed_while_run_goes_on(
         streamed_log._stream_log()
 
     assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert streamed_log.last_redirected_at == _LAST_LINE_TIME
     assert log_client.stream.call_count == 2
 
 
@@ -2177,6 +2178,7 @@ async def test_streamed_log_async_resumes_after_stream_closed_while_run_goes_on(
         await streamed_log._stream_log()
 
     assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert streamed_log.last_redirected_at == _LAST_LINE_TIME
     assert log_client.stream.call_count == 2
 
 
@@ -2196,6 +2198,7 @@ def test_streamed_log_sync_catches_up_once_after_stream_broke_off_and_run_finish
         streamed_log._stream_log()
 
     assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert streamed_log.last_redirected_at == _LAST_LINE_TIME
     assert log_client.stream.call_count == 2
 
 
@@ -2215,6 +2218,7 @@ async def test_streamed_log_async_catches_up_once_after_stream_broke_off_and_run
         await streamed_log._stream_log()
 
     assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert streamed_log.last_redirected_at == _LAST_LINE_TIME
     assert log_client.stream.call_count == 2
 
 
@@ -2248,6 +2252,44 @@ async def test_streamed_log_async_does_not_reopen_stream_of_finished_run(caplog:
 
     assert _redirected_log_lines(caplog) == ['ACTOR: line 1', 'ACTOR: line 2', 'ACTOR: cut o']
     log_client.stream.assert_called_once()
+
+
+def test_streamed_log_last_redirected_at_is_none_before_any_message() -> None:
+    """`last_redirected_at` is `None` until a message is redirected."""
+    streamed_log = StreamedLog(log_client=Mock(), to_logger=logging.getLogger('test'))
+
+    assert streamed_log.last_redirected_at is None
+
+
+def test_streamed_log_last_redirected_at_ignores_skipped_messages() -> None:
+    """Messages skipped for being older than `since` do not move `last_redirected_at`."""
+    log_stream = Mock()
+    log_stream.iter_bytes.return_value = [_LOG_AFTER_DROP]
+    log_client = Mock()
+    log_client.stream.return_value = nullcontext(log_stream)
+    streamed_log = StreamedLog(
+        log_client=log_client, to_logger=logging.getLogger('test'), since=_LAST_LINE_TIME + timedelta(seconds=1)
+    )
+
+    streamed_log._stream_log()
+
+    assert streamed_log.last_redirected_at is None
+
+
+def test_streamed_log_resumes_from_saved_last_redirected_at(caplog: LogCaptureFixture) -> None:
+    """A new streamed log started from a saved `last_redirected_at` plus one millisecond redirects only newer lines."""
+    log_stream = Mock()
+    log_stream.iter_bytes.return_value = [_LOG_AFTER_DROP]
+    log_client = Mock()
+    log_client.stream.return_value = nullcontext(log_stream)
+    saved = datetime.fromisoformat('2025-05-13T07:24:12.588+00:00')
+    logger = logging.getLogger('apify_client.tests.resume_saved')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger, since=saved + timedelta(milliseconds=1))
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: cut off before', 'ACTOR: logged after a long silence']
 
 
 def test_streamed_log_sync_backs_off_between_failing_reopens(monkeypatch: pytest.MonkeyPatch) -> None:

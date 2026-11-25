@@ -14,6 +14,8 @@ import RedirectCallAsyncExample from '!!raw-loader!./code/06_redirect_call_async
 import RedirectCallSyncExample from '!!raw-loader!./code/06_redirect_call_sync.py';
 import RedirectRunAsyncExample from '!!raw-loader!./code/06_redirect_run_async.py';
 import RedirectRunSyncExample from '!!raw-loader!./code/06_redirect_run_sync.py';
+import RedirectResumeAsyncExample from '!!raw-loader!./code/06_redirect_resume_async.py';
+import RedirectResumeSyncExample from '!!raw-loader!./code/06_redirect_resume_sync.py';
 
 import ApiLink from '@theme/ApiLink';
 
@@ -77,4 +79,19 @@ For a run started with <ApiLink to="class/ActorClient#start">`ActorClient.start`
 
 By default, the whole log of the run is redirected. To redirect only part of it, pass a `datetime` as `since`, and only the lines logged at that time or later are redirected. A naive `datetime` is treated as UTC. The deprecated `from_start` argument still works: `from_start=False` is the same as `since=datetime.now(tz=UTC)`.
 
-The platform closes a log stream that has carried no data for several minutes, even when the run is still going. When that happens, the client checks the run status, reopens the stream if the run hasn't finished, and continues after the last redirected line, so a run that stays quiet for a long time keeps its log redirected. The reopened stream delivers the log from its start, and the client skips the lines it has already redirected.
+The platform closes a log stream that has carried no data for several minutes, even when the run is still going. When that happens, the client checks the run status and, if the run hasn't finished, reopens the stream. It then redirects only the lines logged after <ApiLink to="class/StreamedLog#last_redirected_at">`StreamedLog.last_redirected_at`</ApiLink>, the timestamp of the last redirected line. The reopened stream delivers the log from its start, and the client skips everything up to that point.
+
+The same property lets you continue the redirection in another process, for example after the Actor that redirects the log reboots. Save `last_redirected_at` before the reboot, and afterwards pass it plus one millisecond as `since`. Log timestamps have millisecond precision, so this skips the last redirected line. It would also skip another line logged in that same millisecond and not yet redirected, which is rare.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {RedirectResumeAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {RedirectResumeSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

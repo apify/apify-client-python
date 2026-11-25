@@ -55,7 +55,8 @@ class StoreCollectionClient(ResourceClient):
             offset: What Actor to include as first when retrieving the list.
             search: String to search by. The search runs on the following fields: title, name, description, username,
                 readme.
-            sort_by: Specifies the field by which to sort the results.
+            sort_by: Deprecated. The API ignores this argument. Results are ordered by relevance when `search` is used,
+                and by Store position otherwise.
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
@@ -106,7 +107,8 @@ class StoreCollectionClient(ResourceClient):
             offset: What Actor to include as first when retrieving the list.
             search: String to search by. The search runs on the following fields: title, name, description, username,
                 readme.
-            sort_by: Specifies the field by which to sort the results.
+            sort_by: Deprecated. The API ignores this argument. Results are ordered by relevance when `search` is used,
+                and by Store position otherwise.
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
@@ -177,7 +179,8 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             offset: What Actor to include as first when retrieving the list.
             search: String to search by. The search runs on the following fields: title, name, description, username,
                 readme.
-            sort_by: Specifies the field by which to sort the results.
+            sort_by: Deprecated. The API ignores this argument. Results are ordered by relevance when `search` is used,
+                and by Store position otherwise.
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
@@ -228,7 +231,8 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             offset: What Actor to include as first when retrieving the list.
             search: String to search by. The search runs on the following fields: title, name, description, username,
                 readme.
-            sort_by: Specifies the field by which to sort the results.
+            sort_by: Deprecated. The API ignores this argument. Results are ordered by relevance when `search` is used,
+                and by Store position otherwise.
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.

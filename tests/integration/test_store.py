@@ -129,7 +129,7 @@ async def test_store_list_parses_full_first_page(client: ApifyClient | ApifyClie
     assert isinstance(page, ListOfStoreActors)
     # All items have already been validated by Pydantic via `model_validate`. Touch a few
     # fields to make the assertion concrete and to ensure the page wasn't empty.
-    assert page.items, f'{type(page).__name__} returned an empty items list — unexpected for the public store'
+    assert page.items, f'{type(page).__name__} returned an empty items list - unexpected for the public store'
     for item in page.items:
         assert item.id
         assert item.name

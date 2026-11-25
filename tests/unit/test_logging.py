@@ -2027,6 +2027,41 @@ async def test_streamed_log_async_reopens_stream_that_broke_off(
     assert log_client.stream.call_count == 2
 
 
+_LOG_WITH_INVALID_UTF8 = b'2025-05-13T07:24:12.588Z ACTOR: line 1\n2025-05-13T07:24:13.000Z ACTOR: bad \xff byte\n'
+
+
+def test_streamed_log_sync_does_not_reopen_stream_with_unprocessable_line(caplog: LogCaptureFixture) -> None:
+    """A line that fails to be processed ends the redirection with a logged error, and the stream is not reopened."""
+    log_client = Mock()
+    log_client.stream.side_effect = _sync_streams([_LOG_WITH_INVALID_UTF8])
+    log_client._http_client.is_timeout_error.return_value = False
+    logger = logging.getLogger('apify_client.tests.unprocessable_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: line 1']
+    assert 'Log redirection stopped due to unexpected error:' in caplog.text
+    log_client.stream.assert_called_once()
+
+
+async def test_streamed_log_async_does_not_reopen_stream_with_unprocessable_line(caplog: LogCaptureFixture) -> None:
+    """A line that fails to be processed ends the redirection with a logged error, and the stream is not reopened."""
+    log_client = Mock()
+    log_client.stream.side_effect = _async_streams([_LOG_WITH_INVALID_UTF8])
+    log_client._http_client.is_timeout_error.return_value = False
+    logger = logging.getLogger('apify_client.tests.unprocessable_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: line 1']
+    assert 'Log redirection stopped due to unexpected error:' in caplog.text
+    log_client.stream.assert_called_once()
+
+
 def test_streamed_log_sync_does_not_reopen_stream_that_ended(caplog: LogCaptureFixture) -> None:
     """A stream that ends without an error is not reopened, and its unterminated last line is redirected."""
     log_client = Mock()

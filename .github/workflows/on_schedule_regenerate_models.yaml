@@ -37,7 +37,7 @@ jobs:
     name: Regenerate models
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: automation
       deployment: false
 
     steps:

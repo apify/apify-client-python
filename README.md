@@ -27,6 +27,7 @@
 - [Documentation](#documentation)
 - [Related projects](#related-projects)
 - [Support and community](#support-and-community)
+- [Supported versions](#supported-versions)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -231,6 +232,10 @@ The full documentation lives at **[docs.apify.com/api/client/python](https://doc
 
 - **Discord** — chat with the team and other users on the [Apify Discord server](https://discord.gg/jyEM2PRvMU).
 - **GitHub issues** — report a bug or request a feature in the repository's [issue tracker](https://github.com/apify/apify-client-python/issues).
+
+## Supported versions
+
+New features and bug fixes land in the latest major version. The previous major version keeps receiving fixes for high and critical severity vulnerabilities for 12 months after the next major is released, and reaches end of life after that. See the [security policy](https://github.com/apify/apify-client-python/security/policy) for the current status of each version and for how to report a vulnerability.
 
 ## Contributing
 

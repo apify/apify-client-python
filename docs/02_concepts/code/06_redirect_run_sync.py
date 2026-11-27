@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from apify_client import ApifyClient
 
 TOKEN = 'MY-APIFY-TOKEN'
@@ -20,8 +22,8 @@ def main() -> None:
     actor_run = actor_client.start()
     run_client = apify_client.run(actor_run.id)
 
-    # With `from_start=False`, only log lines written from now on are redirected.
-    streamed_log = run_client.get_streamed_log(from_start=False)
+    # With `since`, only log lines written at that time or later are redirected.
+    streamed_log = run_client.get_streamed_log(since=datetime.now(tz=UTC))
     streamed_log.start()
     # Do other work while the run's log is redirected.
     streamed_log.stop()

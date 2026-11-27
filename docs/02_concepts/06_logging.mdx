@@ -14,6 +14,8 @@ import RedirectCallAsyncExample from '!!raw-loader!./code/06_redirect_call_async
 import RedirectCallSyncExample from '!!raw-loader!./code/06_redirect_call_sync.py';
 import RedirectRunAsyncExample from '!!raw-loader!./code/06_redirect_run_async.py';
 import RedirectRunSyncExample from '!!raw-loader!./code/06_redirect_run_sync.py';
+import RedirectResumeAsyncExample from '!!raw-loader!./code/06_redirect_resume_async.py';
+import RedirectResumeSyncExample from '!!raw-loader!./code/06_redirect_resume_sync.py';
 
 import ApiLink from '@theme/ApiLink';
 
@@ -71,6 +73,25 @@ For a run started with <ApiLink to="class/ActorClient#start">`ActorClient.start`
     <TabItem value="SyncExample" label="Sync client">
         <CodeBlock className="language-python">
             {RedirectRunSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+By default, the whole log of the run is redirected. To redirect only part of it, pass a `datetime` as `since`, and only the lines logged at that time or later are redirected. A naive `datetime` is treated as UTC. The deprecated `from_start` argument still works: `from_start=False` is the same as `since=datetime.now(tz=UTC)`.
+
+The platform cuts off a log stream that has carried no data for several minutes, even when the run is still going. When that happens, the client reopens the stream. The API can't continue a stream from a given point, so the reopened stream delivers the log from its start, and the client skips everything up to <ApiLink to="class/StreamedLog#last_redirected_at">`StreamedLog.last_redirected_at`</ApiLink>, the timestamp of the last redirected line. A stream that ends on its own has delivered the whole log of a finished run, and the client doesn't open it again.
+
+The same property lets you continue the redirection in another process, for example after the Actor that redirects the log reboots. Save `last_redirected_at` before the reboot, and afterwards pass it plus one millisecond as `since`. Log timestamps have millisecond precision, so this skips the last redirected line. It would also skip another line logged in that same millisecond and not yet redirected, which is rare.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {RedirectResumeAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {RedirectResumeSyncExample}
         </CodeBlock>
     </TabItem>
 </Tabs>

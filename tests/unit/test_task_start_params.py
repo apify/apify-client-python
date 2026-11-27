@@ -35,7 +35,7 @@ RUN = {
 
 STARTERS = [
     pytest.param(lambda c, **kw: c.task('task-id').start(**kw), id='start'),
-    pytest.param(lambda c, **kw: c.task('task-id').call(**kw), id='call'),
+    pytest.param(lambda c, **kw: c.task('task-id').call(logger=None, **kw), id='call'),
 ]
 
 

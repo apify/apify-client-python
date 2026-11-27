@@ -400,14 +400,14 @@ def test_resource_id_is_encoded_into_a_single_path_segment(
     assert captured_targets == [f'/v2/datasets/{encoded_resource_id}']
 
 
-@pytest.mark.parametrize('resource_id', _DEGENERATE_SEGMENTS)
+@pytest.mark.parametrize('resource_id', [pytest.param('.', id='current'), pytest.param('..', id='parent')])
 def test_degenerate_resource_id_is_rejected_before_the_request(
     *,
     api_url: str,
     captured_targets: list[str],
     resource_id: str,
 ) -> None:
-    """An empty or dot resource ID would address the whole collection, so it is refused instead."""
+    """A dot resource ID would address another endpoint, so it is refused instead."""
     client = ApifyClient(token='test_token', api_url=api_url)
 
     with pytest.raises(ValueError, match='cannot be used as a URL path segment'):

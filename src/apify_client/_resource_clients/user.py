@@ -38,7 +38,7 @@ class UserClient(ResourceClient):
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            resource_id=resource_id or 'me',
+            resource_id='me' if resource_id is None else resource_id,
             resource_path=resource_path,
             **kwargs,
         )
@@ -161,7 +161,7 @@ class UserClientAsync(ResourceClientAsync):
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            resource_id=resource_id or 'me',
+            resource_id='me' if resource_id is None else resource_id,
             resource_path=resource_path,
             **kwargs,
         )

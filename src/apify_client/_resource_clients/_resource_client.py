@@ -63,6 +63,9 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         if resource_path.endswith('/'):
             raise ValueError('resource_path must not end with "/"')
 
+        if resource_id == '':
+            raise ValueError(f'resource_id of the `{resource_path}` client must not be an empty string')
+
         self._base_url = base_url
         self._api_base_url = api_base_url or base_url
         self._public_base_url = public_base_url

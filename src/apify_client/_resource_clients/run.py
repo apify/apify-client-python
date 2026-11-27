@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
+from apify_client._logging import logger as library_logger
 from apify_client._models import Run, RunResponse
 from apify_client._pagination import DEFAULT_CHUNK_SIZE
 from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES, ResourceClient, ResourceClientAsync
@@ -482,31 +483,6 @@ class RunClient(ResourceClient):
 
         return StatusMessageWatcher(run_client=self, to_logger=to_logger, check_period=check_period)
 
-    def _wait_with_logs(
-        self,
-        *,
-        logger: logging.Logger | Literal['default'] | None,
-        wait_duration: timedelta | None,
-        timeout: Timeout,
-    ) -> Run | None:
-        """Wait for the run to finish while redirecting its log and status messages to `logger`.
-
-        `'default'` redirects to a logger named after the Actor and run, and `None` waits without any redirection.
-        """
-        if logger is None:
-            return self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
-
-        to_logger = None if logger == 'default' else logger
-
-        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
-        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher thread is already
-        # writing into.
-        status_watcher = self.get_status_message_watcher(to_logger=to_logger)
-        streamed_log = self.get_streamed_log(to_logger=to_logger)
-
-        with status_watcher, streamed_log:
-            return self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
-
     def iterate_dataset_items(
         self,
         *,
@@ -622,6 +598,39 @@ class RunClient(ResourceClient):
             position += page_limit
             if end is not None and position >= end:
                 return
+
+    def _wait_with_logs(
+        self,
+        *,
+        logger: logging.Logger | Literal['default'] | None,
+        wait_duration: timedelta | None,
+        timeout: Timeout,
+    ) -> Run | None:
+        """Wait for the run to finish while redirecting its log and status messages to `logger`.
+
+        `'default'` redirects to a logger named after the Actor and run, and `None` waits without any redirection. A
+        failure to set up the redirection never fails the wait: the run is then waited for without it.
+        """
+        if logger is None:
+            return self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        to_logger = None if logger == 'default' else logger
+
+        try:
+            # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist
+            # before either starts polling; otherwise the streamed log reconfigures a logger the status watcher thread
+            # is already writing into.
+            status_watcher = self.get_status_message_watcher(to_logger=to_logger)
+            streamed_log = self.get_streamed_log(to_logger=to_logger)
+        except Exception as exc:
+            # The run has already started, so the caller must get it even when the redirection cannot be set up.
+            library_logger.warning(
+                'Waiting for run %s without log redirection, which could not be set up: %r', self.resource_id, exc
+            )
+            return self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        with status_watcher, streamed_log:
+            return self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
 
 
 @docs_group('Resource clients')
@@ -1068,31 +1077,6 @@ class RunClientAsync(ResourceClientAsync):
 
         return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)
 
-    async def _wait_with_logs(
-        self,
-        *,
-        logger: logging.Logger | Literal['default'] | None,
-        wait_duration: timedelta | None,
-        timeout: Timeout,
-    ) -> Run | None:
-        """Wait for the run to finish while redirecting its log and status messages to `logger`.
-
-        `'default'` redirects to a logger named after the Actor and run, and `None` waits without any redirection.
-        """
-        if logger is None:
-            return await self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
-
-        to_logger = None if logger == 'default' else logger
-
-        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
-        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher task is already
-        # writing into.
-        status_watcher = await self.get_status_message_watcher(to_logger=to_logger)
-        streamed_log = await self.get_streamed_log(to_logger=to_logger)
-
-        async with status_watcher, streamed_log:
-            return await self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
-
     async def iterate_dataset_items(
         self,
         *,
@@ -1210,3 +1194,36 @@ class RunClientAsync(ResourceClientAsync):
             position += page_limit
             if end is not None and position >= end:
                 return
+
+    async def _wait_with_logs(
+        self,
+        *,
+        logger: logging.Logger | Literal['default'] | None,
+        wait_duration: timedelta | None,
+        timeout: Timeout,
+    ) -> Run | None:
+        """Wait for the run to finish while redirecting its log and status messages to `logger`.
+
+        `'default'` redirects to a logger named after the Actor and run, and `None` waits without any redirection. A
+        failure to set up the redirection never fails the wait: the run is then waited for without it.
+        """
+        if logger is None:
+            return await self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        to_logger = None if logger == 'default' else logger
+
+        try:
+            # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist
+            # before either starts polling; otherwise the streamed log reconfigures a logger the status watcher task
+            # is already writing into.
+            status_watcher = await self.get_status_message_watcher(to_logger=to_logger)
+            streamed_log = await self.get_streamed_log(to_logger=to_logger)
+        except Exception as exc:
+            # The run has already started, so the caller must get it even when the redirection cannot be set up.
+            library_logger.warning(
+                'Waiting for run %s without log redirection, which could not be set up: %r', self.resource_id, exc
+            )
+            return await self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)
+
+        async with status_watcher, streamed_log:
+            return await self.wait_for_finish(wait_duration=wait_duration, timeout=timeout)

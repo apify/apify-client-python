@@ -17,6 +17,8 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import LoggerOnce, RedirectLogFormatter
+from apify_client._models import Run
+from apify_client._resource_clients import RunClient, RunClientAsync
 from apify_client._resource_clients import run as run_module
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherBase
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
@@ -28,7 +30,6 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
     from apify_client._literals import ActorJobStatus
-    from apify_client._models import Run
     from apify_client.http_clients import HttpClient, HttpClientAsync
 
 pytestmark = pytest.mark.usefixtures('http_client_classes')
@@ -560,6 +561,144 @@ def test_task_call_redirect_logs_to_custom_logger_sync(
 
     assert {(record.message, record.levelno) for record in caplog.records} == set(
         _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
+    )
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
+async def test_task_call_redirect_logs_to_default_logger_async(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """Task call logs go to the default redirect logger, named after the Actor of the task run."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+    logger = logging.getLogger(logger_name)
+    task_client = ApifyClientAsync(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        await task_client.call()
+
+    assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
+    assert isinstance(logger.handlers[0], logging.StreamHandler)
+    assert {(record.message, record.levelno) for record in caplog.records} == set(
+        _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
+    )
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
+def test_task_call_redirect_logs_to_default_logger_sync(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """Task call logs go to the default redirect logger, named after the Actor of the task run."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+    logger = logging.getLogger(logger_name)
+    task_client = ApifyClient(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        task_client.call()
+
+    assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
+    assert isinstance(logger.handlers[0], logging.StreamHandler)
+    assert {(record.message, record.levelno) for record in caplog.records} == set(
+        _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
+    )
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
+async def test_task_call_no_redirect_logs_async(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """Task call with `logger=None` redirects nothing."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+    task_client = ApifyClientAsync(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        await task_client.call(logger=None)
+
+    assert len(caplog.records) == 0
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
+def test_task_call_no_redirect_logs_sync(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """Task call with `logger=None` redirects nothing."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+    task_client = ApifyClient(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        task_client.call(logger=None)
+
+    assert len(caplog.records) == 0
+
+
+@pytest.mark.parametrize(
+    'failing_helper',
+    [
+        pytest.param('get_status_message_watcher', id='status-message-watcher'),
+        pytest.param('get_streamed_log', id='streamed-log'),
+    ],
+)
+@pytest.mark.usefixtures('mock_api')
+async def test_task_call_returns_run_when_log_redirection_setup_fails_async(
+    *,
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+    failing_helper: str,
+) -> None:
+    """A failure to set up log redirection is logged as a warning, and the call still waits for and returns the run."""
+    monkeypatch.setattr(RunClientAsync, failing_helper, AsyncMock(side_effect=RuntimeError('Simulated setup failure')))
+    api_url = httpserver.url_for('/').removesuffix('/')
+    task_client = ApifyClientAsync(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.WARNING, logger='apify_client'):
+        run = await task_client.call()
+
+    assert isinstance(run, Run)
+    assert run.id == _MOCKED_RUN_ID
+    assert any(
+        record.levelno == logging.WARNING and 'without log redirection' in record.message for record in caplog.records
+    )
+
+
+@pytest.mark.parametrize(
+    'failing_helper',
+    [
+        pytest.param('get_status_message_watcher', id='status-message-watcher'),
+        pytest.param('get_streamed_log', id='streamed-log'),
+    ],
+)
+@pytest.mark.usefixtures('mock_api')
+def test_task_call_returns_run_when_log_redirection_setup_fails_sync(
+    *,
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+    failing_helper: str,
+) -> None:
+    """A failure to set up log redirection is logged as a warning, and the call still waits for and returns the run."""
+    monkeypatch.setattr(RunClient, failing_helper, Mock(side_effect=RuntimeError('Simulated setup failure')))
+    api_url = httpserver.url_for('/').removesuffix('/')
+    task_client = ApifyClient(token='mocked_token', api_url=api_url).task(task_id=_MOCKED_TASK_ID)
+
+    with caplog.at_level(logging.WARNING, logger='apify_client'):
+        run = task_client.call()
+
+    assert isinstance(run, Run)
+    assert run.id == _MOCKED_RUN_ID
+    assert any(
+        record.levelno == logging.WARNING and 'without log redirection' in record.message for record in caplog.records
     )
 
 

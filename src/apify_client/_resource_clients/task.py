@@ -372,10 +372,10 @@ class TaskClient(ResourceClient):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. The time spent retrying doesn't count toward
                 `wait_duration`.
-            logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
-                default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
-                will redirect logs to the provided logger. The logger is also used to capture status and status message
-                of the other Actor run.
+            logger: Logger used to redirect logs from the task run. Using the `'default'` literal means that a
+                predefined default logger will be used. Setting `None` will disable any log propagation. Passing custom
+                logger will redirect logs to the provided logger. The logger is also used to capture status and status
+                message of the task run.
             timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
                 up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
                 call fails if the retries run out first.
@@ -817,10 +817,10 @@ class TaskClientAsync(ResourceClientAsync):
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
                 never starts, so `True` retries it forever. The time spent retrying doesn't count toward
                 `wait_duration`.
-            logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
-                default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
-                will redirect logs to the provided logger. The logger is also used to capture status and status message
-                of the other Actor run.
+            logger: Logger used to redirect logs from the task run. Using the `'default'` literal means that a
+                predefined default logger will be used. Setting `None` will disable any log propagation. Passing custom
+                logger will redirect logs to the provided logger. The logger is also used to capture status and status
+                message of the task run.
             timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
                 up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
                 call fails if the retries run out first.

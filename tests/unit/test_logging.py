@@ -2032,10 +2032,12 @@ def test_streamed_log_from_start_is_deprecated_alias_of_since(
     mocked_datetime.now.return_value = _REDIRECT_ATTACH_TIME
     monkeypatch.setattr('apify_client._streamed_log.datetime', mocked_datetime)
 
-    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated'):
+    with pytest.warns(DeprecationWarning, match='`from_start` argument is deprecated') as warning_records:
         streamed_log = StreamedLog(log_client=Mock(), to_logger=logging.getLogger('test'), from_start=from_start)
 
     assert streamed_log._since == expected_since
+    # The warning points at the code that passed the argument, so the default warning filters do not hide it.
+    assert warning_records[0].filename == __file__
 
 
 def test_streamed_log_rejects_both_since_and_from_start() -> None:
@@ -2265,6 +2267,200 @@ async def test_streamed_log_async_does_not_reopen_stream_that_ended(caplog: LogC
 
     assert _redirected_log_lines(caplog) == ['ACTOR: line 1', 'ACTOR: line 2', 'ACTOR: cut o']
     log_client.stream.assert_called_once()
+
+
+def _breaking_sync_stream(data: bytes) -> nullcontext:
+    """Return a mocked sync log stream that delivers `data` and then breaks off with a transport error."""
+
+    def iter_bytes() -> Iterator[bytes]:
+        yield data
+        raise ConnectionResetError('Simulated drop')
+
+    log_stream = Mock()
+    log_stream.iter_bytes.side_effect = iter_bytes
+    return nullcontext(log_stream)
+
+
+def _breaking_async_stream(data: bytes) -> nullcontext:
+    """Return a mocked async log stream that delivers `data` and then breaks off with a transport error."""
+
+    async def aiter_bytes() -> AsyncIterator[bytes]:
+        yield data
+        raise ConnectionResetError('Simulated drop')
+
+    log_stream = Mock()
+    log_stream.aiter_bytes.side_effect = aiter_bytes
+    return nullcontext(log_stream)
+
+
+def _mock_log_client_with_transient_errors() -> Mock:
+    log_client = Mock()
+    log_client._http_client.is_timeout_error.return_value = False
+    log_client._http_client.is_retryable_transport_error.return_value = True
+    return log_client
+
+
+_TRACEBACK_BEFORE_DROP = (
+    b'2025-05-13T07:24:12.588Z Traceback (most recent call last):\n'
+    b'2025-05-13T07:24:12.588Z   File "main.py", line 1, in <module>\n'
+    b'2025-05-13T07:24:12.588Z ValueEr'
+)
+"""A traceback whose lines share one millisecond, cut off in its last line."""
+
+_TRACEBACK_REPLAY = (
+    b'2025-05-13T07:24:12.588Z Traceback (most recent call last):\n'
+    b'2025-05-13T07:24:12.588Z   File "main.py", line 1, in <module>\n'
+    b'2025-05-13T07:24:12.588Z ValueError: boom\n'
+    b'2025-05-13T07:24:13.000Z ACTOR: Exiting\n'
+)
+
+_TRACEBACK_LINES = [
+    'Traceback (most recent call last):',
+    '  File "main.py", line 1, in <module>',
+    'ValueError: boom',
+    'ACTOR: Exiting',
+]
+
+
+def test_streamed_log_sync_reopen_keeps_lines_sharing_the_last_timestamp(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stream that breaks off inside a group of lines with the same timestamp loses none of them on reopen."""
+    monkeypatch.setattr(StreamedLog, '_reopen_pause_s', 0)
+    log_client = _mock_log_client_with_transient_errors()
+    log_client.stream.side_effect = [_breaking_sync_stream(_TRACEBACK_BEFORE_DROP), *_sync_streams([_TRACEBACK_REPLAY])]
+    logger = logging.getLogger('apify_client.tests.same_timestamp_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _TRACEBACK_LINES
+
+
+async def test_streamed_log_async_reopen_keeps_lines_sharing_the_last_timestamp(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stream that breaks off inside a group of lines with the same timestamp loses none of them on reopen."""
+    monkeypatch.setattr(StreamedLogAsync, '_reopen_pause_s', 0)
+    log_client = _mock_log_client_with_transient_errors()
+    log_client.stream.side_effect = [
+        _breaking_async_stream(_TRACEBACK_BEFORE_DROP),
+        *_async_streams([_TRACEBACK_REPLAY]),
+    ]
+    logger = logging.getLogger('apify_client.tests.same_timestamp_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _TRACEBACK_LINES
+
+
+_REPLAY_CUT_SHORT = b'2025-05-13T07:24:12.588Z ACTOR: line 1\n'
+"""A replay of `_LOG_BEFORE_DROP` that breaks off before it reaches the last redirected line."""
+
+
+def test_streamed_log_sync_stops_when_reopened_stream_breaks_before_catching_up(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A reopened stream that breaks off before it replays the last redirected line ends the redirection with a
+    warning instead of reopening again."""
+    monkeypatch.setattr(StreamedLog, '_reopen_pause_s', 0)
+    log_client = _mock_log_client_with_transient_errors()
+    log_client.stream.side_effect = [
+        _breaking_sync_stream(_LOG_BEFORE_DROP),
+        _breaking_sync_stream(_REPLAY_CUT_SHORT),
+        *_sync_streams([_LOG_AFTER_DROP]),
+    ]
+    logger = logging.getLogger('apify_client.tests.no_progress_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: line 1', 'ACTOR: line 2']
+    assert log_client.stream.call_count == 2
+    assert any(
+        record.levelno == logging.WARNING and 'before it reached the last redirected line' in record.message
+        for record in caplog.records
+    )
+
+
+async def test_streamed_log_async_stops_when_reopened_stream_breaks_before_catching_up(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A reopened stream that breaks off before it replays the last redirected line ends the redirection with a
+    warning instead of reopening again."""
+    monkeypatch.setattr(StreamedLogAsync, '_reopen_pause_s', 0)
+    log_client = _mock_log_client_with_transient_errors()
+    log_client.stream.side_effect = [
+        _breaking_async_stream(_LOG_BEFORE_DROP),
+        _breaking_async_stream(_REPLAY_CUT_SHORT),
+        *_async_streams([_LOG_AFTER_DROP]),
+    ]
+    logger = logging.getLogger('apify_client.tests.no_progress_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == ['ACTOR: line 1', 'ACTOR: line 2']
+    assert log_client.stream.call_count == 2
+    assert any(
+        record.levelno == logging.WARNING and 'before it reached the last redirected line' in record.message
+        for record in caplog.records
+    )
+
+
+_SILENT_REPLAY = b'2025-05-13T07:24:12.588Z ACTOR: line 1\n2025-05-13T07:24:12.588Z ACTOR: line 2\n'
+"""A replay of `_LOG_BEFORE_DROP` that reaches the last redirected line, after which the run logs nothing."""
+
+
+def test_streamed_log_sync_keeps_reopening_stream_of_silent_run(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A silent run whose stream breaks off repeatedly keeps its redirection, because every replay catches up."""
+    monkeypatch.setattr(StreamedLog, '_reopen_pause_s', 0)
+    log_client = _mock_log_client_with_transient_errors()
+    log_client.stream.side_effect = [
+        _breaking_sync_stream(_LOG_BEFORE_DROP),
+        _breaking_sync_stream(_SILENT_REPLAY),
+        _breaking_sync_stream(_SILENT_REPLAY),
+        *_sync_streams([_LOG_AFTER_DROP]),
+    ]
+    logger = logging.getLogger('apify_client.tests.silent_run_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert log_client.stream.call_count == 4
+    assert not any(record.levelno >= logging.WARNING for record in caplog.records)
+
+
+async def test_streamed_log_async_keeps_reopening_stream_of_silent_run(
+    caplog: LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A silent run whose stream breaks off repeatedly keeps its redirection, because every replay catches up."""
+    monkeypatch.setattr(StreamedLogAsync, '_reopen_pause_s', 0)
+    log_client = _mock_log_client_with_transient_errors()
+    log_client.stream.side_effect = [
+        _breaking_async_stream(_LOG_BEFORE_DROP),
+        _breaking_async_stream(_SILENT_REPLAY),
+        _breaking_async_stream(_SILENT_REPLAY),
+        *_async_streams([_LOG_AFTER_DROP]),
+    ]
+    logger = logging.getLogger('apify_client.tests.silent_run_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        await streamed_log._stream_log()
+
+    assert _redirected_log_lines(caplog) == _LINES_AFTER_RESUME
+    assert log_client.stream.call_count == 4
+    assert not any(record.levelno >= logging.WARNING for record in caplog.records)
 
 
 def test_streamed_log_last_redirected_at_is_none_before_any_message() -> None:

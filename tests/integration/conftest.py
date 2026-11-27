@@ -16,6 +16,7 @@ from .._utils import (
     KvsFixture,
     get_api_url,
     get_crypto_random_object_id,
+    get_random_resource_name,
     open_apify_client,
 )
 from apify_client import ApifyClient, ApifyClientAsync
@@ -112,6 +113,46 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     )
 
     kvs_client.delete()
+
+
+@pytest.fixture(scope='session')
+def build_id_of_own_actor(api_token: str) -> Generator[str]:
+    """ID of a finished build of an Actor owned by the primary test user.
+
+    The API serves a build log only to a user who can write to or build the Actor, so the builds of a public Actor
+    such as `apify/hello-world` have no log the test user can read.
+    """
+    api_url = get_api_url()
+    client = ApifyClient(api_token, api_url=api_url)
+
+    actor = client.actors().create(
+        name=get_random_resource_name('actor'),
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+            }
+        ],
+    )
+    actor_client = client.actor(actor.id)
+
+    try:
+        build = actor_client.build(version_number='0.1')
+        finished_build = client.build(build.id).wait_for_finish()
+        assert finished_build is not None
+        assert finished_build.status in ('SUCCEEDED', 'FAILED')
+
+        yield build.id
+    finally:
+        actor_client.delete()
 
 
 @pytest.fixture(

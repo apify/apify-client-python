@@ -9,7 +9,7 @@ from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TYPE_CHECKING
 
 from .._utils import maybe_await
-from apify_client._models import ListOfBuilds, Run
+from apify_client._models import Run
 from apify_client._resource_clients import RunClient, RunClientAsync
 from apify_client.http_clients import HttpResponse
 
@@ -43,22 +43,13 @@ async def test_log_get_from_run(client: ApifyClient | ApifyClientAsync) -> None:
     await maybe_await(run_client.delete())
 
 
-async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync) -> None:
+async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync, build_id_of_own_actor: str) -> None:
     """Test retrieving log from a build."""
-    # Get a build from hello-world actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=1))
-    assert isinstance(builds_page, ListOfBuilds)
-    assert builds_page.items
-    build_id = builds_page.items[0].id
-
-    # Get log from the build
-    build = client.build(build_id)
+    build = client.build(build_id_of_own_actor)
     log = await maybe_await(build.log().get())
 
-    # Build log may be None or empty for some builds
-    if log is not None:
-        assert isinstance(log, str)
+    assert isinstance(log, str)
+    assert len(log) > 0
 
 
 async def test_log_get_as_bytes(client: ApifyClient | ApifyClientAsync) -> None:

@@ -86,27 +86,9 @@ async def test_user_builds_list(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(builds_page.items, list)
 
 
-async def test_build_log(client: ApifyClient | ApifyClientAsync) -> None:
+async def test_build_log(client: ApifyClient | ApifyClientAsync, build_id_of_own_actor: str) -> None:
     """Test getting build log."""
-    # First list builds to get a completed build ID
-    actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=5))
-    assert isinstance(builds_page, ListOfBuilds)
-    assert builds_page.items
-
-    # Find a completed build (SUCCEEDED status)
-    completed_build = None
-    for build in builds_page.items:
-        if build.status and build.status == 'SUCCEEDED':
-            completed_build = build
-            break
-
-    if completed_build is None:
-        # If no succeeded build found, use any build
-        completed_build = builds_page.items[0]
-
-    # Get the build log
-    log_client = client.build(completed_build.id).log()
+    log_client = client.build(build_id_of_own_actor).log()
     log_content = await maybe_await(log_client.get())
 
     # Build logs should be available for completed builds

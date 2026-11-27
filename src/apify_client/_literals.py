@@ -542,6 +542,7 @@ RunOrigin = (
         'CI',
         'STANDBY',
         'MCP',
+        'APIFY_AI',
     ]
     | str
 )

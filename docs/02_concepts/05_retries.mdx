@@ -10,6 +10,8 @@ import CodeBlock from '@theme/CodeBlock';
 
 import ApiLink from '@theme/ApiLink';
 
+import BatchAddRetriesAsyncExample from '!!raw-loader!./code/05_batch_add_retries_async.py';
+import BatchAddRetriesSyncExample from '!!raw-loader!./code/05_batch_add_retries_sync.py';
 import RetriesAsyncExample from '!!raw-loader!./code/05_retries_async.py';
 import RetriesSyncExample from '!!raw-loader!./code/05_retries_sync.py';
 import StatsAsyncExample from '!!raw-loader!./code/05_stats_async.py';
@@ -48,13 +50,37 @@ Retries with exponential backoff help reduce the load on the server and increase
     </TabItem>
 </Tabs>
 
+## Retry unprocessed requests in batch adds
+
+When the API rate-limits a batch of added requests, it responds with HTTP 200 and lists the requests it skipped in `unprocessedRequests`. The client's HTTP retries don't apply to such a response, because it's a success. For this case, <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests`</ApiLink> retries the skipped requests itself. Each retry sends only the requests the API hasn't processed yet.
+
+You can customize this behavior using the following arguments of `batch_add_requests`:
+
+- `max_unprocessed_requests_retries`: Defines the maximum number of retries, 3 by default. Set it to `0` to disable retries.
+- `min_delay_between_unprocessed_requests_retries`: Sets the minimum delay before the first retry as a `timedelta`, 500 milliseconds by default. Each later retry waits about twice as long as the one before it.
+
+Requests that are still unprocessed after the last retry are returned in `unprocessed_requests`. If a retry call fails, the client logs the error and returns the requests it didn't add as unprocessed.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {BatchAddRetriesAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {BatchAddRetriesSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
 ## Request statistics
 
 The client counts its calls, HTTP requests, and rate limit errors. To read the counts, use the <ApiLink to="class/ApifyClient#stats">`stats`</ApiLink> property. It returns a <ApiLink to="class/ClientStatistics">`ClientStatistics`</ApiLink> object with these fields:
 
 - `calls` is the number of calls made through the client, including requests to Actor servers.
 - `requests` is the number of HTTP requests sent, including retries and requests to Actor servers.
-- `rate_limit_errors` maps each attempt to the number of rate limit (429) errors it got. Key `0` is the first attempt, key `1` is the first retry, and so on. The field is a `defaultdict`, so reading a missing key adds it. To read a count without changing the dict, use `.get()`. Only API calls count here. A 429 from an Actor server called through <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink> is not counted.
+- `rate_limit_errors` maps each attempt to the number of rate limit errors it got. It counts 429 responses and the `batch_add_requests` rounds that return unprocessed requests. Key `0` is the first attempt, key `1` is the first retry, and so on. The field is a `defaultdict`, so reading a missing key adds it. To read a count without changing the dict, use `.get()`. Only API calls count here. A 429 from an Actor server called through <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink> is not counted.
 
 With a custom HTTP client, `stats` returns the statistics of that client. For details, see [HTTP clients](/api/client/python/docs/concepts/custom-http-clients).
 
